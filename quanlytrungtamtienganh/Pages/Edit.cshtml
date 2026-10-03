@@ -1,0 +1,118 @@
+﻿@page
+@model quanlytrungtamtienganh.Pages.LopHoc.EditModel
+
+@{
+    ViewData["Title"] = "Sửa lớp học";
+}
+
+<h1>Sửa lớp học</h1>
+
+<hr />
+
+<div class="row">
+
+    <div class="col-md-6">
+
+        <form method="post">
+
+            <input type="hidden"
+                   asp-for="LopHoc.MaLop" />
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger">
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="LopHoc.TenLop"
+                       class="form-label">
+                </label>
+
+                <input asp-for="LopHoc.TenLop"
+                       class="form-control" />
+
+                <span asp-validation-for="LopHoc.TenLop"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="LopHoc.MaKhoaHoc"
+                       class="form-label">
+                </label>
+
+                <input asp-for="LopHoc.MaKhoaHoc"
+                       class="form-control" />
+
+                <span asp-validation-for="LopHoc.MaKhoaHoc"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="LopHoc.NgayBatDau"
+                       class="form-label">
+                </label>
+
+                <input asp-for="LopHoc.NgayBatDau"
+                       class="form-control"
+                       type="date" />
+
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="LopHoc.NgayKetThuc"
+                       class="form-label">
+                </label>
+
+                <input asp-for="LopHoc.NgayKetThuc"
+                       class="form-control"
+                       type="date" />
+
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="LopHoc.TrangThai"
+                       class="form-label">
+                </label>
+
+                <select asp-for="LopHoc.TrangThai"
+                        class="form-select">
+
+                    <option value="DangHoc">
+                        Đang học
+                    </option>
+
+                    <option value="DaKetThuc">
+                        Đã kết thúc
+                    </option>
+
+                    <option value="DaHuy">
+                        Đã hủy
+                    </option>
+
+                </select>
+
+            </div>
+
+            <button type="submit"
+                    class="btn btn-warning">
+                Lưu thay đổi
+            </button>
+
+            <a asp-page="./Index"
+               class="btn btn-secondary">
+                Quay lại
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
