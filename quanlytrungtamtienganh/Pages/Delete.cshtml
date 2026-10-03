@@ -1,0 +1,67 @@
+﻿@page
+@model quanlytrungtamtienganh.Pages.LopHoc.DeleteModel
+
+@{
+    ViewData["Title"] = "Xóa lớp học";
+}
+
+<h1>Xóa lớp học</h1>
+
+<div class="alert alert-danger">
+
+    <h4>Bạn có chắc chắn muốn xóa lớp học này?</h4>
+
+</div>
+
+<dl class="row">
+
+    <dt class="col-sm-3">
+        Mã lớp
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.MaLop
+    </dd>
+
+    <dt class="col-sm-3">
+        Tên lớp
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.TenLop
+    </dd>
+
+    <dt class="col-sm-3">
+        Mã khóa học
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.MaKhoaHoc
+    </dd>
+
+    <dt class="col-sm-3">
+        Trạng thái
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.TrangThai
+    </dd>
+
+</dl>
+
+<form method="post">
+
+    <input type="hidden"
+           asp-for="LopHoc.MaLop" />
+
+    <button type="submit"
+            class="btn btn-danger">
+        Xác nhận xóa
+    </button>
+
+    <a asp-page="./Index"
+       class="btn btn-secondary">
+        Hủy
+    </a>
+
+</form>

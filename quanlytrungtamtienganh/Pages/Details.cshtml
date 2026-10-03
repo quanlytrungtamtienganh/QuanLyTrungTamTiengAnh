@@ -1,0 +1,73 @@
+﻿@page
+@model quanlytrungtamtienganh.Pages.LopHoc.DetailsModel
+
+@{
+    ViewData["Title"] = "Chi tiết lớp học";
+}
+
+<h1>Chi tiết lớp học</h1>
+
+<hr />
+
+<dl class="row">
+
+    <dt class="col-sm-3">
+        Mã lớp
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.MaLop
+    </dd>
+
+    <dt class="col-sm-3">
+        Tên lớp
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.TenLop
+    </dd>
+
+    <dt class="col-sm-3">
+        Mã khóa học
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.MaKhoaHoc
+    </dd>
+
+    <dt class="col-sm-3">
+        Ngày bắt đầu
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.NgayBatDau.ToString("dd/MM/yyyy")
+    </dd>
+
+    <dt class="col-sm-3">
+        Ngày kết thúc
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.NgayKetThuc.ToString("dd/MM/yyyy")
+    </dd>
+
+    <dt class="col-sm-3">
+        Trạng thái
+    </dt>
+
+    <dd class="col-sm-9">
+        @Model.LopHoc.TrangThai
+    </dd>
+
+</dl>
+
+<a asp-page="./Edit"
+   asp-route-id="@Model.LopHoc.MaLop"
+   class="btn btn-warning">
+    Sửa
+</a>
+
+<a asp-page="./Index"
+   class="btn btn-secondary">
+    Quay lại
+</a>

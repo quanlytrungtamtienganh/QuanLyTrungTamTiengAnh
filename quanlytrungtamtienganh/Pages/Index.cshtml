@@ -1,10 +1,286 @@
 ﻿@page
-@model IndexModel
+@model quanlytrungtamtienganh.Pages.LopHoc.IndexModel
+
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Quản lý lớp học";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1>Quản lý lớp học</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">
+        + Thêm lớp học
+    </a>
+</p>
+
+<form method="get" class="mb-3">
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+
+            <input type="text"
+                   name="SearchString"
+                   value="@Model.SearchString"
+                   class="form-control"
+                   placeholder="Nhập tên lớp..." />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Trạng thái</label>
+
+            <select name="TrangThaiFilter" class="form-select">
+
+                <option value="">-- Tất cả --</option>
+
+                <option value="DangHoc"
+                        selected="@(Model.TrangThaiFilter == "DangHoc")">
+                    Đang học
+                </option>
+
+                <option value="DaKetThuc"
+                        selected="@(Model.TrangThaiFilter == "DaKetThuc")">
+                    Đã kết thúc
+                </option>
+
+                <option value="DaHuy"
+                        selected="@(Model.TrangThaiFilter == "DaHuy")">
+                    Đã hủy
+                </option>
+
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Sắp xếp</label>
+
+            <select name="SortOrder" class="form-select">
+
+                <option value="">Tên lớp A-Z</option>
+
+                <option value="ten_desc"
+                        selected="@(Model.SortOrder == "ten_desc")">
+                    Tên lớp Z-A
+                </option>
+
+                <option value="ma_asc"
+                        selected="@(Model.SortOrder == "ma_asc")">
+                    Mã lớp tăng dần
+                </option>
+
+                <option value="ma_desc"
+                        selected="@(Model.SortOrder == "ma_desc")">
+                    Mã lớp giảm dần
+                </option>
+
+                <option value="ngay_asc"
+                        selected="@(Model.SortOrder == "ngay_asc")">
+                    Ngày bắt đầu tăng dần
+                </option>
+
+                <option value="ngay_desc"
+                        selected="@(Model.SortOrder == "ngay_desc")">
+                    Ngày bắt đầu giảm dần
+                </option>
+
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+
+            <button type="submit"
+                    class="btn btn-success w-100">
+                Tìm kiếm
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+<table class="table table-bordered table-striped">
+
+    <thead class="table-dark">
+
+        <tr>
+
+            <th>Mã lớp</th>
+
+            <th>Tên lớp</th>
+
+            <th>Mã khóa học</th>
+
+            <th>Ngày bắt đầu</th>
+
+            <th>Ngày kết thúc</th>
+
+            <th>Trạng thái</th>
+
+            <th>Thao tác</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        @if (Model.LopHocs.Any())
+        {
+            foreach (var item in Model.LopHocs)
+            {
+                <tr>
+
+                    <td>
+                        @item.MaLop
+                    </td>
+
+                    <td>
+                        @item.TenLop
+                    </td>
+
+                    <td>
+                        @item.MaKhoaHoc
+                    </td>
+
+                    <td>
+                        @item.NgayBatDau.ToString("dd/MM/yyyy")
+                    </td>
+
+                    <td>
+                        @item.NgayKetThuc.ToString("dd/MM/yyyy")
+                    </td>
+
+                    <td>
+
+                        @if (item.TrangThai == "DangHoc")
+                        {
+                            <span class="badge bg-success">
+                                Đang học
+                            </span>
+                        }
+                        else if (item.TrangThai == "DaKetThuc")
+                        {
+                            <span class="badge bg-secondary">
+                                Đã kết thúc
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">
+                                Đã hủy
+                            </span>
+                        }
+
+                    </td>
+
+                    <td>
+
+                        <a asp-page="Details"
+                           asp-route-id="@item.MaLop"
+                           class="btn btn-info btn-sm">
+                            Chi tiết
+                        </a>
+
+                        <a asp-page="Edit"
+                           asp-route-id="@item.MaLop"
+                           class="btn btn-warning btn-sm">
+                            Sửa
+                        </a>
+
+                        <a asp-page="Delete"
+                           asp-route-id="@item.MaLop"
+                           class="btn btn-danger btn-sm">
+                            Xóa
+                        </a>
+
+                    </td>
+
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+
+                <td colspan="7"
+                    class="text-center">
+
+                    Không tìm thấy lớp học.
+
+                </td>
+
+            </tr>
+        }
+
+    </tbody>
+
+</table>
+
+
+@if (Model.TotalPages > 1)
+{
+    <nav>
+
+        <ul class="pagination">
+
+            @if (Model.PageNumber > 1)
+            {
+                <li class="page-item">
+
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-PageNumber="@(Model.PageNumber - 1)"
+                       asp-route-SearchString="@Model.SearchString"
+                       asp-route-TrangThaiFilter="@Model.TrangThaiFilter"
+                       asp-route-SortOrder="@Model.SortOrder">
+
+                        « Trước
+
+                    </a>
+
+                </li>
+            }
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-PageNumber="@i"
+                       asp-route-SearchString="@Model.SearchString"
+                       asp-route-TrangThaiFilter="@Model.TrangThaiFilter"
+                       asp-route-SortOrder="@Model.SortOrder">
+
+                        @i
+
+                    </a>
+
+                </li>
+            }
+
+            @if (Model.PageNumber < Model.TotalPages)
+            {
+                <li class="page-item">
+
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-PageNumber="@(Model.PageNumber + 1)"
+                       asp-route-SearchString="@Model.SearchString"
+                       asp-route-TrangThaiFilter="@Model.TrangThaiFilter"
+                       asp-route-SortOrder="@Model.SortOrder">
+
+                        Sau »
+
+                    </a>
+
+                </li>
+            }
+
+        </ul>
+
+    </nav>
+}
