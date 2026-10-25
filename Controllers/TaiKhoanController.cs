@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 1 - SINH VIÊN 1: TÀI KHOẢN – ĐĂNG NHẬP VÀ PHÂN QUYỀN – QUẢN LÝ KHÓA HỌC]
+// [MODULE 1 - VŨ TRƯỜNG AN: TÀI KHOẢN – ĐĂNG NHẬP VÀ PHÂN QUYỀN – QUẢN LÝ KHÓA HỌC]
 // Tên Tệp: TaiKhoanController.cs
 // Mô tả: Chức năng: Quản lý tài khoản người dùng, Đăng nhập, Đăng ký, Phân quyền vai trò (Admin, GiaoVien, HocVien)
 // ============================================================================

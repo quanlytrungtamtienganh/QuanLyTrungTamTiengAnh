@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 2 - SINH VIÊN 2: QUẢN LÝ LỚP HỌC – TÌM KIẾM – LỌC – SẮP XẾP – PHÂN TRANG]
+// [MODULE 2 - TRẦN TRỌNG TRÁNG: QUẢN LÝ LỚP HỌC – TÌM KIẾM – LỌC – SẮP XẾP – PHÂN TRANG]
 // Tên Tệp: LopHocController.cs
 // Mô tả: Chức năng: Quản lý lớp học (Thêm/Sửa/Xóa), Tìm kiếm theo tên/mã, Lọc theo giáo viên/trạng thái, Sắp xếp học phí/ngày, Phân trang
 // ============================================================================

@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 4 - SINH VIÊN 4: QUẢN LÝ ĐĂNG KÝ – DASHBOARD – THỐNG KÊ]
+// [MODULE 4 - KHIẾU QUỐC TOẢN: QUẢN LÝ ĐĂNG KÝ – DASHBOARD – THỐNG KÊ]
 // Tên Tệp: ThongKeController.cs
 // Mô tả: Chức năng: Giao diện thống kê Admin, Dashboard tổng quan, Thống kê doanh thu học phí, Biểu đồ học viên & khóa học
 // ============================================================================

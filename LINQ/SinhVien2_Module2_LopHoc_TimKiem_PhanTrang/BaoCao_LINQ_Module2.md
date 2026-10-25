@@ -1,7 +1,7 @@
-# BÁO CÁO CÂU LỆNH LINQ - SINH VIÊN 2 (MODULE 2)
+# BÁO CÁO CÂU LỆNH LINQ - TRẦN TRỌNG TRÁNG (MODULE 2)
 
 ## 📌 THÔNG TIN MODULE
-* **Sinh viên phụ trách**: Sinh viên 2
+* **Sinh viên phụ trách**: TRẦN TRỌNG TRÁNG
 * **Tên Module**: Module 2 - Quản lý lớp học – Tìm kiếm – Lọc – Sắp xếp – Phân trang
 * **Các bảng dữ liệu liên quan**: `LopHoc`, `KhoaHoc`, `GiaoVien`, `DangKyHoc`
 * **File mã nguồn C#**: `LINQ_Module2_LopHoc_TimKiem_PhanTrang.cs`

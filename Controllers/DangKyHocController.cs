@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 3 - SINH VIÊN 3: QUẢN LÝ HỌC VIÊN – ĐĂNG KÝ LỚP HỌC – LỊCH SỬ ĐĂNG KÝ]
+// [MODULE 3 - PHẠM THANH TÙNG: QUẢN LÝ HỌC VIÊN – ĐĂNG KÝ LỚP HỌC – LỊCH SỬ ĐĂNG KÝ]
 // Tên Tệp: DangKyHocController.cs
 // Mô tả: Chức năng: Đăng ký lớp học (Kiểm tra đăng nhập, lớp tuyển sinh, sỉ số, trùng lặp), Xem lịch sử đăng ký, Hủy đăng ký
 // ============================================================================

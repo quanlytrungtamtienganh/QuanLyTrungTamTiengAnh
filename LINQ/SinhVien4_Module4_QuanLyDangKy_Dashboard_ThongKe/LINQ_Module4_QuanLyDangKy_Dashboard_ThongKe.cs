@@ -9,7 +9,7 @@ using TrungTamNgoaiNgu.Models;
 namespace TrungTamNgoaiNgu.LINQ.Module4
 {
     /// <summary>
-    /// PHÂN CHIA CHỨC NĂNG: SINH VIÊN 4 - MODULE 4
+    /// PHÂN CHIA CHỨC NĂNG: KHIẾU QUỐC TOẢN - MODULE 4
     /// NHIỆM VỤ: Quản lý đăng ký – Dashboard – Thống kê
     /// </summary>
     public class LINQ_Module4_QuanLyDangKy_Dashboard_ThongKe

@@ -148,7 +148,7 @@ erDiagram
 
 ### Danh Sách Chi Tiết 20 Bảng Phân Theo Module:
 
-#### 1. Module 1: Tài Khoản & Khóa Học (Sinh viên 1)
+#### 1. Module 1: Tài Khoản & Khóa Học (VŨ TRƯỜNG AN)
 - **`TaiKhoan`**:
   - `MaTaiKhoan` (INT, PK, Identity): Mã định danh tài khoản.
   - `TenDangNhap` (NVARCHAR(50), Unique): Tên tài khoản đăng nhập.
@@ -160,7 +160,7 @@ erDiagram
   - `TenKhoaHoc` (NVARCHAR(150)), `NgoaiNgu` (NVARCHAR(50) - 'TiengAnh'/'TiengHan'/'TiengTrung'/'TiengNhat').
   - `CapDo` (NVARCHAR(50)), `HocPhi` (DECIMAL(18,2)), `SoBuoi` (INT), `MoTa` (NVARCHAR(MAX)), `TrangThai` (NVARCHAR(50)).
 
-#### 2. Module 2: Lớp Học & Giảng Viên (Sinh viên 2)
+#### 2. Module 2: Lớp Học & Giảng Viên (TRẦN TRỌNG TRÁNG)
 - **`LopHoc`**:
   - `MaLopHoc` (INT, PK, Identity): Mã lớp học.
   - `TenLop` (NVARCHAR(100)): Tên lớp học.
@@ -172,7 +172,7 @@ erDiagram
   - `MaGiaoVien` (INT, PK, Identity), `MaTaiKhoan` (INT, FK $\rightarrow$ TaiKhoan).
   - `HoTen` (NVARCHAR(100)), `ChuyenMon` (NVARCHAR(50)), `HocVi` (NVARCHAR(100)), `Email` (NVARCHAR(100)), `SoDienThoai` (NVARCHAR(20)).
 
-#### 3. Module 3: Học Viên & Đăng Ký Lớp Học (Sinh viên 3)
+#### 3. Module 3: Học Viên & Đăng Ký Lớp Học (PHẠM THANH TÙNG)
 - **`HocVien`**:
   - `MaHocVien` (INT, PK, Identity), `MaTaiKhoan` (INT, FK $\rightarrow$ TaiKhoan, Nullable).
   - `HoTen` (NVARCHAR(100)), `NgaySinh` (DATETIME2), `GioiTinh` (NVARCHAR(10)).
@@ -181,7 +181,7 @@ erDiagram
   - `MaDangKy` (INT, PK, Identity), `MaHocVien` (INT, FK $\rightarrow$ HocVien), `MaLopHoc` (INT, FK $\rightarrow$ LopHoc).
   - `NgayDangKy` (DATETIME2), `TrangThaiThanhToan` (NVARCHAR(50)), `SoTienDaDong` (DECIMAL(18,2)).
 
-#### 4. Module 4: Quản Lý Đăng Ký & Dashboard Thống Kê (Sinh viên 4)
+#### 4. Module 4: Quản Lý Đăng Ký & Dashboard Thống Kê (KHIẾU QUỐC TOẢN)
 - **`YeuCauDangKy`**:
   - `MaYeuCau` (INT, PK, Identity), `MaKhoaHoc` (INT, FK $\rightarrow$ KhoaHoc), `MaLopHoc` (INT, FK $\rightarrow$ LopHoc, Nullable).
   - `HoTen` (NVARCHAR(100)), `Email` (NVARCHAR(100)), `SoDienThoai` (NVARCHAR(20)).

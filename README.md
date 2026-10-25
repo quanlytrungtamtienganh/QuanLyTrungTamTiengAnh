@@ -48,7 +48,7 @@
 
 Dự án được phân chia thành **04 Module chính** tương ứng với 04 sinh viên phụ trách theo đúng đề cương đồ án:
 
-### 4.1. Sinh viên 1 – Module 1: Tài Khoản – Đăng Nhập & Phân Quyền – Quản Lý Khóa Học
+### 4.1. VŨ TRƯỜNG AN – Module 1: Tài Khoản – Đăng Nhập & Phân Quyền – Quản Lý Khóa Học
 - **Nghiệp vụ chi tiết**:
   - Đăng ký tài khoản, đăng nhập hệ thống, đổi mật khẩu, xác thực phiên làm việc (`Session`).
   - Phân quyền người dùng dựa trên 3 vai trò: `Admin`, `GiaoVien`, `HocVien`.
@@ -60,7 +60,7 @@ Dự án được phân chia thành **04 Module chính** tương ứng với 04 
   - Tệp Giao diện: `DangNhap.cshtml`, `DangKy.cshtml`, `Index.cshtml` (Quản lý tài khoản), `Edit.cshtml`, `Create.cshtml`, `Details.cshtml`, `Delete.cshtml`
   - Bảng CSDL: `TaiKhoan`, `KhoaHoc`
 
-### 4.2. Sinh viên 2 – Module 2: Quản Lý Lớp Học – Tìm Kiếm – Lọc – Sắp Xếp – Phân Trang
+### 4.2. TRẦN TRỌNG TRÁNG – Module 2: Quản Lý Lớp Học – Tìm Kiếm – Lọc – Sắp Xếp – Phân Trang
 - **Nghiệp vụ chi tiết**:
   - Quản lý lớp học: Thêm lớp mới, chỉnh sửa thông tin lớp, **Xóa lớp học (Mục 4.13)**.
   - **Bộ lọc tìm kiếm giáo viên (Mục 4.8)**: Tìm kiếm lớp học theo giáo viên phụ trách, trạng thái lớp (Đang mở, Đang học, Kết thúc).
@@ -73,7 +73,7 @@ Dự án được phân chia thành **04 Module chính** tương ứng với 04 
   - Tệp Giao diện: `Index.cshtml`, `Create.cshtml`, `Edit.cshtml`, `Delete.cshtml`, `Details.cshtml`
   - Bảng CSDL: `LopHoc`, `GiaoVien`
 
-### 4.3. Sinh viên 3 – Module 3: Quản Lý Học Viên – Đăng Ký Lớp Học – Lịch Sử Đăng Ký
+### 4.3. PHẠM THANH TÙNG – Module 3: Quản Lý Học Viên – Đăng Ký Lớp Học – Lịch Sử Đăng Ký
 - **Nghiệp vụ chi tiết**:
   - **Quản lý học viên (Mục 4.14)**: Hiển thị danh sách, thông tin Họ tên, Email, SĐT, **Địa chỉ**, Thêm học viên mới, Chỉnh sửa thông tin học viên, Xóa học viên.
   - **Quy trình đăng ký khóa học (Mục 4.16)**:
@@ -90,7 +90,7 @@ Dự án được phân chia thành **04 Module chính** tương ứng với 04 
   - Tệp Giao diện: `Index.cshtml`, `Create.cshtml`, `Edit.cshtml`, `Delete.cshtml`, `DangKy.cshtml`, `XacNhanDangKy.cshtml`, `LichSuDangKy.cshtml`
   - Bảng CSDL: `HocVien`, `DangKyHoc`
 
-### 4.4. Sinh viên 4 – Module 4: Quản Lý Đăng Ký – Dashboard – Thống Kê
+### 4.4. KHIẾU QUỐC TOẢN – Module 4: Quản Lý Đăng Ký – Dashboard – Thống Kê
 - **Nghiệp vụ chi tiết**:
   - **Quản lý đăng ký (Mục 4.18)**: Hiển thị danh sách đơn đăng ký gồm Mã đăng ký, Khóa học, Lớp học, Trạng thái (Chờ duyệt, Đã duyệt, Đã hủy), Học phí; Thực hiện duyệt hồ sơ hoặc từ chối đơn.
   - **Dashboard & Thống kê Admin (Mục 4.20)**:

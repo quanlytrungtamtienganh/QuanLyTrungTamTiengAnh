@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 2 - SINH VIÊN 2: QUẢN LÝ LỚP HỌC – TÌM KIẾM – LỌC – SẮP XẾP – PHÂN TRANG]
+// [MODULE 2 - TRẦN TRỌNG TRÁNG: QUẢN LÝ LỚP HỌC – TÌM KIẾM – LỌC – SẮP XẾP – PHÂN TRANG]
 // Tên Tệp: GiaoVienController.cs
 // Mô tả: Chức năng: Quản lý thông tin giảng viên, Bộ lọc tìm kiếm giáo viên phụ trách lớp học
 // ============================================================================

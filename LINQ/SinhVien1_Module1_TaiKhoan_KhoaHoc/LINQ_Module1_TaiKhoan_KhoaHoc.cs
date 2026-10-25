@@ -9,7 +9,7 @@ using TrungTamNgoaiNgu.Models;
 namespace TrungTamNgoaiNgu.LINQ.Module1
 {
     /// <summary>
-    /// PHÂN CHIA CHỨC NĂNG: SINH VIÊN 1 - MODULE 1
+    /// PHÂN CHIA CHỨC NĂNG: VŨ TRƯỜNG AN - MODULE 1
     /// NHIỆM VỤ: Tài khoản – Đăng nhập và phân quyền – Quản lý khóa học
     /// </summary>
     public class LINQ_Module1_TaiKhoan_KhoaHoc

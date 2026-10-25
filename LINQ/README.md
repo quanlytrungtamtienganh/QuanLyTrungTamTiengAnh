@@ -3,7 +3,7 @@
 > **Học phần**: Phát triển ứng dụng Web / Lập trình .NET & CSDL  
 > **Cơ sở dữ liệu & ORM**: Microsoft SQL Server & Entity Framework Core  
 > **Dự án**: Website Quản lý & Học trực tuyến Trung Tâm Ngoại Ngữ  
-> **Tài liệu phân chia chức năng**: 04 Module chính tương ứng với 04 thành viên (Sinh viên 1 - Sinh viên 4)
+> **Tài liệu phân chia chức năng**: 04 Module chính tương ứng với 04 thành viên (VŨ TRƯỜNG AN - KHIẾU QUỐC TOẢN)
 
 ---
 
@@ -11,10 +11,10 @@
 
 | STT | Thư mục Module | Sinh viên phụ trách | Nhóm chức năng chính |
 |:---:|:---|:---:|:---|
-| **1** | [SinhVien1_Module1_TaiKhoan_KhoaHoc](./SinhVien1_Module1_TaiKhoan_KhoaHoc) | **Sinh viên 1** | **Tài khoản – Đăng nhập và phân quyền – Quản lý khóa học** |
-| **2** | [SinhVien2_Module2_LopHoc_TimKiem_PhanTrang](./SinhVien2_Module2_LopHoc_TimKiem_PhanTrang) | **Sinh viên 2** | **Quản lý lớp học – Tìm kiếm – Lọc – Sắp xếp – Phân trang** |
-| **3** | [SinhVien3_Module3_HocVien_DangKyLopHoc](./SinhVien3_Module3_HocVien_DangKyLopHoc) | **Sinh viên 3** | **Quản lý học viên – Đăng ký lớp học – Lịch sử đăng ký** |
-| **4** | [SinhVien4_Module4_QuanLyDangKy_Dashboard_ThongKe](./SinhVien4_Module4_QuanLyDangKy_Dashboard_ThongKe) | **Sinh viên 4** | **Quản lý đăng ký – Dashboard – Thống kê** |
+| **1** | [VŨ TRƯỜNG AN_Module1_TaiKhoan_KhoaHoc](./VŨ TRƯỜNG AN_Module1_TaiKhoan_KhoaHoc) | **VŨ TRƯỜNG AN** | **Tài khoản – Đăng nhập và phân quyền – Quản lý khóa học** |
+| **2** | [TRẦN TRỌNG TRÁNG_Module2_LopHoc_TimKiem_PhanTrang](./TRẦN TRỌNG TRÁNG_Module2_LopHoc_TimKiem_PhanTrang) | **TRẦN TRỌNG TRÁNG** | **Quản lý lớp học – Tìm kiếm – Lọc – Sắp xếp – Phân trang** |
+| **3** | [PHẠM THANH TÙNG_Module3_HocVien_DangKyLopHoc](./PHẠM THANH TÙNG_Module3_HocVien_DangKyLopHoc) | **PHẠM THANH TÙNG** | **Quản lý học viên – Đăng ký lớp học – Lịch sử đăng ký** |
+| **4** | [KHIẾU QUỐC TOẢN_Module4_QuanLyDangKy_Dashboard_ThongKe](./KHIẾU QUỐC TOẢN_Module4_QuanLyDangKy_Dashboard_ThongKe) | **KHIẾU QUỐC TOẢN** | **Quản lý đăng ký – Dashboard – Thống kê** |
 
 ---
 

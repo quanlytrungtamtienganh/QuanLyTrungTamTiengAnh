@@ -1,7 +1,7 @@
-# BÁO CÁO CÂU LỆNH LINQ - SINH VIÊN 3 (MODULE 3)
+# BÁO CÁO CÂU LỆNH LINQ - PHẠM THANH TÙNG (MODULE 3)
 
 ## 📌 THÔNG TIN MODULE
-* **Sinh viên phụ trách**: Sinh viên 3
+* **Sinh viên phụ trách**: PHẠM THANH TÙNG
 * **Tên Module**: Module 3 - Quản lý học viên – Đăng ký lớp học – Lịch sử đăng ký
 * **Các bảng dữ liệu liên quan**: `HocVien`, `TaiKhoan`, `DangKyHoc`, `LopHoc`, `KhoaHoc`
 * **File mã nguồn C#**: `LINQ_Module3_HocVien_DangKyLopHoc.cs`

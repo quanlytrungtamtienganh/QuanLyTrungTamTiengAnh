@@ -5,16 +5,16 @@
    
    PHÂN CHIA THEO CÁC MODULE CHỨC NĂNG (THEO YÊU CẦU ĐỒ ÁN):
    ---------------------------------------------------------------------------
-   [+] MODULE 1 - SINH VIÊN 1: Tài khoản – Đăng nhập và phân quyền – Quản lý khóa học
+   [+] MODULE 1 - VŨ TRƯỜNG AN: Tài khoản – Đăng nhập và phân quyền – Quản lý khóa học
        -> Bảng CSDL: [TaiKhoan], [KhoaHoc]
    
-   [+] MODULE 2 - SINH VIÊN 2: Quản lý lớp học – Tìm kiếm – Lọc – Sắp xếp – Phân trang
+   [+] MODULE 2 - TRẦN TRỌNG TRÁNG: Quản lý lớp học – Tìm kiếm – Lọc – Sắp xếp – Phân trang
        -> Bảng CSDL: [GiaoVien], [LopHoc]
    
-   [+] MODULE 3 - SINH VIÊN 3: Quản lý học viên – Đăng ký lớp học – Lịch sử đăng ký
+   [+] MODULE 3 - PHẠM THANH TÙNG: Quản lý học viên – Đăng ký lớp học – Lịch sử đăng ký
        -> Bảng CSDL: [HocVien], [DangKyHoc]
    
-   [+] MODULE 4 - SINH VIÊN 4: Quản lý đăng ký – Dashboard – Thống kê
+   [+] MODULE 4 - KHIẾU QUỐC TOẢN: Quản lý đăng ký – Dashboard – Thống kê
        -> Bảng CSDL: [YeuCauDangKy], [CauHinhHeThong]
    
    [+] CÁC MODULE MỞ RỘNG (NÂNG CAO):
@@ -42,7 +42,7 @@ GO
 -- 1. CẤU TRÚC BẢNG VÀ RÀNG BUỘC (TABLE SCHEMAS & CONSTRAINTS)
 -- ===========================================================================
 /* ---------------------------------------------------------------------------
-   >>> MODULE 4 (Sinh viên 4) - Cấu hình hệ thống & Dashboard Thống kê doanh thu
+   >>> MODULE 4 (KHIẾU QUỐC TOẢN) - Cấu hình hệ thống & Dashboard Thống kê doanh thu
    Bảng: [CauHinhHeThong]
    --------------------------------------------------------------------------- */
 CREATE TABLE [CauHinhHeThong] (
@@ -78,7 +78,7 @@ GO
 
 
 /* ---------------------------------------------------------------------------
-   >>> MODULE 1 (Sinh viên 1) - Quản lý khóa học ngoại ngữ
+   >>> MODULE 1 (VŨ TRƯỜNG AN) - Quản lý khóa học ngoại ngữ
    Bảng: [KhoaHoc]
    --------------------------------------------------------------------------- */
 CREATE TABLE [KhoaHoc] (
@@ -96,7 +96,7 @@ GO
 
 
 /* ---------------------------------------------------------------------------
-   >>> MODULE 1 (Sinh viên 1) - Tài khoản, Đăng nhập và phân quyền
+   >>> MODULE 1 (VŨ TRƯỜNG AN) - Tài khoản, Đăng nhập và phân quyền
    Bảng: [TaiKhoan]
    --------------------------------------------------------------------------- */
 CREATE TABLE [TaiKhoan] (
@@ -113,7 +113,7 @@ GO
 
 
 /* ---------------------------------------------------------------------------
-   >>> MODULE 4 (Sinh viên 4) - Quản lý yêu cầu đăng ký & Duyệt hồ sơ
+   >>> MODULE 4 (KHIẾU QUỐC TOẢN) - Quản lý yêu cầu đăng ký & Duyệt hồ sơ
    Bảng: [YeuCauDangKy]
    --------------------------------------------------------------------------- */
 CREATE TABLE [YeuCauDangKy] (
@@ -193,7 +193,7 @@ GO
 
 
 /* ---------------------------------------------------------------------------
-   >>> MODULE 2 (Sinh viên 2) - Giáo viên & Giảng dạy
+   >>> MODULE 2 (TRẦN TRỌNG TRÁNG) - Giáo viên & Giảng dạy
    Bảng: [GiaoVien]
    --------------------------------------------------------------------------- */
 CREATE TABLE [GiaoVien] (
@@ -213,7 +213,7 @@ GO
 
 
 /* ---------------------------------------------------------------------------
-   >>> MODULE 3 (Sinh viên 3) - Quản lý thông tin học viên
+   >>> MODULE 3 (PHẠM THANH TÙNG) - Quản lý thông tin học viên
    Bảng: [HocVien]
    --------------------------------------------------------------------------- */
 CREATE TABLE [HocVien] (
@@ -357,7 +357,7 @@ GO
 
 
 /* ---------------------------------------------------------------------------
-   >>> MODULE 2 (Sinh viên 2) - Quản lý lớp học, Tìm kiếm, Lọc, Sắp xếp, Phân trang
+   >>> MODULE 2 (TRẦN TRỌNG TRÁNG) - Quản lý lớp học, Tìm kiếm, Lọc, Sắp xếp, Phân trang
    Bảng: [LopHoc]
    --------------------------------------------------------------------------- */
 CREATE TABLE [LopHoc] (
@@ -418,7 +418,7 @@ GO
 
 
 /* ---------------------------------------------------------------------------
-   >>> MODULE 3 (Sinh viên 3) - Đăng ký lớp học & Lịch sử đăng ký
+   >>> MODULE 3 (PHẠM THANH TÙNG) - Đăng ký lớp học & Lịch sử đăng ký
    Bảng: [DangKyHoc]
    --------------------------------------------------------------------------- */
 CREATE TABLE [DangKyHoc] (
@@ -559,7 +559,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 4 (Sinh viên 4) - Cấu hình hệ thống & Dashboard Thống kê doanh thu
+-- >>> MODULE 4 (KHIẾU QUỐC TOẢN) - Cấu hình hệ thống & Dashboard Thống kê doanh thu
 -- Dữ liệu bảng: [CauHinhHeThong] (1 bản ghi)
 -- ===========================================================================
 INSERT INTO [CauHinhHeThong] ([Khoa], [GiaTri], [MoTa], [NgayCapNhat]) VALUES
@@ -568,7 +568,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 1 (Sinh viên 1) - Tài khoản, Đăng nhập và phân quyền
+-- >>> MODULE 1 (VŨ TRƯỜNG AN) - Tài khoản, Đăng nhập và phân quyền
 -- Dữ liệu bảng: [TaiKhoan] (145 bản ghi)
 -- ===========================================================================
 SET IDENTITY_INSERT [TaiKhoan] ON;
@@ -724,7 +724,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 2 (Sinh viên 2) - Giáo viên & Giảng dạy
+-- >>> MODULE 2 (TRẦN TRỌNG TRÁNG) - Giáo viên & Giảng dạy
 -- Dữ liệu bảng: [GiaoVien] (35 bản ghi)
 -- ===========================================================================
 SET IDENTITY_INSERT [GiaoVien] ON;
@@ -769,7 +769,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 3 (Sinh viên 3) - Quản lý thông tin học viên
+-- >>> MODULE 3 (PHẠM THANH TÙNG) - Quản lý thông tin học viên
 -- Dữ liệu bảng: [HocVien] (109 bản ghi)
 -- ===========================================================================
 SET IDENTITY_INSERT [HocVien] ON;
@@ -889,7 +889,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 1 (Sinh viên 1) - Quản lý khóa học ngoại ngữ
+-- >>> MODULE 1 (VŨ TRƯỜNG AN) - Quản lý khóa học ngoại ngữ
 -- Dữ liệu bảng: [KhoaHoc] (38 bản ghi)
 -- ===========================================================================
 SET IDENTITY_INSERT [KhoaHoc] ON;
@@ -937,7 +937,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 2 (Sinh viên 2) - Quản lý lớp học, Tìm kiếm, Lọc, Sắp xếp, Phân trang
+-- >>> MODULE 2 (TRẦN TRỌNG TRÁNG) - Quản lý lớp học, Tìm kiếm, Lọc, Sắp xếp, Phân trang
 -- Dữ liệu bảng: [LopHoc] (45 bản ghi)
 -- ===========================================================================
 SET IDENTITY_INSERT [LopHoc] ON;
@@ -992,7 +992,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 3 (Sinh viên 3) - Đăng ký lớp học & Lịch sử đăng ký
+-- >>> MODULE 3 (PHẠM THANH TÙNG) - Đăng ký lớp học & Lịch sử đăng ký
 -- Dữ liệu bảng: [DangKyHoc] (566 bản ghi)
 -- ===========================================================================
 SET IDENTITY_INSERT [DangKyHoc] ON;
@@ -1573,7 +1573,7 @@ GO
 
 
 -- ===========================================================================
--- >>> MODULE 4 (Sinh viên 4) - Quản lý yêu cầu đăng ký & Duyệt hồ sơ
+-- >>> MODULE 4 (KHIẾU QUỐC TOẢN) - Quản lý yêu cầu đăng ký & Duyệt hồ sơ
 -- Dữ liệu bảng: [YeuCauDangKy] (4 bản ghi)
 -- ===========================================================================
 SET IDENTITY_INSERT [YeuCauDangKy] ON;

@@ -1,7 +1,7 @@
-# BÁO CÁO CÂU LỆNH LINQ - SINH VIÊN 4 (MODULE 4)
+# BÁO CÁO CÂU LỆNH LINQ - KHIẾU QUỐC TOẢN (MODULE 4)
 
 ## 📌 THÔNG TIN MODULE
-* **Sinh viên phụ trách**: Sinh viên 4
+* **Sinh viên phụ trách**: KHIẾU QUỐC TOẢN
 * **Tên Module**: Module 4 - Quản lý đăng ký – Dashboard – Thống kê
 * **Các bảng dữ liệu liên quan**: `DangKyHoc`, `HocVien`, `LopHoc`, `KhoaHoc`, `GiaoVien`
 * **File mã nguồn C#**: `LINQ_Module4_QuanLyDangKy_Dashboard_ThongKe.cs`

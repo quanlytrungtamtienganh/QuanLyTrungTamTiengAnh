@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 3 - SINH VIÊN 3: QUẢN LÝ HỌC VIÊN – ĐĂNG KÝ LỚP HỌC – LỊCH SỬ ĐĂNG KÝ]
+// [MODULE 3 - PHẠM THANH TÙNG: QUẢN LÝ HỌC VIÊN – ĐĂNG KÝ LỚP HỌC – LỊCH SỬ ĐĂNG KÝ]
 // Tên Tệp: HocVienController.cs
 // Mô tả: Chức năng: Quản lý hồ sơ học viên (Họ tên, SĐT, Email, Địa chỉ), Thêm, Chỉnh sửa thông tin, Xóa học viên
 // ============================================================================

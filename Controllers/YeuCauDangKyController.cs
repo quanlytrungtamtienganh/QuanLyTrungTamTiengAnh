@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 4 - SINH VIÊN 4: QUẢN LÝ ĐĂNG KÝ – DASHBOARD – THỐNG KÊ]
+// [MODULE 4 - KHIẾU QUỐC TOẢN: QUẢN LÝ ĐĂNG KÝ – DASHBOARD – THỐNG KÊ]
 // Tên Tệp: YeuCauDangKyController.cs
 // Mô tả: Chức năng: Giao diện quản lý đăng ký (Mã ĐK, Khóa học, Lớp học, Trạng thái, Học phí), Duyệt/Từ chối hồ sơ đăng ký
 // ============================================================================

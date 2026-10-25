@@ -1,7 +1,7 @@
-# BÁO CÁO CÂU LỆNH LINQ - SINH VIÊN 1 (MODULE 1)
+# BÁO CÁO CÂU LỆNH LINQ - VŨ TRƯỜNG AN (MODULE 1)
 
 ## 📌 THÔNG TIN MODULE
-* **Sinh viên phụ trách**: Sinh viên 1
+* **Sinh viên phụ trách**: VŨ TRƯỜNG AN
 * **Tên Module**: Module 1 - Tài khoản – Đăng nhập và phân quyền – Quản lý khóa học
 * **Các bảng dữ liệu liên quan**: `TaiKhoan`, `HocVien`, `GiaoVien`, `KhoaHoc`, `LopHoc`, `BinhLuan`
 * **File mã nguồn C#**: `LINQ_Module1_TaiKhoan_KhoaHoc.cs`

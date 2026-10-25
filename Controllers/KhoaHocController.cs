@@ -1,5 +1,5 @@
 // ============================================================================
-// [MODULE 1 - SINH VIÊN 1: TÀI KHOẢN – ĐĂNG NHẬP VÀ PHÂN QUYỀN – QUẢN LÝ KHÓA HỌC]
+// [MODULE 1 - VŨ TRƯỜNG AN: TÀI KHOẢN – ĐĂNG NHẬP VÀ PHÂN QUYỀN – QUẢN LÝ KHÓA HỌC]
 // Tên Tệp: KhoaHocController.cs
 // Mô tả: Chức năng: Quản lý danh mục khóa học ngoại ngữ, Thêm/Sửa/Xóa khóa học, Tìm kiếm & hiển thị khóa học
 // ============================================================================
