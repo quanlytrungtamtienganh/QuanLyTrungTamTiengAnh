@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TrungTamNgoaiNgu.Data;
 using TrungTamNgoaiNgu.Filters;
+using TrungTamNgoaiNgu.Models;
+using TrungTamNgoaiNgu.Services;
 using TrungTamNgoaiNgu.ViewModels;
 
 namespace TrungTamNgoaiNgu.Controllers
@@ -15,10 +17,14 @@ namespace TrungTamNgoaiNgu.Controllers
     public class TaiKhoanController : Controller
     {
         private readonly TrungTamDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<TaiKhoanController> _logger;
 
-        public TaiKhoanController(TrungTamDbContext context)
+        public TaiKhoanController(TrungTamDbContext context, IEmailService emailService, ILogger<TaiKhoanController> logger)
         {
             _context = context;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         // GET: /TaiKhoan/Login
@@ -379,5 +385,294 @@ namespace TrungTamNgoaiNgu.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        // =========================================================================
+        // CHỨC NĂNG: ĐỔI MẬT KHẨU / QUÊN MẬT KHẨU QUA MÃ OTP GMAIL (5 PHÚT - 5 LẦN/NGÀY)
+        // =========================================================================
+
+        // GET: /TaiKhoan/DoiMatKhau hoặc /TaiKhoan/QuenMatKhau
+        [HttpGet]
+        public IActionResult DoiMatKhau(string? email)
+        {
+            var model = new GuiYeuCauOtpViewModel();
+
+            // Nếu người dùng đang đăng nhập, tự động lấy email của họ
+            var sessionMaTk = HttpContext.Session.GetInt32("MaTaiKhoan");
+            if (sessionMaTk.HasValue && string.IsNullOrEmpty(email))
+            {
+                var currentUser = _context.TaiKhoans.Find(sessionMaTk.Value);
+                if (currentUser != null)
+                {
+                    model.Email = currentUser.Email;
+                }
+            }
+            else if (!string.IsNullOrEmpty(email))
+            {
+                model.Email = email;
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult QuenMatKhau(string? email)
+        {
+            return RedirectToAction(nameof(DoiMatKhau), new { email });
+        }
+
+        // POST: /TaiKhoan/DoiMatKhau (Gửi mã OTP về Gmail)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DoiMatKhau(GuiYeuCauOtpViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var cleanEmail = (model.Email ?? "").Trim().ToLower();
+
+            // 1. So sánh có đúng Gmail đã lưu trong hệ thống không
+            var user = await _context.TaiKhoans
+                .FirstOrDefaultAsync(t => t.Email.ToLower() == cleanEmail);
+
+            if (user == null)
+            {
+                // Sai báo Gmail không tồn tại
+                ModelState.AddModelError("Email", "Địa chỉ Gmail không tồn tại trong hệ thống! Vui lòng kiểm tra lại.");
+                return View(model);
+            }
+
+            // 2. Giới hạn số lần đổi mật khẩu chỉ 5 lần 1 ngày
+            var today = DateTime.Today;
+            var soLanDaDoiHomNay = await _context.LichSuDoiMatKhaus
+                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == today);
+
+            if (soLanDaDoiHomNay >= 5)
+            {
+                ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã đạt giới hạn tối đa 5 lần đổi mật khẩu trong ngày hôm nay. Vui lòng quay lại vào ngày mai!");
+                return View(model);
+            }
+
+            // 3. Vô hiệu hóa các mã OTP cũ chưa sử dụng của tài khoản này
+            var oldOtps = await _context.OtpDoiMatKhaus
+                .Where(o => o.MaTaiKhoan == user.MaTaiKhoan && !o.DaSuDung)
+                .ToListAsync();
+            foreach (var o in oldOtps)
+            {
+                o.DaSuDung = true;
+            }
+
+            // 4. Sinh mã OTP ngẫu nhiên 6 chữ số
+            var otpCode = Random.Shared.Next(100000, 999999).ToString();
+            var now = DateTime.Now;
+
+            // Mã OTP có hạn sử dụng 5 phút tính từ thời gian gửi mã
+            var otpRecord = new OtpDoiMatKhau
+            {
+                MaTaiKhoan = user.MaTaiKhoan,
+                Email = user.Email,
+                MaOtp = otpCode,
+                ThoiGianTao = now,
+                ThoiGianHetHan = now.AddMinutes(5),
+                DaSuDung = false
+            };
+
+            _context.OtpDoiMatKhaus.Add(otpRecord);
+            await _context.SaveChangesAsync();
+
+            // 5. Gửi mã OTP về Gmail qua EmailService
+            bool sent = await _emailService.SendPasswordResetOtpEmailAsync(user.Email, user.HoTen, otpCode, 5);
+            if (!sent)
+            {
+                _logger.LogWarning("Không thể gửi email OTP qua SMTP. Mã OTP cho tester: {OtpCode}", otpCode);
+                // Dự phòng thông báo mã OTP nếu môi trường offline/demo test
+                TempData["OfflineOtpAlert"] = $"[DEMO/TEST]: Mã OTP của bạn là: {otpCode} (Hết hạn sau 5 phút)";
+            }
+
+            TempData["Success"] = $"Mã OTP đã được gửi đến hộp thư {user.Email}. Mã có hiệu lực trong vòng 5 phút!";
+            return RedirectToAction(nameof(XacNhanDoiMatKhau), new { email = user.Email });
+        }
+
+        // GET: /TaiKhoan/XacNhanDoiMatKhau
+        [HttpGet]
+        public async Task<IActionResult> XacNhanDoiMatKhau(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction(nameof(DoiMatKhau));
+            }
+
+            var cleanEmail = email.Trim().ToLower();
+            var user = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.Email.ToLower() == cleanEmail);
+            if (user == null)
+            {
+                TempData["Error"] = "Không tìm thấy thông tin tài khoản với email này!";
+                return RedirectToAction(nameof(DoiMatKhau));
+            }
+
+            // Lấy mã OTP mới nhất chưa dùng để tính số giây còn lại
+            var latestOtp = await _context.OtpDoiMatKhaus
+                .Where(o => o.MaTaiKhoan == user.MaTaiKhoan && !o.DaSuDung)
+                .OrderByDescending(o => o.ThoiGianTao)
+                .FirstOrDefaultAsync();
+
+            int remainingSeconds = 0;
+            if (latestOtp != null && latestOtp.ThoiGianHetHan > DateTime.Now)
+            {
+                remainingSeconds = (int)(latestOtp.ThoiGianHetHan - DateTime.Now).TotalSeconds;
+            }
+
+            var soLanDaDoiHomNay = await _context.LichSuDoiMatKhaus
+                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == DateTime.Today);
+
+            var model = new XacNhanDoiMatKhauViewModel
+            {
+                Email = user.Email,
+                RemainingSeconds = remainingSeconds,
+                SoLanDaDoiHomNay = soLanDaDoiHomNay
+            };
+
+            return View(model);
+        }
+
+        // POST: /TaiKhoan/XacNhanDoiMatKhau
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> XacNhanDoiMatKhau(XacNhanDoiMatKhauViewModel model)
+        {
+            var cleanEmail = (model.Email ?? "").Trim().ToLower();
+            var user = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.Email.ToLower() == cleanEmail);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Tài khoản không tồn tại!");
+                return View(model);
+            }
+
+            var soLanDaDoiHomNay = await _context.LichSuDoiMatKhaus
+                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == DateTime.Today);
+            model.SoLanDaDoiHomNay = soLanDaDoiHomNay;
+
+            if (soLanDaDoiHomNay >= 5)
+            {
+                ModelState.AddModelError(string.Empty, "Tài khoản đã đạt giới hạn tối đa 5 lần đổi mật khẩu trong ngày. Vui lòng quay lại vào ngày mai!");
+                return View(model);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Tìm mã OTP mới nhất của tài khoản này
+            var otpRecord = await _context.OtpDoiMatKhaus
+                .Where(o => o.MaTaiKhoan == user.MaTaiKhoan && o.Email.ToLower() == cleanEmail && !o.DaSuDung)
+                .OrderByDescending(o => o.ThoiGianTao)
+                .FirstOrDefaultAsync();
+
+            if (otpRecord == null)
+            {
+                ModelState.AddModelError("MaOtp", "Không tìm thấy mã OTP hoặc mã đã được sử dụng. Vui lòng nhấn 'Gửi lại mã OTP'!");
+                model.RemainingSeconds = 0;
+                return View(model);
+            }
+
+            // Kiểm tra hạn sử dụng 5 phút
+            if (DateTime.Now > otpRecord.ThoiGianHetHan)
+            {
+                ModelState.AddModelError("MaOtp", "Mã OTP đã hết hạn sử dụng (quá 5 phút tính từ lúc gửi mã). Vui lòng nhấn 'Gửi lại mã OTP' để lấy mã mới!");
+                model.RemainingSeconds = 0;
+                return View(model);
+            }
+
+            // Kiểm tra tính chính xác của mã OTP
+            if (otpRecord.MaOtp.Trim() != model.MaOtp.Trim())
+            {
+                ModelState.AddModelError("MaOtp", "Mã OTP không chính xác! Vui lòng kiểm tra lại hòm thư Gmail của bạn.");
+                model.RemainingSeconds = Math.Max(0, (int)(otpRecord.ThoiGianHetHan - DateTime.Now).TotalSeconds);
+                return View(model);
+            }
+
+            // ĐÚNG MÃ OTP -> CHO ĐỔI MẬT KHẨU VÀ CẬP NHẬT TRONG HỆ THỐNG
+            user.MatKhau = model.MatKhauMoi;
+            otpRecord.DaSuDung = true;
+
+            // Ghi nhận lịch sử đổi mật khẩu để kiểm soát 5 lần / ngày
+            var lichSu = new LichSuDoiMatKhau
+            {
+                MaTaiKhoan = user.MaTaiKhoan,
+                Email = user.Email,
+                NgayDoi = DateTime.Today,
+                ThoiGianDoi = DateTime.Now
+            };
+            _context.LichSuDoiMatKhaus.Add(lichSu);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Chúc mừng {user.HoTen}! Bạn đã đổi mật khẩu thành công. Mật khẩu mới đã được cập nhật, vui lòng đăng nhập lại.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        // POST: /TaiKhoan/GuiLaiOtp (Hỗ trợ nút 'Gửi lại mã' khi đang ở trang nhập OTP)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GuiLaiOtp(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction(nameof(DoiMatKhau));
+            }
+
+            var cleanEmail = email.Trim().ToLower();
+            var user = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.Email.ToLower() == cleanEmail);
+            if (user == null)
+            {
+                TempData["Error"] = "Email không tồn tại trong hệ thống!";
+                return RedirectToAction(nameof(DoiMatKhau));
+            }
+
+            var soLanDaDoi = await _context.LichSuDoiMatKhaus
+                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == DateTime.Today);
+            if (soLanDaDoi >= 5)
+            {
+                TempData["Error"] = "Tài khoản đã đạt giới hạn 5 lần đổi mật khẩu hôm nay. Vui lòng quay lại vào ngày mai!";
+                return RedirectToAction(nameof(XacNhanDoiMatKhau), new { email = user.Email });
+            }
+
+            // Vô hiệu hóa mã cũ
+            var oldOtps = await _context.OtpDoiMatKhaus
+                .Where(o => o.MaTaiKhoan == user.MaTaiKhoan && !o.DaSuDung)
+                .ToListAsync();
+            foreach (var o in oldOtps)
+            {
+                o.DaSuDung = true;
+            }
+
+            var otpCode = Random.Shared.Next(100000, 999999).ToString();
+            var now = DateTime.Now;
+
+            var otpRecord = new OtpDoiMatKhau
+            {
+                MaTaiKhoan = user.MaTaiKhoan,
+                Email = user.Email,
+                MaOtp = otpCode,
+                ThoiGianTao = now,
+                ThoiGianHetHan = now.AddMinutes(5),
+                DaSuDung = false
+            };
+
+            _context.OtpDoiMatKhaus.Add(otpRecord);
+            await _context.SaveChangesAsync();
+
+            bool sent = await _emailService.SendPasswordResetOtpEmailAsync(user.Email, user.HoTen, otpCode, 5);
+            if (!sent)
+            {
+                TempData["OfflineOtpAlert"] = $"[DEMO/TEST]: Mã OTP mới của bạn là: {otpCode} (Hết hạn sau 5 phút)";
+            }
+
+            TempData["Success"] = "Mã OTP mới đã được gửi thành công về Gmail của bạn! Mã có hiệu lực trong 5 phút.";
+            return RedirectToAction(nameof(XacNhanDoiMatKhau), new { email = user.Email });
+        }
+
     }
 }

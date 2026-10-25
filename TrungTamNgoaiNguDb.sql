@@ -554,6 +554,45 @@ GO
 
 
 -- ===========================================================================
+
+/* ---------------------------------------------------------------------------
+   >>> MODULE 1 (VŨ TRƯỜNG AN) - Mã xác thực OTP đổi mật khẩu (Hiệu lực 5 phút)
+   Bảng: [OtpDoiMatKhau]
+   --------------------------------------------------------------------------- */
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='OtpDoiMatKhau' and xtype='U')
+BEGIN
+    CREATE TABLE [OtpDoiMatKhau] (
+        [Id] int NOT NULL IDENTITY,
+        [MaTaiKhoan] int NOT NULL,
+        [Email] nvarchar(100) NOT NULL,
+        [MaOtp] nvarchar(10) NOT NULL,
+        [ThoiGianTao] datetime2 NOT NULL DEFAULT GETDATE(),
+        [ThoiGianHetHan] datetime2 NOT NULL,
+        [DaSuDung] bit NOT NULL DEFAULT 0,
+        CONSTRAINT [PK_OtpDoiMatKhau] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_OtpDoiMatKhau_TaiKhoan_MaTaiKhoan] FOREIGN KEY ([MaTaiKhoan]) REFERENCES [TaiKhoan] ([MaTaiKhoan]) ON DELETE CASCADE
+    );
+END
+GO
+
+/* ---------------------------------------------------------------------------
+   >>> MODULE 1 (VŨ TRƯỜNG AN) - Lịch sử đổi mật khẩu (Giới hạn tối đa 5 lần/ngày)
+   Bảng: [LichSuDoiMatKhau]
+   --------------------------------------------------------------------------- */
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='LichSuDoiMatKhau' and xtype='U')
+BEGIN
+    CREATE TABLE [LichSuDoiMatKhau] (
+        [Id] int NOT NULL IDENTITY,
+        [MaTaiKhoan] int NOT NULL,
+        [Email] nvarchar(100) NOT NULL,
+        [NgayDoi] date NOT NULL DEFAULT CAST(GETDATE() AS DATE),
+        [ThoiGianDoi] datetime2 NOT NULL DEFAULT GETDATE(),
+        CONSTRAINT [PK_LichSuDoiMatKhau] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_LichSuDoiMatKhau_TaiKhoan_MaTaiKhoan] FOREIGN KEY ([MaTaiKhoan]) REFERENCES [TaiKhoan] ([MaTaiKhoan]) ON DELETE CASCADE
+    );
+END
+GO
+
 -- 2. NẠP DỮ LIỆU ĐẦY ĐỦ CHO TẤT CẢ CÁC BẢNG (DATA SEED / INSERTS)
 -- ===========================================================================
 

@@ -159,6 +159,20 @@ erDiagram
   - `MaKhoaHoc` (INT, PK, Identity): Mã khóa học.
   - `TenKhoaHoc` (NVARCHAR(150)), `NgoaiNgu` (NVARCHAR(50) - 'TiengAnh'/'TiengHan'/'TiengTrung'/'TiengNhat').
   - `CapDo` (NVARCHAR(50)), `HocPhi` (DECIMAL(18,2)), `SoBuoi` (INT), `MoTa` (NVARCHAR(MAX)), `TrangThai` (NVARCHAR(50)).
+- **`OtpDoiMatKhau`** (Bảng quản lý mã OTP đổi mật khẩu):
+  - `Id` (INT, PK, Identity): Mã định danh phiên OTP.
+  - `MaTaiKhoan` (INT, FK $ightarrow$ TaiKhoan): Tài khoản yêu cầu đổi mật khẩu.
+  - `Email` (NVARCHAR(100)): Địa chỉ Gmail nhận mã OTP.
+  - `MaOtp` (NVARCHAR(10)): Mã OTP 6 chữ số ngẫu nhiên.
+  - `ThoiGianTao` (DATETIME2): Thời điểm phát sinh mã.
+  - `ThoiGianHetHan` (DATETIME2): Thời điểm hết hạn (chính xác 5 phút sau thời điểm tạo).
+  - `DaSuDung` (BIT): Cờ đánh dấu mã OTP đã được sử dụng hay chưa.
+- **`LichSuDoiMatKhau`** (Bảng quản lý giới hạn 5 lần/ngày):
+  - `Id` (INT, PK, Identity): Mã định danh lịch sử đổi.
+  - `MaTaiKhoan` (INT, FK $ightarrow$ TaiKhoan): Tài khoản thực hiện đổi.
+  - `Email` (NVARCHAR(100)): Gmail tài khoản.
+  - `NgayDoi` (DATE): Ngày đổi mật khẩu (dùng kiểm soát điều kiện $\le 5$ lần / ngày).
+  - `ThoiGianDoi` (DATETIME2): Thời điểm cụ thể đổi mật khẩu thành công.
 
 #### 2. Module 2: Lớp Học & Giảng Viên (TRẦN TRỌNG TRÁNG)
 - **`LopHoc`**:

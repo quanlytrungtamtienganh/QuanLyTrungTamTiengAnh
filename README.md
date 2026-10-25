@@ -50,15 +50,26 @@ Dự án được phân chia thành **04 Module chính** tương ứng với 04 
 
 ### 4.1. VŨ TRƯỜNG AN – Module 1: Tài Khoản – Đăng Nhập & Phân Quyền – Quản Lý Khóa Học
 - **Nghiệp vụ chi tiết**:
-  - Đăng ký tài khoản, đăng nhập hệ thống, đổi mật khẩu, xác thực phiên làm việc (`Session`).
+  - Đăng ký tài khoản, đăng nhập hệ thống, xác thực phiên làm việc (`Session`).
+  - **Đổi mật khẩu / Quên mật khẩu qua mã OTP Gmail**:
+    + Người dùng nhập Gmail tài khoản cần đổi mật khẩu $ightarrow$ hệ thống so sánh với CSDL.
+    + Nếu Gmail không tồn tại: báo lỗi rõ ràng `"Địa chỉ Gmail không tồn tại trong hệ thống! Vui lòng kiểm tra lại."`.
+    + Nếu đúng: sinh mã OTP 6 chữ số ngẫu nhiên gửi về hòm thư Gmail qua dịch vụ SMTP.
+    + Mã OTP chỉ có tác dụng cho đúng tài khoản đang yêu cầu đổi.
+    + Hạn sử dụng mã OTP chính xác **5 phút** tính từ thời gian gửi; quá 5 phút mã tự động hết hạn và không thể sử dụng.
+    + Giới hạn số lần đổi mật khẩu chỉ **5 lần 1 ngày** (quản lý qua bảng `LichSuDoiMatKhau`).
+    + Màn hình xác nhận có bộ đếm ngược thời gian thực 5 phút (JavaScript countdown) và nút gửi lại mã.
+    + Xác nhận đúng mã OTP và mật khẩu mới hợp lệ ($\ge 6$ ký tự) sẽ cập nhật ngay mật khẩu trong hệ thống.
   - Phân quyền người dùng dựa trên 3 vai trò: `Admin`, `GiaoVien`, `HocVien`.
   - Quản lý danh sách tài khoản: hiển thị STT, Mã tài khoản, Tên đăng nhập, Họ tên, Email, Vai trò, Trạng thái; Chỉnh sửa thông tin và Xóa tài khoản.
   - Quản lý danh mục khóa học ngoại ngữ: Thêm, Sửa, Xóa, Xem chi tiết khóa học, quản lý học phí và số buổi.
 - **Tên tệp tin thực hiện**:
   - Tệp Controller: `TaiKhoanController.cs`, `KhoaHocController.cs`
-  - Tệp Model: `TaiKhoan.cs`, `KhoaHoc.cs`
-  - Tệp Giao diện: `DangNhap.cshtml`, `DangKy.cshtml`, `Index.cshtml` (Quản lý tài khoản), `Edit.cshtml`, `Create.cshtml`, `Details.cshtml`, `Delete.cshtml`
-  - Bảng CSDL: `TaiKhoan`, `KhoaHoc`
+  - Tệp Model: `TaiKhoan.cs`, `KhoaHoc.cs`, `OtpDoiMatKhau.cs`, `LichSuDoiMatKhau.cs`
+  - Tệp ViewModel: `DoiMatKhauViewModel.cs`
+  - Tệp Dịch vụ: `EmailService.cs`, `IEmailService.cs`
+  - Tệp Giao diện: `Login.cshtml`, `DangKy.cshtml`, `DoiMatKhau.cshtml`, `XacNhanDoiMatKhau.cshtml`, `Profile.cshtml`, `Index.cshtml`, `Edit.cshtml`, `Create.cshtml`, `Details.cshtml`, `Delete.cshtml`
+  - Bảng CSDL: `TaiKhoan`, `KhoaHoc`, `OtpDoiMatKhau`, `LichSuDoiMatKhau`
 
 ### 4.2. TRẦN TRỌNG TRÁNG – Module 2: Quản Lý Lớp Học – Tìm Kiếm – Lọc – Sắp Xếp – Phân Trang
 - **Nghiệp vụ chi tiết**:

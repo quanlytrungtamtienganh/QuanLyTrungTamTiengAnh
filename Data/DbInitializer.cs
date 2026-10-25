@@ -49,6 +49,36 @@ namespace TrungTamNgoaiNgu.Data
                 ");
 
                 context.Database.ExecuteSqlRaw(@"
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='OtpDoiMatKhau' and xtype='U')
+                    BEGIN
+                        CREATE TABLE [OtpDoiMatKhau] (
+                            [Id] int NOT NULL IDENTITY,
+                            [MaTaiKhoan] int NOT NULL,
+                            [Email] nvarchar(100) NOT NULL,
+                            [MaOtp] nvarchar(10) NOT NULL,
+                            [ThoiGianTao] datetime2 NOT NULL DEFAULT GETDATE(),
+                            [ThoiGianHetHan] datetime2 NOT NULL,
+                            [DaSuDung] bit NOT NULL DEFAULT 0,
+                            CONSTRAINT [PK_OtpDoiMatKhau] PRIMARY KEY ([Id]),
+                            CONSTRAINT [FK_OtpDoiMatKhau_TaiKhoan_MaTaiKhoan] FOREIGN KEY ([MaTaiKhoan]) REFERENCES [TaiKhoan] ([MaTaiKhoan]) ON DELETE CASCADE
+                        );
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='LichSuDoiMatKhau' and xtype='U')
+                    BEGIN
+                        CREATE TABLE [LichSuDoiMatKhau] (
+                            [Id] int NOT NULL IDENTITY,
+                            [MaTaiKhoan] int NOT NULL,
+                            [Email] nvarchar(100) NOT NULL,
+                            [NgayDoi] date NOT NULL DEFAULT CAST(GETDATE() AS DATE),
+                            [ThoiGianDoi] datetime2 NOT NULL DEFAULT GETDATE(),
+                            CONSTRAINT [PK_LichSuDoiMatKhau] PRIMARY KEY ([Id]),
+                            CONSTRAINT [FK_LichSuDoiMatKhau_TaiKhoan_MaTaiKhoan] FOREIGN KEY ([MaTaiKhoan]) REFERENCES [TaiKhoan] ([MaTaiKhoan]) ON DELETE CASCADE
+                        );
+                    END
+                ");
+
+                context.Database.ExecuteSqlRaw(@"
                     IF NOT EXISTS (
                         SELECT * FROM sys.columns 
                         WHERE object_id = OBJECT_ID(N'[LopHoc]') AND name = 'MaGiaoVien'

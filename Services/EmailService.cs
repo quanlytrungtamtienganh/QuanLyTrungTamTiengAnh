@@ -7,6 +7,7 @@ namespace TrungTamNgoaiNgu.Services
     public interface IEmailService
     {
         Task SendAccountCreatedEmailAsync(string toEmail, string toName, string username, string password, string role);
+        Task<bool> SendPasswordResetOtpEmailAsync(string toEmail, string toName, string otpCode, int expiryMinutes = 5);
     }
 
     public class EmailService : IEmailService
@@ -103,6 +104,87 @@ namespace TrungTamNgoaiNgu.Services
             {
                 _logger.LogError(ex, "Lỗi khi gửi email tới {Email}", toEmail);
                 // Không throw - lỗi email không nên làm hỏng luồng tạo tài khoản
+            }
+        }
+
+        public async Task<bool> SendPasswordResetOtpEmailAsync(string toEmail, string toName, string otpCode, int expiryMinutes = 5)
+        {
+            try
+            {
+                var smtpHost = _config["Email:SmtpHost"] ?? "smtp.gmail.com";
+                var smtpPort = int.Parse(_config["Email:SmtpPort"] ?? "587");
+                var smtpUser = _config["Email:Username"] ?? "";
+                var smtpPass = _config["Email:Password"] ?? "";
+                var fromName = _config["Email:FromName"] ?? "Trung Tâm Ngoại Ngữ";
+
+                if (string.IsNullOrWhiteSpace(smtpUser) || string.IsNullOrWhiteSpace(smtpPass))
+                {
+                    _logger.LogWarning("Email chưa được cấu hình. Mã OTP cho {Email} là: {Otp}", toEmail, otpCode);
+                    return false;
+                }
+
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(fromName, smtpUser));
+                message.To.Add(new MailboxAddress(toName, toEmail));
+                message.Subject = $"[{fromName}] Mã OTP xác nhận đổi mật khẩu: {otpCode}";
+
+                var bodyBuilder = new BodyBuilder();
+                bodyBuilder.HtmlBody = $@"
+<!DOCTYPE html>
+<html lang='vi'>
+<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'></head>
+<body style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; margin:0; padding:20px 0;'>
+  <div style='max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e4e6eb;'>
+    <div style='background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 32px 30px; text-align: center; color: #ffffff;'>
+      <div style='font-size: 32px; margin-bottom: 8px;'>🔐</div>
+      <h1 style='font-size: 22px; font-weight: 800; margin: 0;'>Trung Tâm Ngoại Ngữ</h1>
+      <p style='margin: 6px 0 0; font-size: 14px; opacity: 0.9;'>Yêu cầu đổi mật khẩu tài khoản</p>
+    </div>
+    <div style='padding: 32px 30px;'>
+      <p style='font-size: 15px; color: #1c1e21; margin: 0 0 16px; line-height: 1.6;'>
+        Xin chào <strong>{toName}</strong>,
+      </p>
+      <p style='font-size: 15px; color: #4b5563; margin: 0 0 20px; line-height: 1.6;'>
+        Hệ thống nhận được yêu cầu đổi mật khẩu cho tài khoản liên kết với địa chỉ Gmail này. Dưới đây là mã xác thực OTP của bạn:
+      </p>
+      <div style='background: #f8fafc; border: 2px dashed #2563eb; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0;'>
+        <div style='font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;'>MÃ XÁC THỰC OTP</div>
+        <div style='font-size: 38px; font-weight: 900; color: #1e3a8a; letter-spacing: 8px; font-family: monospace;'>{otpCode}</div>
+      </div>
+      <div style='background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px 16px; border-radius: 0 8px 8px 0; margin-bottom: 24px;'>
+        <p style='margin: 0; font-size: 13.5px; color: #92400e; line-height: 1.5;'>
+          ⏱️ <strong>Thời hạn hiệu lực:</strong> Mã OTP có hiệu lực trong vòng <strong>{expiryMinutes} phút</strong> kể từ thời điểm gửi mã. Sau thời gian này mã sẽ tự động vô hiệu hóa.
+        </p>
+        <p style='margin: 6px 0 0; font-size: 13px; color: #b45309;'>
+          🔒 <strong>Bảo mật:</strong> Mã OTP này chỉ có tác dụng riêng cho tài khoản của bạn và giới hạn tối đa 5 lần đổi mật khẩu mỗi ngày. Tuyệt đối không chia sẻ mã này cho bất kỳ ai!
+        </p>
+      </div>
+      <p style='font-size: 13px; color: #6b7280; line-height: 1.5; margin: 0;'>
+        Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email hoặc thông báo ngay cho ban quản trị trung tâm để bảo đảm an toàn cho tài khoản.
+      </p>
+    </div>
+    <div style='background: #f9fafb; padding: 18px 30px; text-align: center; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;'>
+      Hệ Thống Quản Lý Trung Tâm Ngoại Ngữ &bull; Hỗ trợ: admin@educenter.edu.vn
+    </div>
+  </div>
+</body>
+</html>";
+
+                message.Body = bodyBuilder.ToMessageBody();
+
+                using var client = new SmtpClient();
+                await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
+                await client.AuthenticateAsync(smtpUser, smtpPass);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+
+                _logger.LogInformation("Đã gửi email OTP đổi mật khẩu thành công tới {Email}", toEmail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi gửi email OTP tới {Email}", toEmail);
+                return false;
             }
         }
     }

@@ -24,6 +24,8 @@ namespace TrungTamNgoaiNgu.Data
         public DbSet<CauHinhHeThong> CauHinhHeThongs { get; set; } = null!;
         public DbSet<ThichBaiViet> ThichBaiViets { get; set; } = null!;
         public DbSet<YeuCauDangKy> YeuCauDangKys { get; set; } = null!;
+        public DbSet<OtpDoiMatKhau> OtpDoiMatKhaus { get; set; } = null!;
+        public DbSet<LichSuDoiMatKhau> LichSuDoiMatKhaus { get; set; } = null!;
 
         // Hệ thống Luyện thi trực tuyến (Study4 Style)
         public DbSet<DeThi> DeThis { get; set; } = null!;
