@@ -51,17 +51,25 @@ Dự án được phân chia thành **04 Module chính** tương ứng với 04 
 ### 4.1. VŨ TRƯỜNG AN – Module 1: Tài Khoản – Đăng Nhập & Phân Quyền – Quản Lý Khóa Học
 - **Nghiệp vụ chi tiết**:
   - Đăng ký tài khoản, đăng nhập hệ thống, xác thực phiên làm việc (`Session`).
-  - **Đổi mật khẩu / Quên mật khẩu qua mã OTP Gmail**:
-    + Người dùng nhập Gmail tài khoản cần đổi mật khẩu $ightarrow$ hệ thống so sánh với CSDL.
+  - **Đổi mật khẩu / Quên mật khẩu qua mã OTP Gmail (Hiệu lực 5 phút - Giới hạn 5 lần gửi mã/ngày)**:
+    + Người dùng nhập Gmail tài khoản cần đổi mật khẩu $\rightarrow$ hệ thống đối chiếu với CSDL.
     + Nếu Gmail không tồn tại: báo lỗi rõ ràng `"Địa chỉ Gmail không tồn tại trong hệ thống! Vui lòng kiểm tra lại."`.
-    + Nếu đúng: sinh mã OTP 6 chữ số ngẫu nhiên gửi về hòm thư Gmail qua dịch vụ SMTP.
-    + Mã OTP chỉ có tác dụng cho đúng tài khoản đang yêu cầu đổi.
-    + Hạn sử dụng mã OTP chính xác **5 phút** tính từ thời gian gửi; quá 5 phút mã tự động hết hạn và không thể sử dụng.
-    + Giới hạn số lần đổi mật khẩu chỉ **5 lần 1 ngày** (quản lý qua bảng `LichSuDoiMatKhau`).
+    + Nếu đúng: sinh duy nhất **01 mã OTP** 6 chữ số ngẫu nhiên gửi về hòm thư Gmail qua dịch vụ SMTP (khắc phục triệt để tình trạng gửi trùng nhiều mã cùng lúc).
+    + Mã OTP chỉ có tác dụng duy nhất cho đúng tài khoản đang yêu cầu đổi mật khẩu.
+    + Hạn sử dụng mã OTP chính xác **5 phút** tính từ thời gian gửi; quá 5 phút mã tự động vô hiệu hóa và không thể sử dụng.
+    + Giới hạn số lần gửi mã OTP và đổi mật khẩu tối đa **5 lần trong 1 ngày** cho mỗi tài khoản (kiểm soát chặt chẽ qua bảng `OtpDoiMatKhau` và `LichSuDoiMatKhau`).
     + Màn hình xác nhận có bộ đếm ngược thời gian thực 5 phút (JavaScript countdown) và nút gửi lại mã.
-    + Xác nhận đúng mã OTP và mật khẩu mới hợp lệ ($\ge 6$ ký tự) sẽ cập nhật ngay mật khẩu trong hệ thống.
+    + Tích hợp cơ chế khóa nút chống spam / chống nhấn đúp (Anti-Double-Click), tự động khóa nút gửi lại mã khi đã đạt ngưỡng 5 lần trong ngày.
+    + Sau khi xác nhận đúng mã OTP và mật khẩu mới hợp lệ ($\ge 6$ ký tự), hệ thống tự động cập nhật ngay mật khẩu mới trong hệ thống.
   - Phân quyền người dùng dựa trên 3 vai trò: `Admin`, `GiaoVien`, `HocVien`.
-  - Quản lý danh sách tài khoản: hiển thị STT, Mã tài khoản, Tên đăng nhập, Họ tên, Email, Vai trò, Trạng thái; Chỉnh sửa thông tin và Xóa tài khoản.
+  - **Quản lý danh sách tài khoản & Chức năng Xóa tài khoản an toàn cho Admin (Safe Cascade Delete)**:
+    + Hiển thị danh sách tài khoản: STT, Mã tài khoản, Tên đăng nhập, Họ tên, Email, Vai trò, Trạng thái hoạt động.
+    + Tích hợp Modal xác nhận xóa nhanh trực tiếp trên bảng danh sách tài khoản (`Index.cshtml`) và trang xác nhận xóa độc lập (`Delete.cshtml`).
+    + **Cơ chế Safe Cascade Delete tự động dọn dẹp an toàn các liên kết khóa ngoại**:
+      * Xóa sạch các bản ghi phụ thuộc liên quan đến tài khoản: `DangKyHoc`, `BinhLuan`, `BaiViet`, `ThichBaiViet`, `ThanhVienNhom`, `TinNhan` (cả người gửi và người nhận), `OtpDoiMatKhau`, `LichSuDoiMatKhau`.
+      * Bảo toàn dữ liệu lớp học: tự động gỡ phân công giảng dạy (`MaGiaoVien = null`) để lớp học vẫn được lưu giữ và phân công giảng viên mới thay thế mà không gây lỗi ràng buộc Foreign Key.
+      * Xóa hồ sơ tương ứng trong `HocVien` hoặc `GiaoVien`.
+    + **Cơ chế bảo vệ đặc quyền**: Tuyệt đối chặn Admin tự xóa chính tài khoản của mình đang đăng nhập.
   - Quản lý danh mục khóa học ngoại ngữ: Thêm, Sửa, Xóa, Xem chi tiết khóa học, quản lý học phí và số buổi.
 - **Tên tệp tin thực hiện**:
   - Tệp Controller: `TaiKhoanController.cs`, `KhoaHocController.cs`
@@ -104,14 +112,20 @@ Dự án được phân chia thành **04 Module chính** tương ứng với 04 
 ### 4.4. KHIẾU QUỐC TOẢN – Module 4: Quản Lý Đăng Ký – Dashboard – Thống Kê
 - **Nghiệp vụ chi tiết**:
   - **Quản lý đăng ký (Mục 4.18)**: Hiển thị danh sách đơn đăng ký gồm Mã đăng ký, Khóa học, Lớp học, Trạng thái (Chờ duyệt, Đã duyệt, Đã hủy), Học phí; Thực hiện duyệt hồ sơ hoặc từ chối đơn.
+  - **Tối ưu hóa chức năng Yêu cầu tạo tài khoản & Duyệt tài khoản tức thì**:
+    + **Phía người dùng (Landing Page)**: Gửi biểu mẫu yêu cầu tạo tài khoản hoàn toàn qua AJAX bất đồng bộ (`fetch` API), phản hồi tức thì (~0.2s), hiển thị thông báo trạng thái alert tại chỗ mà không cần tải lại trang.
+    + **Cơ chế Upsert thông minh**: Nếu người dùng gửi lại yêu cầu với email/số điện thoại đã có yêu cầu ở trạng thái `ChoDuyet`, hệ thống tự động cập nhật lại thông tin mới nhất thay vì báo lỗi hoặc tạo bản ghi trùng lặp, đảm bảo không bao giờ rơi rụng yêu cầu của người dùng.
+    + **Phía Admin (Duyệt & Tạo tài khoản)**: Thao tác tạo tài khoản và gửi email thông tin đăng nhập được tách riêng: hệ thống lưu tài khoản vào CSDL và phản hồi ngay lập tức cho Admin (<0.1s), chuyển việc gửi email sang tiến trình ngầm (`Task.Run`) để Admin không bị treo trang web khi mạng chậm hoặc SMTP phản hồi lâu.
+    + **Giao diện thân thiện & Chống click đúp**: Modal tạo tài khoản tích hợp loading spinner, khóa nút ngay khi nhấn để chống gửi yêu cầu lặp.
+    + **Tự động đồng bộ huy hiệu thông báo**: Huy hiệu hiển thị số lượng yêu cầu mới chờ duyệt trên thanh điều hướng Admin (`_AdminLayout.cshtml`) tự động cập nhật định kỳ mỗi 10 giây qua Ajax polling.
   - **Dashboard & Thống kê Admin (Mục 4.20)**:
     - Báo cáo **Doanh thu học phí** (theo tháng, năm, danh mục khóa học).
     - Biểu đồ tăng trưởng học viên và tỷ lệ đăng ký các ngoại ngữ (Anh, Hàn, Trung, Nhật).
     - Thẻ thống kê tổng số: Học viên, Giảng viên, Lớp học đang mở, Doanh thu lũy kế.
 - **Tên tệp tin thực hiện**:
-  - Tệp Controller: `YeuCauDangKyController.cs`, `ThongKeController.cs`
+  - Tệp Controller: `YeuCauDangKyController.cs`, `ThongKeController.cs`, `LandingController.cs`
   - Tệp Model: `YeuCauDangKy.cs`, `CauHinhHeThong.cs`
-  - Tệp Giao diện: `Index.cshtml`, `Details.cshtml`
+  - Tệp Giao diện: `Index.cshtml`, `Details.cshtml`, `_AdminLayout.cshtml`
   - Bảng CSDL: `YeuCauDangKy`, `CauHinhHeThong`
 
 ---
@@ -142,9 +156,9 @@ Ngoài 4 module bắt buộc, hệ thống được trang bị thêm các phân 
 | Nhóm Tệp Tin | Danh Sách Tên Tệp |
 |:---|:---|
 | **Bộ điều khiển (Controllers)** | `TaiKhoanController.cs`<br/>`KhoaHocController.cs`<br/>`LopHocController.cs`<br/>`GiaoVienController.cs`<br/>`HocVienController.cs`<br/>`DangKyHocController.cs`<br/>`YeuCauDangKyController.cs`<br/>`ThongKeController.cs`<br/>`LuyenThiController.cs`<br/>`ChatController.cs`<br/>`BaiVietController.cs`<br/>`BinhLuanController.cs`<br/>`HomeController.cs`<br/>`LandingController.cs` |
-| **Thực thể dữ liệu (Models)** | `TaiKhoan.cs`<br/>`KhoaHoc.cs`<br/>`LopHoc.cs`<br/>`GiaoVien.cs`<br/>`HocVien.cs`<br/>`DangKyHoc.cs`<br/>`YeuCauDangKy.cs`<br/>`CauHinhHeThong.cs`<br/>`DeThi.cs`<br/>`PhanThi.cs`<br/>`CauHoiLuyenThi.cs`<br/>`KetQuaLuyenThi.cs`<br/>`BinhLuanDeThi.cs`<br/>`NhomChat.cs`<br/>`ThanhVienNhom.cs`<br/>`TinNhan.cs`<br/>`BaiViet.cs`<br/>`BinhLuan.cs`<br/>`ThichBaiViet.cs`<br/>`BaoCaoBaiViet.cs` |
+| **Thực thể dữ liệu (Models)** | `TaiKhoan.cs`<br/>`OtpDoiMatKhau.cs`<br/>`LichSuDoiMatKhau.cs`<br/>`KhoaHoc.cs`<br/>`LopHoc.cs`<br/>`GiaoVien.cs`<br/>`HocVien.cs`<br/>`DangKyHoc.cs`<br/>`YeuCauDangKy.cs`<br/>`CauHinhHeThong.cs`<br/>`DeThi.cs`<br/>`PhanThi.cs`<br/>`CauHoiLuyenThi.cs`<br/>`KetQuaLuyenThi.cs`<br/>`BinhLuanDeThi.cs`<br/>`NhomChat.cs`<br/>`ThanhVienNhom.cs`<br/>`TinNhan.cs`<br/>`BaiViet.cs`<br/>`BinhLuan.cs`<br/>`ThichBaiViet.cs`<br/>`BaoCaoBaiViet.cs` |
 | **Tín hiệu thời gian thực (Hubs)** | `CallHub.cs`<br/>`ChatHub.cs`<br/>`VideoCallHub.cs` |
-| **Dịch vụ nền & Dữ liệu (Services & Data)** | `EmailService.cs`<br/>`ImageHelper.cs`<br/>`TrungTamDbContext.cs`<br/>`DbInitializer.cs`<br/>`LuyenThiDataGenerator.cs` |
+| **Dịch vụ nền & Dữ liệu (Services & Data)** | `EmailService.cs`<br/>`IEmailService.cs`<br/>`ImageHelper.cs`<br/>`TrungTamDbContext.cs`<br/>`DbInitializer.cs`<br/>`LuyenThiDataGenerator.cs` |
 | **Cơ sở dữ liệu (Database Files)** | `TrungTamNgoaiNguDb.sql`<br/>`TrungTamNgoaiNguDb.bak` |
 | **Cấu hình & Tài liệu (Config & Docs)** | `appsettings.json`<br/>`Program.cs`<br/>`README.md`<br/>`DESIGN.md`<br/>`PHAN_CHIA_MODULE_DU_AN.md` |
 
