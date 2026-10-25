@@ -42,6 +42,8 @@ namespace TrungTamNgoaiNgu.ViewModels
 
         public int RemainingSeconds { get; set; } = 300; // 5 phút = 300 giây
 
+        public int SoLanGuiOtpHomNay { get; set; } = 0;
+
         public int SoLanDaDoiHomNay { get; set; } = 0;
     }
 }

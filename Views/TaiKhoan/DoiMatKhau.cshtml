@@ -87,10 +87,15 @@
             transition: background 0.2s ease, transform 0.1s ease;
         }
 
-        .btn-submit:hover {
+        .btn-submit:hover:not(:disabled) {
             background: #0052cc;
             color: #ffffff;
             transform: translateY(-1px);
+        }
+
+        .btn-submit:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
         }
 
         .rule-badge {
@@ -137,16 +142,17 @@
             <!-- Quy định đổi mật khẩu -->
             <div class="rule-badge">
                 <div class="fw-bold text-dark mb-1 d-flex align-items-center gap-1">
-                    <i class="bi bi-info-circle-fill text-primary"></i> Quy định đổi mật khẩu:
+                    <i class="bi bi-info-circle-fill text-primary"></i> Quy định gửi mã OTP:
                 </div>
                 <ul class="mb-0 ps-3 small text-muted">
-                    <li>Nhập chính xác <strong>Gmail đã lưu</strong> trong tài khoản.</li>
-                    <li>Mã OTP có thời hạn sử dụng <strong>trong vòng 5 phút</strong>.</li>
-                    <li>Giới hạn đổi mật khẩu tối đa <strong>5 lần / 1 ngày</strong>.</li>
+                    <li>Nhập đúng <strong>Gmail đã lưu</strong> trong hệ thống.</li>
+                    <li>Mỗi lần gửi chỉ phát hành <strong>duy nhất 1 mã OTP</strong> (6 số).</li>
+                    <li>Mã OTP có hiệu lực chính xác trong vòng <strong>5 phút</strong>.</li>
+                    <li>Giới hạn số lần gửi mã: tối đa <strong>5 lần / 1 ngày</strong>.</li>
                 </ul>
             </div>
 
-            <form asp-action="DoiMatKhau" method="post">
+            <form asp-action="DoiMatKhau" method="post" id="formDoiMatKhau">
                 @Html.AntiForgeryToken()
 
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small mb-3"></div>
@@ -155,12 +161,13 @@
                     <label asp-for="Email" class="form-label fw-bold small text-dark">
                         <i class="bi bi-envelope-at-fill text-primary me-1"></i> Địa chỉ Gmail của tài khoản:
                     </label>
-                    <input asp-for="Email" class="form-control form-control-custom" placeholder="Ví dụ: hocvien@gmail.com" autofocus />
+                    <input asp-for="Email" class="form-control form-control-custom" placeholder="Ví dụ: hocvien@gmail.com" autofocus required />
                     <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
                 </div>
 
-                <button type="submit" class="btn btn-submit w-100 mb-3 d-flex align-items-center justify-content-center gap-2">
-                    <i class="bi bi-send-fill"></i> Nhận Mã OTP Qua Gmail
+                <button type="submit" id="btnSubmitDoiMatKhau" class="btn btn-submit w-100 mb-3 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-send-fill" id="btnSubmitIcon"></i>
+                    <span id="btnSubmitText">Nhận Mã OTP Qua Gmail</span>
                 </button>
 
                 <div class="text-center pt-2 border-top">
@@ -173,5 +180,20 @@
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Chống bấm gửi nhiều lần liên tiếp
+        document.getElementById('formDoiMatKhau').addEventListener('submit', function (e) {
+            var btn = document.getElementById('btnSubmitDoiMatKhau');
+            var icon = document.getElementById('btnSubmitIcon');
+            var text = document.getElementById('btnSubmitText');
+            if (btn && this.checkValidity()) {
+                setTimeout(function() {
+                    btn.disabled = true;
+                    if (icon) icon.className = 'spinner-border spinner-border-sm';
+                    if (text) text.textContent = ' Đang gửi 1 mã OTP...';
+                }, 10);
+            }
+        });
+    </script>
 </body>
 </html>

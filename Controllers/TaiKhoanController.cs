@@ -443,18 +443,20 @@ namespace TrungTamNgoaiNgu.Controllers
                 return View(model);
             }
 
-            // 2. Giới hạn số lần đổi mật khẩu chỉ 5 lần 1 ngày
+            // 2. GIỚI HẠN SỐ LẦN GỬI MÃ OTP TRONG NGÀY: TỐI ĐA 5 LẦN / 1 NGÀY
             var today = DateTime.Today;
-            var soLanDaDoiHomNay = await _context.LichSuDoiMatKhaus
-                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == today);
+            var tomorrow = today.AddDays(1);
 
-            if (soLanDaDoiHomNay >= 5)
+            var soLanGuiOtpHomNay = await _context.OtpDoiMatKhaus
+                .CountAsync(o => o.MaTaiKhoan == user.MaTaiKhoan && o.ThoiGianTao >= today && o.ThoiGianTao < tomorrow);
+
+            if (soLanGuiOtpHomNay >= 5)
             {
-                ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã đạt giới hạn tối đa 5 lần đổi mật khẩu trong ngày hôm nay. Vui lòng quay lại vào ngày mai!");
+                ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã đạt giới hạn tối đa 5 lần gửi mã OTP trong ngày hôm nay (5/5 lần). Vui lòng quay lại vào ngày mai!");
                 return View(model);
             }
 
-            // 3. Vô hiệu hóa các mã OTP cũ chưa sử dụng của tài khoản này
+            // 3. Vô hiệu hóa TẤT CẢ các mã OTP cũ chưa sử dụng (Đảm bảo mỗi lần chỉ có duy nhất 1 mã OTP có hiệu lực)
             var oldOtps = await _context.OtpDoiMatKhaus
                 .Where(o => o.MaTaiKhoan == user.MaTaiKhoan && !o.DaSuDung)
                 .ToListAsync();
@@ -463,11 +465,11 @@ namespace TrungTamNgoaiNgu.Controllers
                 o.DaSuDung = true;
             }
 
-            // 4. Sinh mã OTP ngẫu nhiên 6 chữ số
+            // 4. Sinh DUY NHẤT 1 MÃ OTP ngẫu nhiên 6 chữ số
             var otpCode = Random.Shared.Next(100000, 999999).ToString();
             var now = DateTime.Now;
 
-            // Mã OTP có hạn sử dụng 5 phút tính từ thời gian gửi mã
+            // Mã OTP có hạn sử dụng chính xác 5 phút tính từ thời gian gửi mã
             var otpRecord = new OtpDoiMatKhau
             {
                 MaTaiKhoan = user.MaTaiKhoan,
@@ -481,16 +483,16 @@ namespace TrungTamNgoaiNgu.Controllers
             _context.OtpDoiMatKhaus.Add(otpRecord);
             await _context.SaveChangesAsync();
 
-            // 5. Gửi mã OTP về Gmail qua EmailService
+            // 5. Gửi duy nhất 1 email chứa mã OTP về Gmail qua EmailService
             bool sent = await _emailService.SendPasswordResetOtpEmailAsync(user.Email, user.HoTen, otpCode, 5);
             if (!sent)
             {
-                _logger.LogWarning("Không thể gửi email OTP qua SMTP. Mã OTP cho tester: {OtpCode}", otpCode);
-                // Dự phòng thông báo mã OTP nếu môi trường offline/demo test
-                TempData["OfflineOtpAlert"] = $"[DEMO/TEST]: Mã OTP của bạn là: {otpCode} (Hết hạn sau 5 phút)";
+                _logger.LogWarning("Không thể gửi email OTP qua SMTP. Mã OTP: {OtpCode}", otpCode);
+                TempData["OfflineOtpAlert"] = $"[THÔNG BÁO]: Mã OTP của bạn là: {otpCode} (Hết hạn sau 5 phút)";
             }
 
-            TempData["Success"] = $"Mã OTP đã được gửi đến hộp thư {user.Email}. Mã có hiệu lực trong vòng 5 phút!";
+            int lanGuiHienTai = soLanGuiOtpHomNay + 1;
+            TempData["Success"] = $"Mã OTP đã được gửi về Gmail {user.Email}. (Lượt gửi: {lanGuiHienTai}/5 lần hôm nay). Mã có hiệu lực trong 5 phút!";
             return RedirectToAction(nameof(XacNhanDoiMatKhau), new { email = user.Email });
         }
 
@@ -511,7 +513,7 @@ namespace TrungTamNgoaiNgu.Controllers
                 return RedirectToAction(nameof(DoiMatKhau));
             }
 
-            // Lấy mã OTP mới nhất chưa dùng để tính số giây còn lại
+            // Lấy mã OTP mới nhất chưa dùng để tính số giây đếm ngược còn lại
             var latestOtp = await _context.OtpDoiMatKhaus
                 .Where(o => o.MaTaiKhoan == user.MaTaiKhoan && !o.DaSuDung)
                 .OrderByDescending(o => o.ThoiGianTao)
@@ -523,14 +525,17 @@ namespace TrungTamNgoaiNgu.Controllers
                 remainingSeconds = (int)(latestOtp.ThoiGianHetHan - DateTime.Now).TotalSeconds;
             }
 
-            var soLanDaDoiHomNay = await _context.LichSuDoiMatKhaus
-                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == DateTime.Today);
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var soLanGuiOtpHomNay = await _context.OtpDoiMatKhaus
+                .CountAsync(o => o.MaTaiKhoan == user.MaTaiKhoan && o.ThoiGianTao >= today && o.ThoiGianTao < tomorrow);
 
             var model = new XacNhanDoiMatKhauViewModel
             {
                 Email = user.Email,
                 RemainingSeconds = remainingSeconds,
-                SoLanDaDoiHomNay = soLanDaDoiHomNay
+                SoLanGuiOtpHomNay = soLanGuiOtpHomNay,
+                SoLanDaDoiHomNay = soLanGuiOtpHomNay
             };
 
             return View(model);
@@ -549,15 +554,12 @@ namespace TrungTamNgoaiNgu.Controllers
                 return View(model);
             }
 
-            var soLanDaDoiHomNay = await _context.LichSuDoiMatKhaus
-                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == DateTime.Today);
-            model.SoLanDaDoiHomNay = soLanDaDoiHomNay;
-
-            if (soLanDaDoiHomNay >= 5)
-            {
-                ModelState.AddModelError(string.Empty, "Tài khoản đã đạt giới hạn tối đa 5 lần đổi mật khẩu trong ngày. Vui lòng quay lại vào ngày mai!");
-                return View(model);
-            }
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var soLanGuiOtpHomNay = await _context.OtpDoiMatKhaus
+                .CountAsync(o => o.MaTaiKhoan == user.MaTaiKhoan && o.ThoiGianTao >= today && o.ThoiGianTao < tomorrow);
+            model.SoLanGuiOtpHomNay = soLanGuiOtpHomNay;
+            model.SoLanDaDoiHomNay = soLanGuiOtpHomNay;
 
             if (!ModelState.IsValid)
             {
@@ -577,7 +579,7 @@ namespace TrungTamNgoaiNgu.Controllers
                 return View(model);
             }
 
-            // Kiểm tra hạn sử dụng 5 phút
+            // Kiểm tra hạn sử dụng chính xác 5 phút
             if (DateTime.Now > otpRecord.ThoiGianHetHan)
             {
                 ModelState.AddModelError("MaOtp", "Mã OTP đã hết hạn sử dụng (quá 5 phút tính từ lúc gửi mã). Vui lòng nhấn 'Gửi lại mã OTP' để lấy mã mới!");
@@ -593,11 +595,11 @@ namespace TrungTamNgoaiNgu.Controllers
                 return View(model);
             }
 
-            // ĐÚNG MÃ OTP -> CHO ĐỔI MẬT KHẨU VÀ CẬP NHẬT TRONG HỆ THỐNG
+            // ĐÚNG MÃ OTP -> TIẾN HÀNH ĐỔI MẬT KHẨU VÀ CẬP NHẬT TRONG HỆ THỐNG
             user.MatKhau = model.MatKhauMoi;
             otpRecord.DaSuDung = true;
 
-            // Ghi nhận lịch sử đổi mật khẩu để kiểm soát 5 lần / ngày
+            // Ghi nhận lịch sử đổi mật khẩu thành công
             var lichSu = new LichSuDoiMatKhau
             {
                 MaTaiKhoan = user.MaTaiKhoan,
@@ -631,15 +633,18 @@ namespace TrungTamNgoaiNgu.Controllers
                 return RedirectToAction(nameof(DoiMatKhau));
             }
 
-            var soLanDaDoi = await _context.LichSuDoiMatKhaus
-                .CountAsync(l => l.MaTaiKhoan == user.MaTaiKhoan && l.NgayDoi == DateTime.Today);
-            if (soLanDaDoi >= 5)
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var soLanGuiOtpHomNay = await _context.OtpDoiMatKhaus
+                .CountAsync(o => o.MaTaiKhoan == user.MaTaiKhoan && o.ThoiGianTao >= today && o.ThoiGianTao < tomorrow);
+
+            if (soLanGuiOtpHomNay >= 5)
             {
-                TempData["Error"] = "Tài khoản đã đạt giới hạn 5 lần đổi mật khẩu hôm nay. Vui lòng quay lại vào ngày mai!";
+                TempData["Error"] = "Tài khoản của bạn đã đạt giới hạn tối đa 5 lần gửi mã OTP trong ngày hôm nay (5/5 lần). Vui lòng quay lại vào ngày mai!";
                 return RedirectToAction(nameof(XacNhanDoiMatKhau), new { email = user.Email });
             }
 
-            // Vô hiệu hóa mã cũ
+            // Vô hiệu hóa các mã OTP cũ
             var oldOtps = await _context.OtpDoiMatKhaus
                 .Where(o => o.MaTaiKhoan == user.MaTaiKhoan && !o.DaSuDung)
                 .ToListAsync();
@@ -648,6 +653,7 @@ namespace TrungTamNgoaiNgu.Controllers
                 o.DaSuDung = true;
             }
 
+            // Sinh DUY NHẤT 1 mã OTP mới
             var otpCode = Random.Shared.Next(100000, 999999).ToString();
             var now = DateTime.Now;
 
@@ -667,10 +673,11 @@ namespace TrungTamNgoaiNgu.Controllers
             bool sent = await _emailService.SendPasswordResetOtpEmailAsync(user.Email, user.HoTen, otpCode, 5);
             if (!sent)
             {
-                TempData["OfflineOtpAlert"] = $"[DEMO/TEST]: Mã OTP mới của bạn là: {otpCode} (Hết hạn sau 5 phút)";
+                TempData["OfflineOtpAlert"] = $"[THÔNG BÁO]: Mã OTP mới của bạn là: {otpCode} (Hết hạn sau 5 phút)";
             }
 
-            TempData["Success"] = "Mã OTP mới đã được gửi thành công về Gmail của bạn! Mã có hiệu lực trong 5 phút.";
+            int lanMoi = soLanGuiOtpHomNay + 1;
+            TempData["Success"] = $"Mã OTP mới đã được gửi về Gmail của bạn! (Lượt gửi: {lanMoi}/5 lần hôm nay). Mã có hiệu lực trong 5 phút.";
             return RedirectToAction(nameof(XacNhanDoiMatKhau), new { email = user.Email });
         }
 
