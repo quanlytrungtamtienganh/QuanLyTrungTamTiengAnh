@@ -1,7 +1,14 @@
 @model TrungTamNgoaiNgu.ViewModels.LandingViewModel
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
 @{
     Layout = null;
     ViewData["Title"] = "LanguageBook - Trung Tâm Ngoại Ngữ Hàng Đầu & Nền Tảng Luyện Thi Trực Tuyến";
+    var session = HttpContextAccessor.HttpContext?.Session;
+    var userRole = session?.GetString("VaiTro");
+    var userName = session?.GetString("HoTen");
+    var isLoggedIn = !string.IsNullOrEmpty(userName);
+    var isAdmin = userRole == "Admin";
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -93,6 +100,24 @@
     </style>
 </head>
 <body>
+@if (isAdmin)
+{
+    <!-- Admin Preview Notification Bar -->
+    <div class="bg-dark text-white py-2 px-3 border-bottom border-warning d-flex flex-wrap justify-content-between align-items-center" style="position: sticky; top: 0; z-index: 1050; font-size: 13px;">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-danger"><i class="bi bi-shield-lock-fill me-1"></i>Chế độ Xem Web (Admin)</span>
+            <span>Bạn đang xem trước giao diện <strong>Trang Giới Thiệu (Landing Page)</strong> với tư cách Quản Trị Viên.</span>
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-1 mt-md-0">
+            <a href="/Home" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1" style="font-size: 12px;">
+                <i class="bi bi-house-door-fill me-1"></i> Đến Bảng Tin Học Viên
+            </a>
+            <a href="/ThongKe" class="btn btn-sm btn-warning rounded-pill px-3 py-1 fw-bold text-dark" style="font-size: 12px;">
+                <i class="bi bi-speedometer2 me-1"></i> Quay lại Admin Console
+            </a>
+        </div>
+    </div>
+}
 
 <!-- =========================================================================
      1. STICKY NAVIGATION BAR
@@ -115,10 +140,25 @@
             <a href="/LuyenThi" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold d-none d-sm-inline-flex">
                 <i class="bi bi-laptop me-1"></i>Thi thử Online
             </a>
-            <a href="#register" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Đăng ký</a>
-            <a href="/TaiKhoan/Login" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="background:#0866ff;">
-                Đăng nhập
-            </a>
+            @if (isLoggedIn)
+            {
+                <a href="/Home" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="background:#0866ff;">
+                    <i class="bi bi-house-door-fill me-1"></i>Vào Bảng Tin Web
+                </a>
+                @if (isAdmin)
+                {
+                    <a href="/ThongKe" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold">
+                        <i class="bi bi-speedometer2 me-1"></i>Admin Console
+                    </a>
+                }
+            }
+            else
+            {
+                <a href="#register" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Đăng ký</a>
+                <a href="/TaiKhoan/Login" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="background:#0866ff;">
+                    Đăng nhập
+                </a>
+            }
         </div>
     </div>
 </nav>

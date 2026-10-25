@@ -4,7 +4,9 @@
 @{
     var role = HttpContextAccessor.HttpContext?.Session.GetString("VaiTro");
     var isAdmin = role == "Admin";
-    Layout = isAdmin ? "_AdminLayout" : "_StudentLayout";
+    var viewMode = HttpContextAccessor.HttpContext?.Request.Query["view"].ToString();
+    var isWebView = viewMode == "web" || viewMode == "student";
+    Layout = (isAdmin && !isWebView) ? "_AdminLayout" : "_StudentLayout";
     ViewData["Title"] = "Lớp học: " + Model.LopHoc.TenLop + " · LanguageBook";
 }
 

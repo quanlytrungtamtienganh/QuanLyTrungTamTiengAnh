@@ -25,13 +25,32 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+    @if (isLoggedIn && userRole == "Admin")
+    {
+        <!-- Admin Bar on Public Site -->
+        <div class="bg-dark text-white px-3 py-1 d-flex flex-wrap justify-content-between align-items-center" style="font-size: 12px; z-index: 1060; position: sticky; top: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger"><i class="bi bi-shield-lock-fill me-1"></i>Chế độ Xem Web (Admin)</span>
+                <span class="d-none d-sm-inline">Bạn đang duyệt xem giao diện người dùng với tư cách <strong>Quản trị viên</strong>.</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/ThongKe" class="btn btn-sm btn-warning text-dark rounded-pill px-3 py-0 fw-bold d-flex align-items-center gap-1 shadow-sm" style="font-size: 11px;">
+                    <i class="bi bi-speedometer2"></i> Quay lại Admin Console
+                </a>
+                <span class="text-secondary d-none d-md-inline">|</span>
+                <a href="/KhoaHoc" class="text-white text-decoration-none d-none d-md-inline"><i class="bi bi-journal-album me-1"></i>QL Khóa học</a>
+                <a href="/LopHoc" class="text-white text-decoration-none d-none d-md-inline"><i class="bi bi-people me-1"></i>QL Lớp học</a>
+                <a href="/TaiKhoan" class="text-white text-decoration-none d-none d-md-inline"><i class="bi bi-shield-lock me-1"></i>QL Tài khoản</a>
+            </div>
+        </div>
+    }
     <!-- =========================================================================
          1. FACEBOOK GLOBAL STICKY TOPBAR (56px)
          ========================================================================= -->
     <header class="fb-topbar">
         <!-- Left: Logo Image (No text) & Search Box -->
         <div class="fb-topbar-left">
-            <a href="/" class="fb-logo-btn" title="Trang chủ">
+            <a href="/Home" class="fb-logo-btn" title="Trang chủ">
                 <img src="~/images/logo.png" alt="Logo" class="fb-topbar-logo-img" />
             </a>
 
@@ -45,13 +64,13 @@
 
         <!-- Center: Facebook Primary Navigation Tabs -->
         <nav class="fb-topbar-center">
-            <a href="/" class="fb-tab-item @(currentPath == "/" ? "active" : "")" title="Bảng tin (Trang chủ)">
-                <i class="bi @(currentPath == "/" ? "bi-house-door-fill" : "bi-house-door")"></i>
+            <a href="/Home" class="fb-tab-item @(currentPath == "/home" || currentPath == "/" ? "active" : "")" title="Bảng tin (Trang chủ)">
+                <i class="bi @(currentPath == "/home" || currentPath == "/" ? "bi-house-door-fill" : "bi-house-door")"></i>
             </a>
             <a href="/KhoaHoc/Catalog" class="fb-tab-item @(currentPath.Contains("/khoahoc") ? "active" : "")" title="Khóa học (Video & Đào tạo)">
                 <i class="bi @(currentPath.Contains("/khoahoc") ? "bi-collection-play-fill" : "bi-collection-play")"></i>
             </a>
-            <a href="/LopHoc" class="fb-tab-item @(currentPath.Contains("/lophoc") ? "active" : "")" title="Nhóm & Lịch lớp học">
+            <a href="@(userRole == "Admin" ? "/LopHoc?view=web" : "/LopHoc")" class="fb-tab-item @(currentPath.Contains("/lophoc") ? "active" : "")" title="Nhóm & Lịch lớp học">
                 <i class="bi @(currentPath.Contains("/lophoc") ? "bi-people-fill" : "bi-people")"></i>
             </a>
             <a href="/LuyenThi" class="fb-tab-item @(currentPath.Contains("/luyenthi") ? "active" : "")" title="Luyện thi Online">
@@ -79,6 +98,13 @@
 
         <!-- Right: Action Buttons & User Menu -->
         <div class="fb-topbar-right">
+            @if (isLoggedIn && userRole == "Admin")
+            {
+                <a href="/ThongKe" class="btn btn-danger btn-sm rounded-pill fw-bold px-3 d-inline-flex align-items-center gap-1 shadow-sm me-1" title="Quay lại Bảng Quản trị Admin Console">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="d-none d-md-inline">Admin Console</span>
+                </a>
+            }
             <!-- Menu button -->
             <button class="fb-circle-btn d-none d-md-inline-flex" title="Menu ứng dụng" type="button">
                 <i class="bi bi-grid-3x3-gap-fill"></i>

@@ -7,7 +7,9 @@
     var currentUserId = HttpContextAccessor.HttpContext?.Session.GetInt32("MaTaiKhoan");
     var isLoggedIn = !string.IsNullOrEmpty(HttpContextAccessor.HttpContext?.Session.GetString("HoTen"));
     var isAdmin = role == "Admin";
-    Layout = isAdmin ? "_AdminLayout" : "_StudentLayout";
+    var viewMode = HttpContextAccessor.HttpContext?.Request.Query["view"].ToString();
+    var isWebView = viewMode == "web" || viewMode == "student";
+    Layout = (isAdmin && !isWebView) ? "_AdminLayout" : "_StudentLayout";
     ViewData["Title"] = Model.TenKhoaHoc + " · Trang Khóa Học";
 }
 

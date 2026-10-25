@@ -55,9 +55,65 @@
 
         <!-- Right: Admin User Actions -->
         <div class="fb-topbar-right">
-            <a href="/" target="_blank" class="fb-btn fb-btn-secondary fb-btn-sm d-none d-sm-inline-flex" title="Xem trang học viên công khai">
-                <i class="bi bi-box-arrow-up-right me-1"></i> Xem trang Web
-            </a>
+            <!-- Xem Trang Web (Button Group với dropdown chọn trang) -->
+            <div class="btn-group d-none d-sm-inline-flex">
+                <a href="/Home" class="fb-btn fb-btn-primary fb-btn-sm d-inline-flex align-items-center gap-1 text-decoration-none shadow-sm" title="Đến xem giao diện trang web người dùng (Bảng tin)">
+                    <i class="bi bi-globe2"></i>
+                    <span>Xem trang Web</span>
+                </a>
+                <button type="button" class="fb-btn fb-btn-primary fb-btn-sm dropdown-toggle dropdown-toggle-split px-2" data-bs-toggle="dropdown" aria-expanded="false" title="Chọn trang web cần xem">
+                    <span class="visually-hidden">Mở menu xem trang</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="min-width: 290px; border-radius: 12px; border: 1px solid #e4e6eb;">
+                    <li class="px-2 py-1 text-uppercase fw-bold text-muted" style="font-size: 11px; letter-spacing: 0.5px;">Giao diện người dùng</li>
+                    <li>
+                        <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/Home">
+                            <i class="bi bi-house-door-fill text-primary fs-5"></i>
+                            <div>
+                                <div class="fw-bold">Trang Chủ & Bảng Tin</div>
+                                <div class="text-muted small" style="font-size: 11px;">Mạng xã hội học tập, bài viết, diễn đàn</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/KhoaHoc/Catalog">
+                            <i class="bi bi-collection-play-fill text-success fs-5"></i>
+                            <div>
+                                <div class="fw-bold">Kho Khóa Học (Catalog)</div>
+                                <div class="text-muted small" style="font-size: 11px;">Danh mục khóa học công khai cho học viên</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/LopHoc?view=web">
+                            <i class="bi bi-people-fill fs-5" style="color: #9360f7;"></i>
+                            <div>
+                                <div class="fw-bold">Lịch Lớp Học (Học viên)</div>
+                                <div class="text-muted small" style="font-size: 11px;">Xem danh sách lớp ở chế độ học viên</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/LuyenThi">
+                            <i class="bi bi-journal-check text-info fs-5"></i>
+                            <div>
+                                <div class="fw-bold">Luyện Thi Online</div>
+                                <div class="text-muted small" style="font-size: 11px;">Đề thi TOEIC, IELTS, HSK, TOPIK...</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/Landing?preview=true">
+                            <i class="bi bi-window-fullscreen text-secondary fs-5"></i>
+                            <div>
+                                <div class="fw-bold">Trang Giới Thiệu (Landing Page)</div>
+                                <div class="text-muted small" style="font-size: 11px;">Trang đích tiếp thị cho khách vãng lai</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
             <!-- Messenger button (Chỉ hiển thị giáo viên của trung tâm) -->
             <button type="button" class="fb-circle-btn" id="btnAdminTopbarMessenger" title="Messenger tư vấn giảng viên" onclick="toggleMessengerDropdown(event)">
@@ -177,6 +233,33 @@
                                 <i class="bi bi-journal-check"></i>
                             </div>
                             <span>Luyện đề thi Online</span>
+                        </a>
+
+                        <div class="border-top my-2"></div>
+                        <div class="fb-sidebar-title text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">Giao diện Website</div>
+
+                        <a href="/Home" class="fb-sidebar-item">
+                            <div class="fb-sidebar-icon text-primary">
+                                <i class="bi bi-globe2"></i>
+                            </div>
+                            <span class="fw-semibold">Trang Chủ & Bảng Tin</span>
+                            <i class="bi bi-box-arrow-up-right ms-auto text-muted small"></i>
+                        </a>
+
+                        <a href="/KhoaHoc/Catalog" class="fb-sidebar-item">
+                            <div class="fb-sidebar-icon text-success">
+                                <i class="bi bi-collection-play-fill"></i>
+                            </div>
+                            <span>Catalog Khóa Học</span>
+                            <i class="bi bi-box-arrow-up-right ms-auto text-muted small"></i>
+                        </a>
+
+                        <a href="/Landing?preview=true" class="fb-sidebar-item">
+                            <div class="fb-sidebar-icon text-secondary">
+                                <i class="bi bi-window-fullscreen"></i>
+                            </div>
+                            <span>Landing Page Giới Thiệu</span>
+                            <i class="bi bi-box-arrow-up-right ms-auto text-muted small"></i>
                         </a>
 
                         <div class="border-top my-2"></div>

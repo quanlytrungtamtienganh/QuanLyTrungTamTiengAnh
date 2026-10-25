@@ -3,7 +3,8 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @{
     var role = HttpContextAccessor.HttpContext?.Session.GetString("VaiTro");
-    Layout = role == "Admin" ? "_AdminLayout" : "_StudentLayout";
+    var viewMode = HttpContextAccessor.HttpContext?.Request.Query["view"].ToString();
+    Layout = (role == "Admin" && viewMode != "web") ? "_AdminLayout" : "_StudentLayout";
     ViewData["Title"] = "Trang Cá Nhân & Cài Đặt · " + Model.HoTen;
 }
 
