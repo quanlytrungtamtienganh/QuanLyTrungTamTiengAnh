@@ -2,9 +2,8 @@
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Xác nhận xóa tài khoản #" + Model.MaTaiKhoan;
-    var hasHocVienDk = Model.HocVien != null && Model.HocVien.DangKyHocs.Any();
-    var hasGiaoVienLop = Model.GiaoVien != null && Model.GiaoVien.LopHocs.Any();
-    var cannotDelete = hasHocVienDk || hasGiaoVienLop;
+    var hasHocVienDk = Model.HocVien != null && Model.HocVien.DangKyHocs != null && Model.HocVien.DangKyHocs.Any();
+    var hasGiaoVienLop = Model.GiaoVien != null && Model.GiaoVien.LopHocs != null && Model.GiaoVien.LopHocs.Any();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -12,7 +11,7 @@
         <h3 class="fw-bold mb-1 d-flex align-items-center gap-2 text-danger">
             <i class="bi bi-exclamation-triangle-fill"></i> Xác Nhận Xóa Tài Khoản
         </h3>
-        <p class="text-muted mb-0 small">Hành động này sẽ xóa vĩnh viễn tài khoản người dùng khỏi hệ thống cơ sở dữ liệu</p>
+        <p class="text-muted mb-0 small">Hành động này sẽ xóa vĩnh viễn tài khoản người dùng và dọn dẹp an toàn các dữ liệu liên kết khỏi hệ thống</p>
     </div>
     <div>
         <a asp-action="Index" class="fb-btn fb-btn-secondary">
@@ -24,19 +23,19 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="fb-card p-4 border border-danger">
-            @if (cannotDelete)
+            @if (hasHocVienDk || hasGiaoVienLop)
             {
-                <div class="alert alert-danger d-flex align-items-center gap-3 mb-4" role="alert">
-                    <i class="bi bi-shield-x fs-2"></i>
+                <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-2 text-warning"></i>
                     <div>
-                        <strong class="d-block mb-1">Không thể xóa tài khoản này!</strong>
+                        <strong class="d-block mb-1">Lưu ý về dữ liệu liên kết:</strong>
                         @if (hasHocVienDk)
                         {
-                            <div>Học viên liên kết với tài khoản này đã có <strong>@Model.HocVien?.DangKyHocs.Count</strong> lượt đăng ký lớp học. Vui lòng chuyển trạng thái sang "Khoa" thay vì xóa.</div>
+                            <div>Học viên này đã có <strong>@Model.HocVien?.DangKyHocs.Count</strong> lượt đăng ký lớp học. Khi xóa tài khoản, hệ thống sẽ tự động dọn dẹp các đơn đăng ký liên kết.</div>
                         }
                         @if (hasGiaoVienLop)
                         {
-                            <div>Giảng viên liên kết đang được phân công giảng dạy <strong>@Model.GiaoVien?.LopHocs.Count</strong> lớp học trong trung tâm.</div>
+                            <div>Giảng viên này đang được phân công dạy <strong>@Model.GiaoVien?.LopHocs.Count</strong> lớp học. Khi xóa tài khoản, hệ thống sẽ tự động gỡ phân công để bảo toàn lớp học.</div>
                         }
                     </div>
                 </div>
@@ -96,16 +95,32 @@
                 </div>
             </div>
 
-            <form asp-action="Delete" method="post">
+            <form asp-action="Delete" method="post" id="formDeleteStandalone">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="MaTaiKhoan" />
                 <div class="d-flex justify-content-end gap-2">
                     <a asp-action="Index" class="fb-btn fb-btn-secondary">Hủy bỏ</a>
-                    <button type="submit" class="fb-btn fb-btn-sm text-white" style="background-color: #dc3545;" @(cannotDelete ? "disabled" : "")>
-                        <i class="bi bi-trash-fill me-1"></i> Xác nhận xóa tài khoản
+                    <button type="submit" class="fb-btn fb-btn-sm text-white" style="background-color: #dc3545;" id="btnSubmitStandalone">
+                        <i class="bi bi-trash-fill me-1" id="iconSubmitStandalone"></i>
+                        <span id="textSubmitStandalone">Xác nhận xóa tài khoản</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('formDeleteStandalone').addEventListener('submit', function () {
+        var btn = document.getElementById('btnSubmitStandalone');
+        var icon = document.getElementById('iconSubmitStandalone');
+        var text = document.getElementById('textSubmitStandalone');
+        if (btn) {
+            setTimeout(function() {
+                btn.disabled = true;
+                if (icon) icon.className = 'spinner-border spinner-border-sm me-1';
+                if (text) text.textContent = ' Đang xóa tài khoản...';
+            }, 10);
+        }
+    });
+</script>

@@ -243,8 +243,9 @@ else
                 </div>
                 <div class="modal-footer bg-light border-top">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">
-                        <i class="bi bi-person-check me-1"></i>Tạo tài khoản & Gửi mail
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSubmitTaoTaiKhoan">
+                        <i class="bi bi-person-check me-1" id="iconSubmitTaoTaiKhoan"></i>
+                        <span id="textSubmitTaoTaiKhoan">Tạo tài khoản & Gửi mail</span>
                     </button>
                 </div>
             </form>
@@ -269,6 +270,30 @@ else
         var rnd = Math.floor(1000 + Math.random() * 9000);
         document.getElementById('modalMatKhau').value = 'Lbook\x40\x40' + rnd;
 
+        // Reset submit button state
+        var btn = document.getElementById('btnSubmitTaoTaiKhoan');
+        var icon = document.getElementById('iconSubmitTaoTaiKhoan');
+        var text = document.getElementById('textSubmitTaoTaiKhoan');
+        if (btn) {
+            btn.disabled = false;
+            if (icon) icon.className = 'bi bi-person-check me-1';
+            if (text) text.textContent = 'Tạo tài khoản & Gửi mail';
+        }
+
         new bootstrap.Modal(document.getElementById('modalTaoTaiKhoan')).show();
     }
+
+    // Chống bấm tạo tài khoản nhiều lần & hiện loading
+    document.querySelector('#modalTaoTaiKhoan form').addEventListener('submit', function () {
+        var btn = document.getElementById('btnSubmitTaoTaiKhoan');
+        var icon = document.getElementById('iconSubmitTaoTaiKhoan');
+        var text = document.getElementById('textSubmitTaoTaiKhoan');
+        if (btn && this.checkValidity()) {
+            setTimeout(function() {
+                btn.disabled = true;
+                if (icon) icon.className = 'spinner-border spinner-border-sm me-1';
+                if (text) text.textContent = ' Đang tạo tài khoản...';
+            }, 10);
+        }
+    });
 </script>

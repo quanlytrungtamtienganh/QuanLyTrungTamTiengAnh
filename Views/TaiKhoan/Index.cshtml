@@ -1,193 +1,291 @@
-@model IEnumerable<TrungTamNgoaiNgu.Models.TaiKhoan>
-@{
-    Layout = "_AdminLayout";
-    ViewData["Title"] = "Quản Lý Tài Khoản Người Dùng · Meta Business Suite";
-    int stt = 1;
-}
-
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
-            <i class="bi bi-shield-lock-fill text-primary"></i> Quản Lý Tài Khoản Hệ Thống
-        </h3>
-        <p class="text-muted mb-0 small">Danh sách tài khoản quản trị viên, giảng viên và học viên với phân quyền chi tiết</p>
-    </div>
-    <div class="d-flex gap-2">
-        <span class="fb-badge fb-badge-blue">
-            <i class="bi bi-people-fill me-1"></i> Tổng số: <strong>@ViewBag.TotalCount</strong> tài khoản
-        </span>
-    </div>
-</div>
-
-<!-- Search & Filter Bar -->
-<div class="fb-card p-3 mb-3">
-    <form method="get" asp-action="Index" class="row g-2 align-items-center">
-        <div class="col-md-5">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" class="form-control border-start-0" placeholder="Tìm theo tên đăng nhập, họ tên, email..." value="@ViewBag.Search" />
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <select name="vaiTro" class="form-select">
-                <option value="">-- Tất cả vai trò --</option>
-                <option value="Admin" selected="@(ViewBag.VaiTro == "Admin")">Quản trị viên (Admin)</option>
-                <option value="GiaoVien" selected="@(ViewBag.VaiTro == "GiaoVien")">Giáo viên (GiaoVien)</option>
-                <option value="HocVien" selected="@(ViewBag.VaiTro == "HocVien")">Học viên (HocVien)</option>
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <select name="trangThai" class="form-select">
-                <option value="">-- Trạng thái --</option>
-                <option value="HoatDong" selected="@(ViewBag.TrangThai == "HoatDong")">Hoạt động</option>
-                <option value="Khoa" selected="@(ViewBag.TrangThai == "Khoa")">Tạm khóa</option>
-            </select>
-        </div>
-
-        <div class="col-md-2 d-flex gap-2">
-            <button type="submit" class="fb-btn fb-btn-primary w-100">
-                <i class="bi bi-funnel me-1"></i> Lọc
-            </button>
-            <a asp-action="Index" class="fb-btn fb-btn-secondary" title="Đặt lại bộ lọc">
-                <i class="bi bi-arrow-counterclockwise"></i>
-            </a>
-        </div>
-    </form>
-</div>
-
-<!-- Accounts Data Table -->
-<div class="fb-card">
-    <div class="fb-card-header d-flex justify-content-between align-items-center">
-        <div class="fw-bold text-dark d-flex align-items-center gap-2">
-            <i class="bi bi-table text-primary"></i> Bảng Danh Sách Tài Khoản
-        </div>
-        <div class="text-muted small">
-            Hiển thị @Model.Count() bản ghi
-        </div>
-    </div>
-
-    @if (!Model.Any())
-    {
-        <div class="p-5 text-center text-muted">
-            <i class="bi bi-person-x fs-1 text-muted d-block mb-2"></i>
-            <h6 class="fw-bold">Không tìm thấy tài khoản nào phù hợp</h6>
-            <a asp-action="Index" class="fb-btn fb-btn-secondary mt-2">Đặt lại bộ lọc</a>
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center" style="width: 60px;">STT</th>
-                        <th style="width: 130px;">Mã tài khoản</th>
-                        <th>Tên đăng nhập</th>
-                        <th>Họ và tên</th>
-                        <th>Email liên hệ</th>
-                        <th style="width: 140px;">Vai trò</th>
-                        <th style="width: 130px;">Trạng thái</th>
-                        <th class="text-end" style="width: 170px;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <!-- STT -->
-                            <td class="text-center fw-semibold text-muted">@(stt++)</td>
-
-                            <!-- Mã tài khoản -->
-                            <td>
-                                <span class="badge bg-light text-dark border font-monospace px-2 py-1">
-                                    #TK-@item.MaTaiKhoan.ToString("D4")
-                                </span>
-                            </td>
-
-                            <!-- Tên đăng nhập -->
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="fb-avatar fb-avatar-sm" style="background: @(item.VaiTro == "Admin" ? "#fa3e3e" : (item.VaiTro == "GiaoVien" ? "#9360f7" : "#0866ff")); color: #fff;">
-                                        @(item.HoTen.Length > 0 ? item.HoTen.Substring(0, 1).ToUpper() : "U")
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark">@item.TenDangNhap</div>
-                                        @if (item.HocVien != null)
-                                        {
-                                            <span class="text-muted" style="font-size: 11px;">(Học viên: #HV-@item.HocVien.MaHocVien)</span>
-                                        }
-                                        else if (item.GiaoVien != null)
-                                        {
-                                            <span class="text-muted" style="font-size: 11px;">(Giảng viên: #GV-@item.GiaoVien.MaGiaoVien)</span>
-                                        }
-                                    </div>
-                                </div>
-                            </td>
-
-                            <!-- Họ và tên -->
-                            <td class="fw-semibold text-dark">@item.HoTen</td>
-
-                            <!-- Email -->
-                            <td class="text-muted">
-                                <i class="bi bi-envelope me-1"></i>@item.Email
-                            </td>
-
-                            <!-- Vai trò -->
-                            <td>
-                                @if (item.VaiTro == "Admin")
-                                {
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
-                                        <i class="bi bi-shield-fill-check me-1"></i>Quản trị viên
-                                    </span>
-                                }
-                                else if (item.VaiTro == "GiaoVien")
-                                {
-                                    <span class="badge bg-purple-subtle text-primary border border-primary-subtle px-2 py-1" style="background-color: #f0e6ff; color: #9360f7 !important;">
-                                        <i class="bi bi-person-video3 me-1"></i>Giáo viên
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
-                                        <i class="bi bi-person-fill me-1"></i>Học viên
-                                    </span>
-                                }
-                            </td>
-
-                            <!-- Trạng thái -->
-                            <td>
-                                @if (item.TrangThai == "HoatDong")
-                                {
-                                    <span class="fb-badge fb-badge-green">
-                                        <i class="bi bi-check-circle-fill me-1"></i>Hoạt động
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="fb-badge fb-badge-red">
-                                        <i class="bi bi-lock-fill me-1"></i>Tạm khóa
-                                    </span>
-                                }
-                            </td>
-
-                            <!-- Thao tác: Chỉnh sửa thông tin / Xóa tài khoản -->
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <a asp-action="Edit" asp-route-id="@item.MaTaiKhoan" class="fb-btn fb-btn-secondary fb-btn-sm" title="Chỉnh sửa thông tin tài khoản">
-                                        <i class="bi bi-pencil-square me-1"></i> Sửa
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@item.MaTaiKhoan" class="fb-btn fb-btn-sm text-danger border-danger-subtle bg-danger-subtle" title="Xóa tài khoản">
-                                        <i class="bi bi-trash-fill me-1"></i> Xóa
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
+@model IEnumerable<TrungTamNgoaiNgu.Models.TaiKhoan>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Tài Khoản Người Dùng · Meta Business Suite";
+    int stt = 1;
+    var currentAdminId = Context.Session.GetInt32("MaTaiKhoan");
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-shield-lock-fill text-primary"></i> Quản Lý Tài Khoản Hệ Thống
+        </h3>
+        <p class="text-muted mb-0 small">Danh sách tài khoản quản trị viên, giảng viên và học viên với phân quyền chi tiết</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="fb-badge fb-badge-blue">
+            <i class="bi bi-people-fill me-1"></i> Tổng số: <strong>@ViewBag.TotalCount</strong> tài khoản
+        </span>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="fb-card p-3 mb-3">
+    <form method="get" asp-action="Index" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="search" class="form-control border-start-0" placeholder="Tìm theo tên đăng nhập, họ tên, email..." value="@ViewBag.Search" />
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <select name="vaiTro" class="form-select">
+                <option value="">-- Tất cả vai trò --</option>
+                <option value="Admin" selected="@(ViewBag.VaiTro == "Admin")">Quản trị viên (Admin)</option>
+                <option value="GiaoVien" selected="@(ViewBag.VaiTro == "GiaoVien")">Giáo viên (GiaoVien)</option>
+                <option value="HocVien" selected="@(ViewBag.VaiTro == "HocVien")">Học viên (HocVien)</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <select name="trangThai" class="form-select">
+                <option value="">-- Trạng thái --</option>
+                <option value="HoatDong" selected="@(ViewBag.TrangThai == "HoatDong")">Hoạt động</option>
+                <option value="Khoa" selected="@(ViewBag.TrangThai == "Khoa")">Tạm khóa</option>
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="fb-btn fb-btn-primary w-100">
+                <i class="bi bi-funnel me-1"></i> Lọc
+            </button>
+            <a asp-action="Index" class="fb-btn fb-btn-secondary" title="Đặt lại bộ lọc">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Accounts Data Table -->
+<div class="fb-card">
+    <div class="fb-card-header d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-table text-primary"></i> Bảng Danh Sách Tài Khoản
+        </div>
+        <div class="text-muted small">
+            Hiển thị @Model.Count() bản ghi
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-person-x fs-1 text-muted d-block mb-2"></i>
+            <h6 class="fw-bold">Không tìm thấy tài khoản nào phù hợp</h6>
+            <a asp-action="Index" class="fb-btn fb-btn-secondary mt-2">Đặt lại bộ lọc</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 60px;">STT</th>
+                        <th style="width: 130px;">Mã tài khoản</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Họ và tên</th>
+                        <th>Email liên hệ</th>
+                        <th style="width: 140px;">Vai trò</th>
+                        <th style="width: 130px;">Trạng thái</th>
+                        <th class="text-end" style="width: 170px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <!-- STT -->
+                            <td class="text-center fw-semibold text-muted">@(stt++)</td>
+
+                            <!-- Mã tài khoản -->
+                            <td>
+                                <span class="badge bg-light text-dark border font-monospace px-2 py-1">
+                                    #TK-@item.MaTaiKhoan.ToString("D4")
+                                </span>
+                            </td>
+
+                            <!-- Tên đăng nhập -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="fb-avatar fb-avatar-sm" style="background: @(item.VaiTro == "Admin" ? "#fa3e3e" : (item.VaiTro == "GiaoVien" ? "#9360f7" : "#0866ff")); color: #fff;">
+                                        @(item.HoTen.Length > 0 ? item.HoTen.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@item.TenDangNhap</div>
+                                        @if (item.HocVien != null)
+                                        {
+                                            <span class="text-muted" style="font-size: 11px;">(Học viên: #HV-@item.HocVien.MaHocVien)</span>
+                                        }
+                                        else if (item.GiaoVien != null)
+                                        {
+                                            <span class="text-muted" style="font-size: 11px;">(Giảng viên: #GV-@item.GiaoVien.MaGiaoVien)</span>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Họ và tên -->
+                            <td class="fw-semibold text-dark">@item.HoTen</td>
+
+                            <!-- Email -->
+                            <td class="text-muted">
+                                <i class="bi bi-envelope me-1"></i>@item.Email
+                            </td>
+
+                            <!-- Vai trò -->
+                            <td>
+                                @if (item.VaiTro == "Admin")
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        <i class="bi bi-shield-fill-check me-1"></i>Quản trị viên
+                                    </span>
+                                }
+                                else if (item.VaiTro == "GiaoVien")
+                                {
+                                    <span class="badge bg-purple-subtle text-primary border border-primary-subtle px-2 py-1" style="background-color: #f0e6ff; color: #9360f7 !important;">
+                                        <i class="bi bi-person-video3 me-1"></i>Giáo viên
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                        <i class="bi bi-person-fill me-1"></i>Học viên
+                                    </span>
+                                }
+                            </td>
+
+                            <!-- Trạng thái -->
+                            <td>
+                                @if (item.TrangThai == "HoatDong")
+                                {
+                                    <span class="fb-badge fb-badge-green">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Hoạt động
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="fb-badge fb-badge-red">
+                                        <i class="bi bi-lock-fill me-1"></i>Tạm khóa
+                                    </span>
+                                }
+                            </td>
+
+                            <!-- Thao tác: Chỉnh sửa thông tin / Xóa tài khoản -->
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a asp-action="Edit" asp-route-id="@item.MaTaiKhoan" class="fb-btn fb-btn-secondary fb-btn-sm" title="Chỉnh sửa thông tin tài khoản">
+                                        <i class="bi bi-pencil-square me-1"></i> Sửa
+                                    </a>
+                                    @if (currentAdminId.HasValue && item.MaTaiKhoan == currentAdminId.Value)
+                                    {
+                                        <span class="badge bg-secondary-subtle text-muted border px-2 py-1 small align-self-center" title="Không thể tự xóa chính mình">
+                                            <i class="bi bi-person-check me-1"></i>Đang dùng
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" 
+                                                class="fb-btn fb-btn-sm text-danger border-danger-subtle bg-danger-subtle" 
+                                                title="Xóa tài khoản"
+                                                onclick="openDeleteModal(@item.MaTaiKhoan, '@Html.Raw(item.TenDangNhap.Replace("'", "\'"))', '@Html.Raw(item.HoTen.Replace("'", "\'"))', '@item.Email', '@item.VaiTro')">
+                                            <i class="bi bi-trash-fill me-1"></i> Xóa
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+
+<!-- Modal Xác Nhận Xóa Tài Khoản Nhanh -->
+<div class="modal fade" id="modalDeleteTaiKhoan" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-bottom bg-danger text-white">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Xác Nhận Xóa Tài Khoản
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Delete" method="post" id="formDeleteTaiKhoan">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="deleteModalMaTaiKhoan" />
+                <div class="modal-body p-4">
+                    <div class="alert alert-danger d-flex align-items-center gap-2 py-2 px-3 mb-3 small">
+                        <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+                        <div><strong>Cảnh báo:</strong> Thao tác xóa sẽ loại bỏ vĩnh viễn tài khoản người dùng và tự động dọn dẹp các dữ liệu liên kết trong hệ thống. Không thể khôi phục sau khi xóa!</div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="row g-2 small">
+                            <div class="col-4 text-muted">Mã tài khoản:</div>
+                            <div class="col-8 fw-bold font-monospace" id="deleteModalMaHienThi"></div>
+
+                            <div class="col-4 text-muted">Tên đăng nhập:</div>
+                            <div class="col-8 fw-bold text-dark" id="deleteModalTenDangNhap"></div>
+
+                            <div class="col-4 text-muted">Họ và tên:</div>
+                            <div class="col-8 fw-semibold" id="deleteModalHoTen"></div>
+
+                            <div class="col-4 text-muted">Email liên hệ:</div>
+                            <div class="col-8 text-muted" id="deleteModalEmail"></div>
+
+                            <div class="col-4 text-muted">Vai trò:</div>
+                            <div class="col-8" id="deleteModalVaiTro"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4" id="btnConfirmDelete">
+                        <i class="bi bi-trash-fill me-1" id="iconConfirmDelete"></i>
+                        <span id="textConfirmDelete">Xác nhận xóa tài khoản</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal(maTaiKhoan, tenDangNhap, hoTen, email, vaiTro) {
+        document.getElementById('deleteModalMaTaiKhoan').value = maTaiKhoan;
+        document.getElementById('deleteModalMaHienThi').textContent = '#TK-' + String(maTaiKhoan).padStart(4, '0');
+        document.getElementById('deleteModalTenDangNhap').textContent = tenDangNhap;
+        document.getElementById('deleteModalHoTen').textContent = hoTen;
+        document.getElementById('deleteModalEmail').textContent = email;
+
+        var vaiTroContainer = document.getElementById('deleteModalVaiTro');
+        if (vaiTro === 'Admin') {
+            vaiTroContainer.innerHTML = '<span class="badge bg-danger">Quản trị viên (Admin)</span>';
+        } else if (vaiTro === 'GiaoVien') {
+            vaiTroContainer.innerHTML = '<span class="badge" style="background:#9360f7; color:#fff;">Giáo viên</span>';
+        } else {
+            vaiTroContainer.innerHTML = '<span class="badge bg-primary">Học viên</span>';
+        }
+
+        new bootstrap.Modal(document.getElementById('modalDeleteTaiKhoan')).show();
+    }
+
+    document.getElementById('formDeleteTaiKhoan').addEventListener('submit', function () {
+        var btn = document.getElementById('btnConfirmDelete');
+        var icon = document.getElementById('iconConfirmDelete');
+        var text = document.getElementById('textConfirmDelete');
+        if (btn) {
+            setTimeout(function() {
+                btn.disabled = true;
+                if (icon) icon.className = 'spinner-border spinner-border-sm me-1';
+                if (text) text.textContent = ' Đang xóa tài khoản...';
+            }, 10);
+        }
+    });
+</script>

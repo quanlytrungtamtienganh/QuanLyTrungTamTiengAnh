@@ -18,11 +18,13 @@ namespace TrungTamNgoaiNgu.Controllers
     {
         private readonly TrungTamDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly ILogger<YeuCauDangKyController> _logger;
 
-        public YeuCauDangKyController(TrungTamDbContext context, IEmailService emailService)
+        public YeuCauDangKyController(TrungTamDbContext context, IEmailService emailService, ILogger<YeuCauDangKyController> logger)
         {
             _context = context;
             _emailService = emailService;
+            _logger = logger;
         }
 
         // GET: /YeuCauDangKy
@@ -65,7 +67,7 @@ namespace TrungTamNgoaiNgu.Controllers
             var yeuCau = await _context.YeuCauDangKys.FindAsync(maYeuCau);
             if (yeuCau == null)
             {
-                TempData["Error"] = "Không tìm thấy yêu cầu!";
+                TempData["Error"] = "Không tìm thấy yêu cầu đăng ký!";
                 return RedirectToAction("Index");
             }
 
@@ -126,16 +128,26 @@ namespace TrungTamNgoaiNgu.Controllers
             yeuCau.TrangThai = "DaTao";
             await _context.SaveChangesAsync();
 
-            // Gửi email thông báo
-            await _emailService.SendAccountCreatedEmailAsync(
-                toEmail: email,
-                toName: hoTen,
-                username: tenDangNhap.Trim().ToLower(),
-                password: matKhau.Trim(),
-                role: taiKhoan.VaiTro
-            );
+            // Gửi email ở background task (không chặn response, phản hồi tức thì cho Admin)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendAccountCreatedEmailAsync(
+                        toEmail: email,
+                        toName: hoTen,
+                        username: tenDangNhap.Trim().ToLower(),
+                        password: matKhau.Trim(),
+                        role: taiKhoan.VaiTro
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi gửi email thông báo tạo tài khoản tới {Email}", email);
+                }
+            });
 
-            TempData["Success"] = $"✅ Đã tạo tài khoản '{tenDangNhap}' thành công và gửi email tới {email}!";
+            TempData["Success"] = $"Đã tạo tài khoản '{tenDangNhap}' thành công! Thông tin tài khoản đang được tự động gửi về Gmail {email}.";
             return RedirectToAction("Index");
         }
 
@@ -149,7 +161,7 @@ namespace TrungTamNgoaiNgu.Controllers
             {
                 yeuCau.TrangThai = "DaTu";
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Đã từ chối yêu cầu của {yeuCau.HoTen}.";
+                TempData["Success"] = $"Đã từ chối yêu cầu đăng ký của {yeuCau.HoTen}.";
             }
             return RedirectToAction("Index");
         }

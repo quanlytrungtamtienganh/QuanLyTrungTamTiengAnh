@@ -668,6 +668,8 @@
                         </div>
                     }
 
+                    <div id="ajaxAlertContainer" class="mb-3" style="display:none;"></div>
+
                     <form method="post" action="/Landing/GuiYeuCau" id="formDangKy" novalidate>
                         @Html.AntiForgeryToken()
                         <div class="row g-3">
@@ -810,10 +812,51 @@
                         });
 
                         document.getElementById('formDangKy').addEventListener('submit', function (e) {
+                            e.preventDefault();
                             if (!emailOk || !sdtOk) {
-                                e.preventDefault();
                                 return false;
                             }
+
+                            var form = this;
+                            var btn = document.getElementById('btnGuiYeuCau');
+                            var alertBox = document.getElementById('ajaxAlertContainer');
+
+                            var originalHtml = '<i class="bi bi-send-fill me-2"></i>Gửi yêu cầu tạo tài khoản';
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang gửi yêu cầu...';
+                            if (alertBox) alertBox.style.display = 'none';
+
+                            var formData = new FormData(form);
+
+                            fetch('/Landing/GuiYeuCau', {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                btn.disabled = false;
+                                btn.innerHTML = originalHtml;
+
+                                if (alertBox) {
+                                    alertBox.style.display = 'block';
+                                    if (data.success) {
+                                        alertBox.innerHTML = '<div class="alert alert-success rounded-3 d-flex align-items-start gap-2 shadow-sm p-3"><i class="bi bi-check-circle-fill fs-4 text-success flex-shrink-0"></i><div><strong class="d-block mb-1">Gửi yêu cầu thành công!</strong>' + data.message + '</div></div>';
+                                        form.reset();
+                                        setFieldState(emailInput, emailIcon, emailFeed, 'idle', '');
+                                        setFieldState(sdtInput, sdtIcon, sdtFeed, 'idle', '');
+                                    } else {
+                                        alertBox.innerHTML = '<div class="alert alert-danger rounded-3 d-flex align-items-start gap-2 shadow-sm p-3"><i class="bi bi-exclamation-triangle-fill fs-4 text-danger flex-shrink-0"></i><div><strong class="d-block mb-1">Thông báo:</strong>' + data.message + '</div></div>';
+                                    }
+                                    alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                }
+                            })
+                            .catch(function() {
+                                // Fallback form submit
+                                form.submit();
+                            });
                         });
                     })();
                     </script>
