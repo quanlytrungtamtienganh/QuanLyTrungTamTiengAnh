@@ -1,0 +1,874 @@
+/* ==========================================================================
+   FACEBOOK DESIGN SYSTEM (META PRIMER / LANGUAGEBOOK)
+   Modern Facebook Web Interface (Desktop & Mobile Responsive)
+   ========================================================================== */
+
+:root {
+    /* Facebook Brand Colors */
+    --fb-primary: #0866ff;
+    --fb-primary-hover: #0055d6;
+    --fb-primary-active: #004ac0;
+    --fb-primary-soft: #e7f3ff;
+    
+    /* Secondary & Accent Colors */
+    --fb-green: #42b72a;
+    --fb-green-hover: #36a420;
+    --fb-red: #e41e3f;
+    --fb-yellow: #f7b125;
+    --fb-pink: #f33e58;
+    --fb-purple: #9360f7;
+
+    /* Backgrounds */
+    --fb-bg: #f0f2f5;
+    --fb-card-bg: #ffffff;
+    --fb-secondary-bg: #f0f2f5;
+    --fb-hover-bg: #e4e6eb;
+    --fb-hover-subtle: #f2f2f2;
+    --fb-active-bg: #d8dadf;
+
+    /* Text Colors */
+    --fb-text-primary: #050505;
+    --fb-text-secondary: #65676b;
+    --fb-text-muted: #8a8d91;
+    --fb-text-blue: #0866ff;
+    --fb-text-white: #ffffff;
+
+    /* Borders & Dividers */
+    --fb-border: #ced0d4;
+    --fb-border-light: #e4e6eb;
+    --fb-divider: #e4e6eb;
+
+    /* Shadows */
+    --fb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --fb-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --fb-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --fb-shadow-dropdown: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    --fb-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+    /* Radii */
+    --fb-radius-sm: 6px;
+    --fb-radius: 8px;
+    --fb-radius-md: 10px;
+    --fb-radius-lg: 16px;
+    --fb-radius-pill: 9999px;
+    --fb-radius-circle: 50%;
+
+    /* Typography */
+    --fb-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Global Reset & Body */
+body {
+    background-color: var(--fb-bg) !important;
+    color: var(--fb-text-primary);
+    font-family: var(--fb-font-family);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--fb-primary);
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   1. FACEBOOK TOPBAR (HEADER)
+   ========================================================================== */
+.fb-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background-color: var(--fb-card-bg);
+    height: 56px;
+    border-bottom: 1px solid var(--fb-border-light);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+}
+
+/* Left: Logo & Search */
+.fb-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    max-width: 320px;
+}
+.fb-logo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border-radius: var(--fb-radius-circle);
+    text-decoration: none !important;
+}
+.fb-topbar-logo-img {
+    height: 40px;
+    width: 40px;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.2s ease;
+}
+.fb-topbar-logo-img:hover {
+    transform: scale(1.06);
+}
+.fb-logo-text {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--fb-primary);
+    letter-spacing: -0.5px;
+    margin-left: 4px;
+}
+.fb-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--fb-secondary-bg);
+    border-radius: var(--fb-radius-pill);
+    padding: 7px 12px 7px 36px;
+    width: 240px;
+    transition: all 0.2s ease;
+}
+.fb-search-box:focus-within {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px var(--fb-primary-soft), 0 2px 6px rgba(0,0,0,0.1);
+}
+.fb-search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--fb-text-secondary);
+    font-size: 14px;
+}
+.fb-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    width: 100%;
+    color: var(--fb-text-primary);
+}
+.fb-search-input::placeholder {
+    color: var(--fb-text-secondary);
+}
+
+/* Center: Navigation Tabs */
+.fb-topbar-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 2;
+    height: 100%;
+}
+.fb-tab-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 90px;
+    max-width: 110px;
+    position: relative;
+    color: var(--fb-text-secondary);
+    font-size: 24px;
+    border-radius: var(--fb-radius);
+    text-decoration: none !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.fb-tab-item:hover {
+    background-color: var(--fb-hover-bg);
+    color: var(--fb-primary);
+}
+.fb-tab-item.active {
+    color: var(--fb-primary);
+}
+.fb-tab-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--fb-primary);
+    border-radius: 3px 3px 0 0;
+}
+
+/* Right: Action Buttons & Avatar */
+.fb-topbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 1;
+}
+.fb-circle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--fb-radius-circle);
+    background-color: var(--fb-secondary-bg);
+    color: var(--fb-text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.15s ease;
+    text-decoration: none !important;
+}
+.fb-circle-btn:hover {
+    background-color: var(--fb-hover-bg);
+    color: var(--fb-text-primary);
+}
+.fb-circle-btn .fb-badge-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background-color: var(--fb-red);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: var(--fb-radius-pill);
+    padding: 1px 5px;
+    border: 2px solid #fff;
+}
+.fb-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--fb-radius-circle);
+    background-color: #d8dadf;
+    color: #050505;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    overflow: hidden;
+    border: 1px solid var(--fb-border-light);
+    cursor: pointer;
+}
+.fb-avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+.fb-avatar-lg {
+    width: 52px;
+    height: 52px;
+    font-size: 20px;
+}
+.fb-avatar-xl {
+    width: 96px;
+    height: 96px;
+    font-size: 36px;
+}
+
+/* ==========================================================================
+   2. FACEBOOK CARDS & CONTAINERS
+   ========================================================================== */
+.fb-card {
+    background-color: var(--fb-card-bg);
+    border-radius: var(--fb-radius);
+    box-shadow: var(--fb-shadow-card);
+    border: 1px solid var(--fb-border-light);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+.fb-card-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--fb-border-light);
+}
+.fb-card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--fb-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fb-card-body {
+    padding: 16px;
+}
+
+/* ==========================================================================
+   3. FACEBOOK BUTTONS
+   ========================================================================== */
+.fb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--fb-radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none !important;
+}
+.fb-btn-primary {
+    background-color: var(--fb-primary);
+    color: #ffffff !important;
+}
+.fb-btn-primary:hover {
+    background-color: var(--fb-primary-hover);
+    color: #ffffff !important;
+}
+.fb-btn-secondary {
+    background-color: var(--fb-secondary-bg);
+    color: var(--fb-text-primary) !important;
+}
+.fb-btn-secondary:hover {
+    background-color: var(--fb-hover-bg);
+    color: var(--fb-text-primary) !important;
+}
+.fb-btn-green {
+    background-color: var(--fb-green);
+    color: #ffffff !important;
+}
+.fb-btn-green:hover {
+    background-color: var(--fb-green-hover);
+    color: #ffffff !important;
+}
+.fb-btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--fb-border);
+    color: var(--fb-text-primary) !important;
+}
+.fb-btn-outline:hover {
+    background-color: var(--fb-hover-bg);
+}
+.fb-btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+.fb-btn-lg {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   4. FACEBOOK STORIES CAROUSEL
+   ========================================================================== */
+.fb-stories-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+}
+.fb-stories-container::-webkit-scrollbar {
+    display: none;
+}
+.fb-story-card {
+    flex: 0 0 115px;
+    height: 195px;
+    border-radius: var(--fb-radius-md);
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: var(--fb-shadow-card);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-size: cover;
+    background-position: center;
+    background-color: #242526;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    text-decoration: none !important;
+}
+.fb-story-card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--fb-shadow-hover);
+}
+.fb-story-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.7) 100%);
+}
+.fb-story-avatar {
+    position: relative;
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--fb-radius-circle);
+    border: 3px solid var(--fb-primary);
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--fb-primary);
+}
+.fb-story-name {
+    position: relative;
+    z-index: 2;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.25;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+/* ==========================================================================
+   5. FACEBOOK "CREATE POST" BOX
+   ========================================================================== */
+.fb-create-post-card {
+    background-color: var(--fb-card-bg);
+    border-radius: var(--fb-radius);
+    padding: 12px 16px;
+    box-shadow: var(--fb-shadow-card);
+    border: 1px solid var(--fb-border-light);
+    margin-bottom: 16px;
+}
+.fb-create-post-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--fb-border-light);
+}
+.fb-create-post-input {
+    flex: 1;
+    background-color: var(--fb-secondary-bg);
+    border-radius: var(--fb-radius-pill);
+    padding: 10px 16px;
+    color: var(--fb-text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border: none;
+    text-align: left;
+}
+.fb-create-post-input:hover {
+    background-color: var(--fb-hover-bg);
+}
+.fb-create-post-actions {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 8px;
+}
+.fb-action-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1;
+    padding: 8px;
+    border-radius: var(--fb-radius-sm);
+    color: var(--fb-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+.fb-action-item:hover {
+    background-color: var(--fb-hover-bg);
+}
+
+/* ==========================================================================
+   6. FACEBOOK NEWSFEED POST (POST CARD)
+   ========================================================================== */
+.fb-post {
+    background-color: var(--fb-card-bg);
+    border-radius: var(--fb-radius);
+    box-shadow: var(--fb-shadow-card);
+    border: 1px solid var(--fb-border-light);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+.fb-post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+}
+.fb-post-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.fb-author-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--fb-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.fb-verified-badge {
+    color: var(--fb-primary);
+    font-size: 14px;
+}
+.fb-post-meta {
+    font-size: 12px;
+    color: var(--fb-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.fb-post-body {
+    padding: 0 16px 12px 16px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--fb-text-primary);
+}
+.fb-post-media {
+    position: relative;
+    background-color: #f7f8fa;
+    border-top: 1px solid var(--fb-border-light);
+    border-bottom: 1px solid var(--fb-border-light);
+}
+.fb-post-media img {
+    width: 100%;
+    max-height: 380px;
+    object-fit: cover;
+    display: block;
+}
+.fb-post-media-content {
+    padding: 12px 16px;
+    background-color: #f0f2f5;
+    border-bottom: 1px solid var(--fb-border-light);
+}
+.fb-post-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--fb-text-secondary);
+    border-bottom: 1px solid var(--fb-border-light);
+}
+.fb-reactions-icons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.fb-reaction-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--fb-radius-circle);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+}
+.fb-reaction-like { background-color: var(--fb-primary); }
+.fb-reaction-love { background-color: var(--fb-pink); }
+.fb-reaction-care { background-color: var(--fb-yellow); }
+
+.fb-post-actions-bar {
+    display: flex;
+    align-items: center;
+    padding: 4px 12px;
+}
+.fb-post-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 4px;
+    border-radius: var(--fb-radius-sm);
+    color: var(--fb-text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    transition: background-color 0.15s ease;
+    text-decoration: none !important;
+}
+.fb-post-action-btn:hover {
+    background-color: var(--fb-hover-bg);
+    color: var(--fb-text-primary);
+}
+.fb-post-action-btn.active-liked {
+    color: var(--fb-primary);
+}
+
+/* ==========================================================================
+   7. FACEBOOK SIDEBARS (LEFT SHORTCUTS & RIGHT CONTACTS)
+   ========================================================================== */
+.fb-sidebar {
+    position: sticky;
+    top: 68px;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #bcc0c4 transparent;
+}
+.fb-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: var(--fb-radius);
+    color: var(--fb-text-primary);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: background-color 0.15s ease;
+}
+.fb-sidebar-item:hover {
+    background-color: var(--fb-hover-bg);
+    color: var(--fb-text-primary);
+}
+.fb-sidebar-item.active {
+    background-color: var(--fb-primary-soft);
+    color: var(--fb-primary);
+}
+.fb-sidebar-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--fb-radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background-color: #e4e6eb;
+}
+.fb-sidebar-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--fb-text-secondary);
+    padding: 10px 10px 4px 10px;
+}
+.fb-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--fb-radius);
+    cursor: pointer;
+    color: var(--fb-text-primary);
+    text-decoration: none !important;
+    transition: background-color 0.15s ease;
+}
+.fb-contact-item:hover {
+    background-color: var(--fb-hover-bg);
+}
+.fb-online-badge {
+    position: relative;
+}
+.fb-online-badge::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: #31a24c;
+    border-radius: var(--fb-radius-circle);
+    border: 2px solid #fff;
+}
+
+/* ==========================================================================
+   8. FACEBOOK BADGES & TAGS
+   ========================================================================== */
+.fb-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--fb-radius-pill);
+    gap: 4px;
+}
+.fb-badge-blue {
+    background-color: var(--fb-primary-soft);
+    color: var(--fb-primary);
+}
+.fb-badge-green {
+    background-color: #e7f8ec;
+    color: #1b873f;
+}
+.fb-badge-red {
+    background-color: #fde8e8;
+    color: var(--fb-red);
+}
+.fb-badge-yellow {
+    background-color: #fef7e0;
+    color: #b07800;
+}
+.fb-badge-purple {
+    background-color: #f3e8ff;
+    color: #7e22ce;
+}
+
+/* ==========================================================================
+   9. FACEBOOK FORM CONTROLS
+   ========================================================================== */
+.fb-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--fb-border);
+    border-radius: var(--fb-radius-sm);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    background-color: #ffffff;
+}
+.fb-input:focus {
+    border-color: var(--fb-primary);
+    box-shadow: 0 0 0 2px var(--fb-primary-soft);
+}
+.fb-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fb-text-primary);
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* ==========================================================================
+   10. FACEBOOK SIGN IN PAGE
+   ========================================================================== */
+.fb-login-wrapper {
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+}
+.fb-login-logo {
+    color: var(--fb-primary);
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 12px;
+}
+.fb-login-slogan {
+    font-size: 1.65rem;
+    line-height: 1.35;
+    color: #1c1e21;
+    font-weight: 400;
+}
+.fb-login-card {
+    background: #ffffff;
+    border-radius: var(--fb-radius);
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--fb-border-light);
+}
+
+/* ==========================================================================
+   11. RESPONSIVE UTILITIES
+   ========================================================================== */
+@media (max-width: 992px) {
+    .fb-sidebar-col {
+        display: none !important;
+    }
+    .fb-topbar-center {
+        display: none !important;
+    }
+    .fb-search-box {
+        width: 160px;
+    }
+}
+@media (max-width: 576px) {
+    .fb-search-box {
+        display: none !important;
+    }
+    .fb-topbar-left {
+        max-width: auto;
+    }
+    .fb-login-logo {
+        font-size: 2.5rem;
+        text-align: center;
+    }
+    .fb-login-slogan {
+        font-size: 1.2rem;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+}
+
+/* ==========================================================================
+   12. FACEBOOK POST BACKGROUNDS & RICH CREATOR
+   ========================================================================== */
+.fb-bg-sunset {
+    background: linear-gradient(135deg, #ff512f, #dd2476) !important;
+}
+.fb-bg-ocean {
+    background: linear-gradient(135deg, #00c6ff, #0072ff) !important;
+}
+.fb-bg-fire {
+    background: linear-gradient(135deg, #f857a6, #ff5858) !important;
+}
+.fb-bg-berry {
+    background: linear-gradient(135deg, #8e2de2, #4a00e0) !important;
+}
+.fb-bg-midnight {
+    background: linear-gradient(135deg, #232526, #414345) !important;
+}
+.fb-bg-emerald {
+    background: linear-gradient(135deg, #11998e, #38ef7d) !important;
+}
+.fb-bg-purple {
+    background: linear-gradient(135deg, #654ea3, #eaafc8) !important;
+}
+
+.fb-post-bg-canvas {
+    min-height: 260px;
+    padding: 30px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ffffff !important;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.45;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    word-break: break-word;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.fb-color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px #ced0d4;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: inline-block;
+}
+.fb-color-swatch:hover, .fb-color-swatch.active {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px var(--fb-primary);
+}
+
+/* Mod bar */
+.fb-mod-card {
+    background: #ffffff;
+    border: 1px solid #e4e6eb;
+    border-radius: var(--fb-radius);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+

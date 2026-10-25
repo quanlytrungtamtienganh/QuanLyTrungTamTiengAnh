@@ -1,0 +1,321 @@
+@model TrungTamNgoaiNgu.Models.KhoaHoc
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.Session.GetString("VaiTro");
+    var userName = HttpContextAccessor.HttpContext?.Session.GetString("HoTen") ?? "Bạn";
+    var currentUserId = HttpContextAccessor.HttpContext?.Session.GetInt32("MaTaiKhoan");
+    var isLoggedIn = !string.IsNullOrEmpty(HttpContextAccessor.HttpContext?.Session.GetString("HoTen"));
+    var isAdmin = role == "Admin";
+    Layout = isAdmin ? "_AdminLayout" : "_StudentLayout";
+    ViewData["Title"] = Model.TenKhoaHoc + " · Trang Khóa Học";
+}
+
+<!-- =========================================================================
+     1. FACEBOOK PAGE HEADER (COVER PHOTO + AVATAR + PAGE ACTIONS)
+     ========================================================================= -->
+<div class="bg-white border-bottom shadow-sm mb-4">
+    <div class="container-xl p-0">
+        <!-- Cover Photo -->
+        @{
+            string detailBanner = ImageHelper.GetCourseImage(Model.NgoaiNgu, Model.TenKhoaHoc, Model.MaKhoaHoc);
+        }
+        <div class="position-relative overflow-hidden" style="height: 280px; border-radius: 0 0 10px 10px; background: #000;">
+            <img src="@detailBanner" alt="@Model.TenKhoaHoc" style="width:100%; height:100%; object-fit:cover; object-position:center; display:block; opacity:0.85;" />
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);"></div>
+            <div class="position-absolute bottom-0 start-0 p-4 text-white">
+                <span class="badge bg-primary px-3 py-1 mb-2 fs-6">CHƯƠNG TRÌNH ĐÀO TẠO CHUẨN QUỐC TẾ</span>
+                <h1 class="fw-bold mb-0 text-white display-6">@Model.TenKhoaHoc</h1>
+            </div>
+        </div>
+
+        <!-- Page Identity Bar -->
+        <div class="px-4 pb-3 pt-2 d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="fb-avatar fb-avatar-xl shadow" style="margin-top: -45px; background: #ffffff; padding: 6px; border: 4px solid #fff;">
+                    <img src="~/images/logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+                </div>
+                <div>
+                    <h2 class="h3 fw-bold mb-0 d-flex align-items-center gap-2">
+                        @Model.TenKhoaHoc
+                        <i class="bi bi-patch-check-fill text-primary fs-5" title="Khóa học chính thức đã xác minh"></i>
+                    </h2>
+                    <div class="text-muted small">
+                        <span>1.8K lượt thích</span> &bull; 
+                        <span>2.2K người theo dõi</span> &bull; 
+                        <span class="text-primary fw-semibold">@Model.NgoaiNgu (Chuẩn @Model.CapDo)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Action Buttons -->
+            <div class="d-flex flex-wrap gap-2">
+                <a href="#danh-sach-lop" class="fb-btn fb-btn-primary">
+                    <i class="bi bi-send-check me-1"></i> Đăng ký học ngay
+                </a>
+                <a href="/KhoaHoc/Catalog" class="fb-btn fb-btn-secondary">
+                    <i class="bi bi-chat-dots-fill me-1"></i> Nhắn tin tư vấn
+                </a>
+                <button type="button" class="fb-circle-btn" title="Thích khóa học">
+                    <i class="bi bi-hand-thumbs-up-fill text-primary"></i>
+                </button>
+                <button type="button" class="fb-circle-btn" title="Chia sẻ">
+                    <i class="bi bi-share-fill"></i>
+                </button>
+                @if (isAdmin)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.MaKhoaHoc" class="fb-btn fb-btn-outline">
+                        <i class="bi bi-pencil me-1"></i> Quản trị khóa
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     2. MAIN CONTENT (ABOUT CARD & EVENTS/CLASSES CARDS)
+     ========================================================================= -->
+<div class="container-xl mb-5">
+    <div class="row g-4">
+        <!-- Left Column: Giới thiệu & Thông số khóa học -->
+        <div class="col-lg-5">
+            <!-- Thẻ Giới thiệu -->
+            <div class="fb-card p-3 mb-3">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle-fill text-primary"></i> Giới thiệu khóa học
+                </h5>
+
+                <p class="text-secondary small mb-3" style="line-height: 1.6;">
+                    @(string.IsNullOrEmpty(Model.MoTa) ? "Khóa học được thiết kế chuẩn quốc tế với giáo trình hiện đại, giảng viên giàu kinh nghiệm đồng hành, bài tập và khảo thí liên tục giúp học viên nâng cao trình độ nhanh chóng." : Model.MoTa)
+                </p>
+
+                <div class="d-flex flex-column gap-2 small">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-translate text-primary fs-5"></i>
+                        <div>Ngôn ngữ: <strong>@Model.NgoaiNgu</strong></div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard text-success fs-5"></i>
+                        <div>Cấp độ CEFR: <span class="badge bg-light text-dark border">@Model.CapDo</span></div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-warning fs-5"></i>
+                        <div>Thời lượng đào tạo: <strong>@Model.SoBuoi buổi học</strong></div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-cash-stack text-danger fs-5"></i>
+                        <div>Học phí niêm yết: <strong class="text-primary fs-6">@Model.HocPhi.ToString("N0") VNĐ</strong></div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-success fs-5"></i>
+                        <div>Trạng thái: <span class="fb-badge fb-badge-green">@Model.TrangThai</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cam kết đào tạo -->
+            <div class="fb-card p-3">
+                <h6 class="fw-bold mb-2 text-primary"><i class="bi bi-award me-1"></i> Cam kết chuẩn đầu ra</h6>
+                <ul class="text-secondary small mb-0 ps-3" style="line-height: 1.6;">
+                    <li>100% Giảng viên bản ngữ và thạc sĩ sư phạm ngoại ngữ.</li>
+                    <li>Cam kết đạt chuẩn đầu ra hoặc được học lại miễn phí.</li>
+                    <li>Thi thử định kỳ theo chuẩn bài thi khảo thí quốc tế.</li>
+                    <li>Hỗ trợ tài liệu độc quyền và ứng dụng luyện tập trực tuyến.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Column: Danh sách các lớp học đang mở & Đăng ký -->
+        <div class="col-lg-7" id="danh-sach-lop">
+            <div class="fb-card">
+                <div class="fb-card-header">
+                    <h5 class="fb-card-title">
+                        <i class="bi bi-calendar2-check-fill text-primary"></i> 
+                        Lịch mở lớp trực thuộc (@Model.LopHocs.Count lớp)
+                    </h5>
+                    @if (isAdmin)
+                    {
+                        <a asp-controller="LopHoc" asp-action="Create" class="fb-btn fb-btn-primary fb-btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Thêm lớp mới
+                        </a>
+                    }
+                </div>
+
+                <div class="p-3">
+                    @if (!Model.LopHocs.Any())
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2 text-secondary"></i>
+                            <p class="mb-0">Hiện tại chưa có lớp học nào đang mở cho khóa này.</p>
+                            <span class="small">Vui lòng theo dõi hoặc liên hệ tư vấn viên để nhận thông báo khi có lịch mới.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var lop in Model.LopHocs)
+                            {
+                                var daDangKy = lop.DangKyHocs?.Count(d => d.TrangThai != "Đã hủy") ?? 0;
+                                var conLai = Math.Max(0, lop.SoLuongToiDa - daDangKy);
+                                var percent = Math.Min(100, (int)((double)daDangKy / lop.SoLuongToiDa * 100));
+
+                                <div class="border rounded p-3 bg-light hover-bg">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                        <div>
+                                            <h5 class="fw-bold text-primary mb-1">@lop.TenLop</h5>
+                                            <div class="text-muted small">
+                                                <i class="bi bi-calendar-event me-1"></i> Khai giảng: <strong>@lop.NgayKhaiGiang.ToString("dd/MM/yyyy")</strong>
+                                                &bull; Phòng: <span class="badge bg-secondary">@lop.PhongHoc</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="fb-badge @(lop.TrangThai == "Đang tuyển sinh" ? "fb-badge-green" : "fb-badge-blue")">
+                                                @lop.TrangThai
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 text-secondary small mb-3">
+                                        <div class="col-sm-6">
+                                            <i class="bi bi-clock me-1 text-muted"></i> Lịch học: <strong>@lop.LichHoc</strong>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <i class="bi bi-cash me-1 text-muted"></i> Học phí lớp: <strong class="text-success fs-6">@lop.HocPhi.ToString("N0") VNĐ</strong>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tiến độ sĩ số -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between small text-muted mb-1">
+                                            <span>Sĩ số: <strong>@daDangKy</strong> / @lop.SoLuongToiDa học viên</span>
+                                            @if (conLai > 0)
+                                            {
+                                                <span class="text-success fw-bold">Còn @conLai chỗ trống</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-danger fw-bold">Đã đủ số lượng</span>
+                                            }
+                                        </div>
+                                        <div class="progress" style="height: 6px; background-color: #dddfe2;">
+                                            <div class="progress-bar @(percent >= 100 ? "bg-danger" : "bg-primary")" role="progressbar" style="width: @percent%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-controller="LopHoc" asp-action="Details" asp-route-id="@lop.MaLop" class="fb-btn fb-btn-primary fb-btn-sm">
+                                            <i class="bi bi-pencil-square me-1"></i> Đăng ký giữ chỗ
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Thẻ Hỏi Đáp & Bình Luận Học Viên -->
+            <div class="fb-card mt-4" id="binh-luan">
+                <div class="fb-card-header">
+                    <h5 class="fb-card-title">
+                        <i class="bi bi-chat-heart-fill text-primary"></i> 
+                        Hỏi Đáp & Bình Luận (@(Model.BinhLuans?.Count ?? 0) lượt)
+                    </h5>
+                    <span class="text-muted small">Mọi người đều có thể xem và tham gia thảo luận</span>
+                </div>
+
+                <div class="p-3">
+                    <!-- Danh sách bình luận -->
+                    @if (Model.BinhLuans != null && Model.BinhLuans.Any())
+                    {
+                        <div class="d-flex flex-column gap-3 mb-4">
+                            @foreach (var bl in Model.BinhLuans.OrderBy(b => b.NgayBinhLuan))
+                            {
+                                var isCommentOwner = currentUserId.HasValue && bl.MaTaiKhoan == currentUserId.Value;
+                                var canDelete = isAdmin || isCommentOwner;
+
+                                <div class="d-flex align-items-start gap-2">
+                                    <div class="fb-avatar fb-avatar-sm flex-shrink-0" style="background: @(bl.TaiKhoan?.VaiTro == "Admin" ? "#0866ff" : "#42b72a"); color: #fff;">
+                                        @(bl.TaiKhoan?.HoTen != null && bl.TaiKhoan.HoTen.Length > 0 ? bl.TaiKhoan.HoTen.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+
+                                    <div class="flex-grow-1">
+                                        <div class="p-2 px-3 rounded-4 d-inline-block position-relative" style="background-color: #f0f2f5; max-width: 95%;">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <strong class="small text-dark">@(bl.TaiKhoan?.HoTen ?? "Người dùng")</strong>
+                                                @if (bl.TaiKhoan?.VaiTro == "Admin")
+                                                {
+                                                    <span class="badge bg-primary" style="font-size: 9px; padding: 1px 5px;">Quản trị viên</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success" style="font-size: 9px; padding: 1px 5px;">Học viên</span>
+                                                }
+                                            </div>
+                                            <div class="small text-dark" style="word-break: break-word;">
+                                                @bl.NoiDung
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-3 ms-2 mt-1 text-muted" style="font-size: 11px;">
+                                            <span>@bl.NgayBinhLuan.ToString("dd/MM/yyyy HH:mm")</span>
+                                            <span class="fw-semibold text-secondary" style="cursor: pointer;">Thích</span>
+                                            
+                                            @if (canDelete)
+                                            {
+                                                <form asp-controller="BinhLuan" asp-action="Delete" asp-route-id="@bl.MaBinhLuan" method="post" class="d-inline m-0 p-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận này?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="returnUrl" value="/KhoaHoc/Details/@Model.MaKhoaHoc#binh-luan" />
+                                                    <button type="submit" class="border-0 bg-transparent text-danger p-0 fw-semibold" style="font-size: 11px; cursor: pointer;">
+                                                        <i class="bi bi-trash3 me-1"></i>Xóa
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted mb-3">
+                            <i class="bi bi-chat-dots fs-2 text-secondary d-block mb-2"></i>
+                            <p class="mb-0">Chưa có bình luận nào cho khóa học này.</p>
+                            <span class="small">Hãy là người đầu tiên đặt câu hỏi hoặc chia sẻ trải nghiệm!</span>
+                        </div>
+                    }
+
+                    <!-- Khung gửi bình luận -->
+                    @if (isLoggedIn)
+                    {
+                        <form asp-controller="BinhLuan" asp-action="Create" method="post" class="d-flex align-items-center gap-2 pt-2 border-top">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="maKhoaHoc" value="@Model.MaKhoaHoc" />
+                            <input type="hidden" name="returnUrl" value="/KhoaHoc/Details/@Model.MaKhoaHoc#binh-luan" />
+
+                            <div class="fb-avatar fb-avatar-sm flex-shrink-0">
+                                @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                            </div>
+
+                            <div class="position-relative flex-grow-1">
+                                <input type="text" name="noiDung" class="fb-input py-2 px-3 pe-5 rounded-pill" style="font-size: 14px;" placeholder="Viết câu hỏi hoặc bình luận về khóa học này..." required />
+                                <button type="submit" class="position-absolute end-0 top-50 translate-middle-y me-2 border-0 bg-transparent text-primary" title="Gửi bình luận">
+                                    <i class="bi bi-send-fill fs-5"></i>
+                                </button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="p-3 text-center text-muted small bg-light rounded border">
+                            <i class="bi bi-chat-quote me-1 text-primary"></i> 
+                            Bạn cần <a href="/TaiKhoan/Login?returnUrl=/KhoaHoc/Details/@Model.MaKhoaHoc#binh-luan" class="text-primary fw-bold text-decoration-none">đăng nhập</a> để tham gia đặt câu hỏi và bình luận về khóa học này.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

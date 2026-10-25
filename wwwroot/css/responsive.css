@@ -1,0 +1,149 @@
+/* ==========================================================================
+   RESPONSIVE CSS - HỆ THỐNG QUẢN LÝ TRUNG TÂM NGOẠI NGỮ
+   Tối ưu hóa hiển thị ở các mốc: 1440px, 1200px, 1024px, 768px, 375px
+   ========================================================================== */
+
+/* 1200px Breakpoint */
+@media (max-width: 1200px) {
+  .dashboard-grid-2col {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* 1024px Breakpoint (Tablet) */
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .admin-sidebar.show {
+    transform: translateX(0);
+  }
+  
+  .admin-main {
+    margin-left: 0;
+  }
+  
+  .admin-topbar {
+    padding: 0 1.25rem;
+  }
+  
+  .admin-sidebar-toggle {
+    display: inline-flex !important;
+  }
+  
+  .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* 768px Breakpoint (Mobile & Small Tablet) */
+@media (max-width: 768px) {
+  .admin-content {
+    padding: 1.25rem;
+  }
+  
+  .admin-topbar-search {
+    display: none;
+  }
+  
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+  }
+  
+  .stat-value {
+    font-size: 1.4rem;
+  }
+  
+  .student-hero {
+    padding: 2.5rem 1.25rem;
+    margin-bottom: 2rem;
+  }
+  
+  .student-hero-title {
+    font-size: 1.85rem;
+  }
+  
+  .student-hero-desc {
+    font-size: 1rem;
+  }
+  
+  .student-navbar {
+    padding: 0.75rem 1rem;
+  }
+  
+  .student-nav-menu {
+    display: none; /* toggle via mobile menu */
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .student-nav-menu.show {
+    display: flex;
+  }
+  
+  .student-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Responsive Table Scroll */
+  .edu-table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .edu-table th, 
+  .edu-table td {
+    white-space: nowrap;
+    padding: 0.75rem 1rem;
+  }
+  
+  .edu-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* 375px Breakpoint (Compact Mobile) */
+@media (max-width: 375px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .login-card {
+    padding: 1.75rem 1.25rem;
+  }
+  
+  .btn-edu {
+    width: 100%;
+  }
+}

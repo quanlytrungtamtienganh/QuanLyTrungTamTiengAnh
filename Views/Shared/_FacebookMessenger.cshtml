@@ -1,0 +1,3347 @@
+@* Component Chat Facebook Messenger: Chat 1-1 với Giáo viên & Chat Nhóm, Quản lý thành viên, Gọi Thoại & Video Call *@
+@{
+    var sessionUserId = Context.Session.GetInt32("MaTaiKhoan");
+    var sessionUserName = Context.Session.GetString("HoTen") ?? "Bạn";
+    var userRole = Context.Session.GetString("VaiTro");
+    var isLoggedIn = sessionUserId.HasValue;
+    var canCreateGroup = userRole == "Admin" || userRole == "GiaoVien";
+}
+
+<!-- =========================================================================
+     1. MESSENGER DROPDOWN: TABS GIÁO VIÊN & NHÓM CHAT
+     ========================================================================= -->
+<div id="fbMessengerDropdown" class="fb-messenger-dropdown shadow-lg d-none" 
+     style="position: fixed; top: 56px; right: 20px; width: 380px; max-width: calc(100vw - 30px); background: #ffffff; border-radius: 12px; border: 1px solid #ced0d4; z-index: 10050; box-shadow: 0 12px 28px 0 rgba(0,0,0,0.25), 0 2px 4px 0 rgba(0,0,0,0.1); overflow: hidden; display: none;">
+    <!-- Dropdown Header -->
+    <div class="p-3 border-bottom bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-messenger text-primary"></i> Đoạn chat Messenger
+            </h5>
+            <div class="d-flex gap-1 align-items-center">
+                @if (canCreateGroup)
+                {
+                    <button type="button" class="btn btn-sm btn-primary py-1 px-2 rounded-pill small fw-semibold" onclick="openCreateGroupModal()" title="Chỉ Giáo viên và Quản lý/Admin được tạo nhóm">
+                        <i class="bi bi-plus-lg me-1"></i>Tạo nhóm
+                    </button>
+                }
+                <button type="button" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                        style="width: 28px; height: 28px;" onclick="toggleMessengerDropdown(event)" title="Đóng">✕</button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs: Mọi người vs Nhóm chat -->
+        <div class="d-flex gap-1 bg-light p-1 rounded-pill mb-2">
+            <button type="button" id="tabBtnTeachers" class="btn btn-sm rounded-pill flex-fill fw-semibold btn-white shadow-sm" onclick="switchMessengerTab('teachers')">
+                <i class="bi bi-people-fill me-1 text-primary"></i> Mọi người
+            </button>
+            <button type="button" id="tabBtnGroups" class="btn btn-sm rounded-pill flex-fill fw-semibold text-secondary" onclick="switchMessengerTab('groups')">
+                <i class="bi bi-chat-dots-fill me-1 text-success"></i> Nhóm chat
+            </button>
+        </div>
+
+        <!-- Search input -->
+        <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="fbSearchInput" class="form-control bg-light border-0" 
+                   placeholder="Tìm kiếm..." onkeyup="filterMessengerList()" />
+        </div>
+    </div>
+
+    <!-- Tab 1: Danh sách Giáo viên trung tâm -->
+    <div id="fbTabTeachersContent" style="max-height: 400px; overflow-y: auto; padding: 6px; background: #fff;">
+        <div class="text-center py-4 text-muted small" id="fbTeacherLoading">
+            <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+            <div>Đang tải danh sách giáo viên...</div>
+        </div>
+        <div id="fbTeacherItemsList"></div>
+    </div>
+
+    <!-- Tab 2: Danh sách Nhóm chat -->
+    <div id="fbTabGroupsContent" style="max-height: 400px; overflow-y: auto; padding: 6px; background: #fff; display: none;">
+        <div class="text-center py-4 text-muted small" id="fbGroupLoading">
+            <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
+            <div>Đang tải danh sách nhóm chat...</div>
+        </div>
+        <div id="fbGroupItemsList"></div>
+    </div>
+
+    <!-- Dropdown Footer -->
+    <div class="p-2 border-top bg-light d-flex justify-content-between align-items-center small text-muted px-3">
+        <span><i class="bi bi-shield-check text-success me-1"></i>Hệ thống chat trung tâm</span>
+        @if (canCreateGroup)
+        {
+            <span class="badge bg-success-subtle text-success border border-success-subtle">Quyền Quản lý / Giáo viên</span>
+        }
+    </div>
+</div>
+
+<!-- =========================================================================
+     2. CỬA SỔ CHAT NỔI (FLOATING CHAT BOX: HỖ TRỢ CẢ 1-1 VÀ NHÓM CHAT)
+     ========================================================================= -->
+<div id="fbChatBox" class="fb-chat-box shadow-lg d-none" 
+     style="position: fixed; bottom: 0; right: 90px; width: 360px; max-width: calc(100vw - 20px); background: #fff; border-radius: 12px 12px 0 0; border: 1px solid #ced0d4; z-index: 10040; box-shadow: 0 12px 28px rgba(0,0,0,0.25); display: none; flex-direction: column;">
+    
+    <!-- Chat Header -->
+    <div class="p-2 px-3 border-bottom d-flex justify-content-between align-items-center bg-white" 
+         style="border-radius: 12px 12px 0 0; cursor: pointer;" onclick="toggleChatCollapse(event)">
+        
+        <div class="d-flex align-items-center gap-2 text-truncate">
+            <div class="position-relative">
+                <img id="fbChatAvatar" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" 
+                     alt="Avatar" class="rounded-circle object-fit-cover shadow-sm" style="width: 38px; height: 38px;" />
+                <span id="fbChatOnlineBadge" class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle" style="width: 10px; height: 10px;"></span>
+            </div>
+            <div class="text-truncate">
+                <div id="fbChatTitle" class="fw-bold text-dark text-truncate" style="font-size: 14px;">Cô Mai Anh</div>
+                <div id="fbChatSubtitle" class="text-muted text-truncate" style="font-size: 11px;">Đang hoạt động &bull; IELTS 8.5</div>
+            </div>
+        </div>
+
+        <!-- Header Actions: Gọi thoại, Video Call, Menu nhóm, Thu nhỏ, Đóng -->
+        <div class="d-flex align-items-center gap-1" onclick="event.stopPropagation()">
+            <!-- Nút gọi thoại (Voice call) -->
+            <button type="button" class="btn btn-sm btn-light rounded-circle text-primary" title="Bắt đầu cuộc gọi thoại (Voice Call)" onclick="initiateCall('voice')">
+                <i class="bi bi-telephone-fill" style="font-size: 13px;"></i>
+            </button>
+            <!-- Nút gọi video (Video call) -->
+            <button type="button" class="btn btn-sm btn-light rounded-circle text-primary" title="Bắt đầu cuộc gọi video (Video Call)" onclick="initiateCall('video')">
+                <i class="bi bi-camera-video-fill" style="font-size: 13px;"></i>
+            </button>
+            
+            <!-- Menu tùy chọn nhóm (chỉ hiển thị khi chat nhóm) -->
+            <div class="dropdown d-none" id="fbGroupSettingsDropdown">
+                <button type="button" class="btn btn-sm btn-light rounded-circle text-secondary" data-bs-toggle="dropdown" aria-expanded="false" title="Tùy chọn nhóm">
+                    <i class="bi bi-three-dots-vertical" style="font-size: 14px;"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow p-2" style="font-size: 13px; min-width: 190px;">
+                    <li><a class="dropdown-item py-1 rounded" href="javascript:void(0)" onclick="openGroupMembersModal()"><i class="bi bi-people me-2"></i>Xem thành viên</a></li>
+                    <li id="menuItemAddMember"><a class="dropdown-item py-1 rounded text-primary" href="javascript:void(0)" onclick="openAddMemberModal()"><i class="bi bi-person-plus me-2"></i>Thêm thành viên</a></li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li id="menuItemDeleteGroup"><a class="dropdown-item py-1 rounded text-danger" href="javascript:void(0)" onclick="confirmDeleteCurrentGroup()"><i class="bi bi-trash3 me-2"></i>Xóa nhóm chat</a></li>
+                </ul>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-light rounded-circle" title="Thu nhỏ" onclick="toggleChatCollapse(event)">
+                <i class="bi bi-dash-lg" style="font-size: 14px;"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-light rounded-circle text-secondary" title="Đóng chat" onclick="closeChatBox()">
+                <i class="bi bi-x-lg" style="font-size: 14px;"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Call Live Pulsing Banner (Khi nhóm có cuộc gọi đang diễn ra) -->
+    <div id="fbActiveCallBanner" class="px-3 py-2 text-white d-none justify-content-between align-items-center shadow-sm" 
+         style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-bottom: 1px solid rgba(255,255,255,0.25); font-size: 12px; z-index: 5;">
+        <div class="d-flex align-items-center gap-2 text-truncate me-2">
+            <span class="spinner-grow spinner-grow-sm text-white flex-shrink-0" role="status" style="width: 10px; height: 10px;"></span>
+            <span id="fbActiveCallText" class="fw-semibold text-truncate">Cuộc gọi nhóm đang diễn ra...</span>
+        </div>
+        <div class="d-flex gap-1 flex-shrink-0 align-items-center">
+            <button type="button" id="btnBannerJoinCall" class="btn btn-light btn-sm py-1 px-3 fw-bold rounded-pill shadow-sm d-flex align-items-center gap-1" style="font-size: 11px; color: #047857;" onclick="joinActiveGroupCall()">
+                <i class="bi bi-telephone-inbound-fill"></i> Tham gia
+            </button>
+            <button type="button" id="btnBannerEndCall" class="btn btn-outline-light btn-sm py-1 px-2 rounded-pill d-none" style="font-size: 11px;" onclick="endCurrentCall()">
+                Kết thúc
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Body (Messages List) -->
+    <div id="fbChatBody" style="display: flex; flex-direction: column; height: 360px;">
+        <div id="fbChatMessageList" style="flex: 1; overflow-y: auto; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Messages rendered via JS -->
+        </div>
+
+        <!-- Image Preview Thumbnail -->
+        <div id="fbChatImagePreviewContainer" class="p-2 border-top bg-light d-none align-items-center gap-2">
+            <div class="position-relative">
+                <img id="fbChatImagePreview" src="" alt="preview" style="height: 50px; width: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #ced0d4;" />
+                <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 p-0" 
+                        style="width: 18px; height: 18px; font-size: 10px; line-height: 1; transform: translate(30%, -30%);" onclick="clearSelectedChatImage()">✕</button>
+            </div>
+            <span class="small text-muted text-truncate" id="fbChatImageName">image.png</span>
+        </div>
+
+        <!-- Emoji Picker Popover -->
+        <div id="fbEmojiPicker" class="p-2 border-top bg-light d-none" style="max-height: 160px; overflow-y: auto;">
+            <div class="small fw-semibold text-muted mb-1 px-1">Biểu tượng cảm xúc Facebook:</div>
+            <div class="d-flex flex-wrap gap-1" style="font-size: 20px;">
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('👍')">👍</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('❤️')">❤️</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('😂')">😂</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('😍')">😍</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('😮')">😮</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('😢')">😢</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('😡')">😡</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('🔥')">🔥</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('👏')">👏</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('🎉')">🎉</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('📚')">📚</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('🎓')">🎓</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('✍️')">✍️</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('🎯')">🎯</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('💡')">💡</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('💯')">💯</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('🌟')">🌟</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('📝')">📝</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('👌')">👌</span>
+                <span class="fb-emoji-item p-1 rounded" style="cursor: pointer;" onclick="insertEmoji('🤝')">🤝</span>
+            </div>
+        </div>
+
+        <!-- Chat Footer / Input Controls -->
+        <div class="p-2 border-top bg-white d-flex align-items-center gap-1">
+            <!-- Attach Image Button -->
+            <label for="fbChatFileInput" class="btn btn-sm btn-light rounded-circle text-primary m-0 d-flex align-items-center justify-content-center" 
+                   style="width: 32px; height: 32px; cursor: pointer;" title="Đính kèm hình ảnh">
+                <i class="bi bi-images" style="font-size: 16px;"></i>
+            </label>
+            <input type="file" id="fbChatFileInput" accept="image/*" style="display: none;" onchange="onChatImageSelected(this)" />
+
+            <!-- Emoji Picker Toggle -->
+            <button type="button" class="btn btn-sm btn-light rounded-circle text-warning p-0 d-flex align-items-center justify-content-center" 
+                    style="width: 32px; height: 32px;" title="Biểu cảm Facebook" onclick="toggleEmojiPicker()">
+                <i class="bi bi-emoji-smile-fill" style="font-size: 18px;"></i>
+            </button>
+
+            <!-- Text Input -->
+            <div class="flex-grow-1">
+                <input type="text" id="fbChatTextInput" class="form-control form-control-sm rounded-pill border-0 bg-light px-3" 
+                       placeholder="Aa / Nhập tin nhắn..." autocomplete="off" onkeyup="handleChatInputKey(event)" oninput="updateSendButtonState()" />
+            </div>
+
+            <!-- Thumbs Up / Send Action Button -->
+            <button type="button" id="fbChatActionBtn" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center text-primary" 
+                    style="width: 34px; height: 34px;" title="Gửi Like hoặc Tin nhắn" onclick="onSendChatClick()">
+                <i id="fbChatActionIcon" class="bi bi-hand-thumbs-up-fill" style="font-size: 20px; color: #0866ff;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     3. FLOATING MESSENGER BUBBLE AT BOTTOM-RIGHT
+     ========================================================================= -->
+<div id="fbFloatingMessengerBubble" class="shadow-lg position-fixed" 
+     style="bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #0084ff, #00c6ff); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10030; box-shadow: 0 4px 16px rgba(0,132,255,0.45); transition: transform 0.2s;" 
+     onclick="toggleMessengerDropdown(event)" title="Nhắn tin với giáo viên & nhóm học">
+    <i class="bi bi-messenger" style="font-size: 26px;"></i>
+    <span id="fbFloatingUnreadBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 11px;">0</span>
+</div>
+
+<!-- =========================================================================
+     4. MODAL: TẠO NHÓM CHAT MỚI (CHỈ GIÁO VIÊN & ADMIN)
+     ========================================================================= -->
+<div class="modal fade" id="fbCreateGroupModal" tabindex="-1" aria-hidden="true" style="z-index: 10060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill text-primary"></i> Tạo Nhóm Chat Mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Tên nhóm chat <span class="text-danger">*</span></label>
+                    <input type="text" id="newGroupNameInput" class="form-control" placeholder="VD: Lớp IELTS Intensive K38, CLB Tiếng Nhật N3..." />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Ảnh đại diện nhóm (URL)</label>
+                    <input type="text" id="newGroupAvatarInput" class="form-control" placeholder="https://..." value="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=150&auto=format&fit=crop&q=80" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fw-semibold small d-flex justify-content-between">
+                        <span>Chọn thành viên tham gia nhóm:</span>
+                        <span class="text-muted" id="selectedMembersCount">Đã chọn: 0</span>
+                    </label>
+                    <div id="createGroupCandidatesList" style="max-height: 220px; overflow-y: auto; border: 1px solid #e4e6eb; border-radius: 8px; padding: 6px;">
+                        <div class="text-center py-3 text-muted small">Đang tải danh sách tài khoản...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-pill px-4" onclick="submitCreateGroup()">
+                    <i class="bi bi-check2-circle me-1"></i> Tạo nhóm ngay
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     5. MODAL: QUẢN LÝ THÀNH VIÊN NHÓM (XEM & KICK THÀNH VIÊN)
+     ========================================================================= -->
+<div class="modal fade" id="fbGroupMembersModal" tabindex="-1" aria-hidden="true" style="z-index: 10060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-person-lines-fill text-primary"></i> Thành Viên Nhóm Chat
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="groupMembersListContainer" style="max-height: 350px; overflow-y: auto; padding: 10px;">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top d-flex justify-content-between">
+                <button type="button" id="btnAddMemberInModal" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openAddMemberModal()">
+                    <i class="bi bi-person-plus-fill me-1"></i> Thêm thành viên
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     6. MODAL: THÊM THÀNH VIÊN MỚI VÀO NHÓM
+     ========================================================================= -->
+<div class="modal fade" id="fbAddMemberModal" tabindex="-1" aria-hidden="true" style="z-index: 10070;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-person-plus text-primary"></i> Thêm Thành Viên Vào Nhóm
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="small text-muted mb-2">Chọn tài khoản muốn thêm vào nhóm:</div>
+                <div id="addCandidateListContainer" style="max-height: 300px; overflow-y: auto;">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Xong</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     7. PHÒNG GỌI THOẠI & GỌI VIDEO CALL (CALL ROOM OVERLAY MODAL)
+     ========================================================================= -->
+<div id="fbCallRoomModal" class="d-none" 
+     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #111418; z-index: 10080; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; color: #fff; transition: all 0.3s ease;">
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center" style="z-index: 25;">
+        <div class="d-flex align-items-center gap-3">
+            <div id="callRoomStatusBadge" class="badge bg-primary px-3 py-2 fs-6 rounded-pill d-flex align-items-center gap-2">
+                <span class="spinner-grow spinner-grow-sm text-light"></span>
+                <span id="callRoomStatusText">Đang kết nối...</span>
+            </div>
+            <div>
+                <h5 id="callRoomTitle" class="fw-bold mb-0 text-white">Cô Mai Anh</h5>
+                <small id="callRoomSubTitle" class="text-white-50">Cuộc gọi trực tuyến</small>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span id="callDurationTimer" class="fs-4 fw-mono text-white fw-bold px-3 py-1 bg-dark bg-opacity-75 rounded-pill border border-secondary">00:00</span>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" onclick="toggleCallWindowSize()" title="Thu nhỏ / Phóng to">
+                <i class="bi bi-arrows-angle-contract" id="btnResizeIcon"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Cảnh báo trợ giúp HTTPS cho thiết bị di động / mạng LAN -->
+    <div id="callHttpMobileWarningBanner" class="alert alert-warning py-2 px-3 my-2 rounded-pill d-none small d-flex align-items-center justify-content-between border border-warning" style="z-index: 30;">
+        <span class="text-dark fw-semibold"><i class="bi bi-shield-exclamation text-danger me-1 fs-6"></i> Trình duyệt điện thoại chặn Camera & Mic qua HTTP thường.</span>
+        <button type="button" class="btn btn-sm btn-dark rounded-pill py-1 px-3 ms-2 fw-bold" onclick="redirectToHttpsCall()">Bật HTTPS (Cổng 5001)</button>
+    </div>
+
+    <!-- Center Call Stage (Video/Voice Grid) -->
+    <div class="flex-grow-1 position-relative d-flex justify-content-center align-items-center my-3 overflow-hidden rounded-4 shadow-lg border border-secondary" id="callVideoStage" style="background: #000; min-height: 300px;">
+        <!-- 1. REMOTE VIDEO (Người bên kia) -->
+        <video id="callLiveRemoteVideo" autoplay playsinline webkit-playsinline class="w-100 h-100 object-fit-contain d-none" style="max-height: 75vh;"></video>
+        <!-- 1.1 REMOTE AUDIO (Chuyên biệt phát âm thanh rõ nét hai chiều, không bao giờ bị ngắt trên thiết bị di động) -->
+        <audio id="callLiveRemoteAudio" autoplay playsinline style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></audio>
+
+        <!-- 2. SÂN KHẤU GỌI THOẠI (VOICE CALL) HOẶC KHI CHƯA NHẬN VIDEO -->
+        <div id="callVoiceStageBox" class="text-center p-4">
+            <div class="position-relative mx-auto mb-4" style="width: 140px; height: 140px;">
+                <div class="call-pulse-ring ring-1"></div>
+                <div class="call-pulse-ring ring-2"></div>
+                <img id="callRoomActiveAvatar" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" 
+                     class="rounded-circle shadow object-fit-cover w-100 h-100 border border-4 border-primary position-relative" style="z-index: 2;" alt="avatar" />
+                <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-2" style="z-index: 3;"></span>
+            </div>
+            <h4 id="callRoomActiveName" class="fw-bold text-white mb-2">Cô Mai Anh</h4>
+            <div id="callAudioIndicatorText" class="text-info fw-semibold mb-2 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-soundwave fs-4"></i> <span id="callSignalDesc">Đang phát tín hiệu cuộc gọi...</span>
+            </div>
+            <div class="progress mx-auto" style="height: 4px; max-width: 200px;">
+                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <!-- 3. KHUNG LOCAL VIDEO (Camera của chính bạn - Picture-in-Picture góc dưới) -->
+        <div id="callVideoSimBox" class="position-absolute bottom-0 end-0 m-3 rounded-4 shadow-lg overflow-hidden border border-2 border-primary d-none" 
+             style="width: 180px; max-width: 35vw; height: 135px; max-height: 25vh; z-index: 20; background: #111;" title="Camera của bạn">
+            <video id="callLiveLocalVideo" autoplay muted playsinline webkit-playsinline class="w-100 h-100 object-fit-cover"></video>
+            <span class="position-absolute bottom-0 start-0 m-1 badge bg-dark bg-opacity-75 small">Bạn</span>
+        </div>
+    </div>
+
+    <!-- Bottom Controls Toolbar -->
+    <div class="d-flex justify-content-center align-items-center gap-3 gap-sm-4 py-2" style="z-index: 25;">
+        <!-- Mic toggle -->
+        <button type="button" id="btnToggleMic" class="btn btn-light rounded-circle shadow p-0 d-flex align-items-center justify-content-center fb-call-ctrl-btn" 
+                style="width: 56px; height: 56px;" onclick="toggleMicrophone()" title="Bật/Tắt Micro">
+            <i class="bi bi-mic-fill fs-4 text-dark" id="iconMic"></i>
+        </button>
+
+        <!-- Camera toggle -->
+        <button type="button" id="btnToggleCam" class="btn btn-light rounded-circle shadow p-0 d-flex align-items-center justify-content-center fb-call-ctrl-btn" 
+                style="width: 56px; height: 56px;" onclick="toggleCamera()" title="Bật/Tắt Camera">
+            <i class="bi bi-camera-video-fill fs-4 text-dark" id="iconCam"></i>
+        </button>
+
+        <!-- Flip/Switch camera on mobile -->
+        <button type="button" id="btnSwitchCam" class="btn btn-light rounded-circle shadow p-0 d-flex align-items-center justify-content-center fb-call-ctrl-btn d-none" 
+                style="width: 56px; height: 56px;" onclick="switchCamera()" title="Đổi camera trước/sau">
+            <i class="bi bi-arrow-repeat fs-4 text-dark" id="iconSwitchCam"></i>
+        </button>
+
+        <!-- Hangup / End Call -->
+        <button type="button" class="btn btn-danger rounded-circle shadow p-0 d-flex align-items-center justify-content-center fb-call-hangup-btn" 
+                style="width: 64px; height: 64px;" onclick="hangupCall()" title="Kết thúc cuộc gọi">
+            <i class="bi bi-telephone-x-fill fs-3 text-white"></i>
+        </button>
+    </div>
+</div>
+
+<!-- =========================================================================
+     8. TOAST THÔNG BÁO CUỘC GỌI ĐẾN (INCOMING CALL POPUP CHO CÁC THÀNH VIÊN)
+     ========================================================================= -->
+<div id="fbIncomingCallToast" class="shadow-lg border-0 rounded-4 d-none position-fixed" 
+     style="top: 80px; right: 24px; width: 360px; max-width: calc(100vw - 30px); background: #ffffff; z-index: 10075; border-left: 6px solid #28a745 !important; box-shadow: 0 16px 40px rgba(0,0,0,0.35); animation: fbSlideIn 0.3s ease;">
+    <div class="p-3">
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="position-relative">
+                <img id="incomingCallerAvatar" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" 
+                     class="rounded-circle object-fit-cover shadow-sm border border-2 border-success" style="width: 52px; height: 52px;" alt="caller" />
+                <span class="position-absolute bottom-0 end-0 spinner-grow spinner-grow-sm text-success" style="width: 16px; height: 16px;"></span>
+            </div>
+            <div>
+                <div class="badge bg-success-subtle text-success border border-success-subtle mb-1" id="incomingCallTypeBadge">Cuộc gọi thoại đến</div>
+                <div class="fw-bold text-dark fs-6" id="incomingCallerName">Cô Mai Anh</div>
+                <div class="small text-muted" id="incomingGroupTitle">đang gọi cho bạn...</div>
+            </div>
+        </div>
+        <p class="small text-secondary mb-3"><i class="bi bi-bell-fill text-warning me-1"></i>Đang đổ chuông. Bấm "Trả lời" để kết nối ngay.</p>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success btn-sm flex-fill rounded-pill fw-bold py-2 d-flex align-items-center justify-content-center gap-2 shadow-sm" onclick="acceptIncomingCall()">
+                <i class="bi bi-telephone-fill"></i> Trả lời
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm flex-fill rounded-pill py-2 fw-semibold" onclick="rejectIncomingCall()">
+                Từ chối
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     8.1 TOAST THÔNG BÁO TIN NHẮN MỚI ĐẾN (NEW MESSAGE TOAST NOTIFICATION)
+     ========================================================================= -->
+<div id="fbNewMessageToast" class="shadow-lg border-0 rounded-4 d-none position-fixed" 
+     style="top: 80px; right: 24px; width: 340px; max-width: calc(100vw - 30px); background: #ffffff; z-index: 10070; border-left: 5px solid #0084ff !important; box-shadow: 0 12px 30px rgba(0,0,0,0.25); animation: fbSlideIn 0.3s ease; cursor: pointer; transition: transform 0.2s;" 
+     onclick="onToastNewMessageClick()">
+    <div class="p-3 d-flex align-items-center gap-3">
+        <div class="position-relative">
+            <img id="newMsgToastAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80" 
+                 class="rounded-circle object-fit-cover shadow-sm border border-2 border-primary" style="width: 44px; height: 44px;" alt="avatar" />
+            <span class="position-absolute bottom-0 end-0 bg-primary border border-white rounded-circle p-1"></span>
+        </div>
+        <div class="flex-grow-1 text-truncate">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 10px;" id="newMsgToastBadge">Tin nhắn mới</span>
+                <span class="text-muted" style="font-size: 10px;">Vừa xong</span>
+            </div>
+            <strong id="newMsgToastTitle" class="text-dark small text-truncate d-block">Nguyễn Văn A</strong>
+            <div id="newMsgToastBody" class="text-muted small text-truncate" style="font-size: 12px;">Đã gửi cho bạn một tin nhắn...</div>
+        </div>
+        <button type="button" class="btn-close btn-sm p-1" onclick="dismissNewMessageToast(event)"></button>
+    </div>
+</div>
+
+<!-- =========================================================================
+     9. JAVASCRIPT & STYLES CHO TOÀN BỘ HỆ THỐNG CHAT & CALL
+     ========================================================================= -->
+<style>
+    @@keyframes callPulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.25); opacity: 0.3; }
+        100% { transform: scale(1.55); opacity: 0; }
+    }
+    @@keyframes fbSlideIn {
+        from { transform: translateX(100px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @@keyframes fbHighlightTop {
+        0% { background-color: #e7f3ff; }
+        50% { background-color: #d0e7ff; }
+        100% { background-color: transparent; }
+    }
+    .fb-top-highlight {
+        animation: fbHighlightTop 3s ease-out;
+    }
+    .call-pulse-ring {
+        position: absolute;
+        top: -12px; left: -12px; right: -12px; bottom: -12px;
+        border: 3px solid #0866ff;
+        border-radius: 50%;
+        animation: callPulse 2s infinite ease-out;
+        pointer-events: none;
+    }
+    .call-pulse-ring.ring-2 {
+        animation-delay: 0.7s;
+        border-color: #42b72a;
+    }
+    .fb-call-minimized {
+        width: 320px !important;
+        height: 240px !important;
+        top: auto !important;
+        left: auto !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.6) !important;
+        padding: 12px !important;
+    }
+    .fb-messenger-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    .fb-messenger-item:hover {
+        background-color: #f2f2f2;
+    }
+    .fb-emoji-item:hover {
+        background-color: #e4e6eb;
+        transform: scale(1.2);
+        transition: transform 0.1s ease;
+    }
+    .fb-bubble-mine {
+        background: #0084ff;
+        color: #ffffff;
+        border-radius: 18px 18px 4px 18px;
+        padding: 8px 14px;
+        max-width: 80%;
+        align-self: flex-end;
+        word-break: break-word;
+        font-size: 14px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .fb-bubble-theirs {
+        background: #f0f2f5;
+        color: #050505;
+        border-radius: 18px 18px 18px 4px;
+        padding: 8px 14px;
+        max-width: 80%;
+        align-self: flex-start;
+        word-break: break-word;
+        font-size: 14px;
+    }
+    .fb-bubble-system {
+        background: #f0f2f5;
+        color: #65676b;
+        border-radius: 12px;
+        padding: 4px 12px;
+        max-width: 90%;
+        align-self: center;
+        text-align: center;
+        font-size: 12px;
+        font-style: italic;
+    }
+    .fb-bubble-like {
+        background: transparent !important;
+        padding: 2px 4px !important;
+        font-size: 38px !important;
+        box-shadow: none !important;
+        line-height: 1;
+    }
+    .fb-chat-msg-time {
+        font-size: 10px;
+        margin-top: 3px;
+        opacity: 0.75;
+    }
+    #fbFloatingMessengerBubble:hover {
+        transform: scale(1.08);
+    }
+    /* Thẻ thông báo cuộc gọi nhóm trong khung chat */
+    .fb-call-msg-card {
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        border: 1px solid #6ee7b7;
+        border-radius: 16px;
+        padding: 10px 14px;
+        margin: 6px auto;
+        max-width: 90%;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+        text-align: center;
+        align-self: center;
+    }
+    .fb-call-msg-card.ended {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        box-shadow: none;
+    }
+    /* Tối ưu giao diện toàn diện cho thiết bị di động (Mobile Responsive) */
+    @@media (max-width: 576px) {
+        #fbChatBox {
+            right: 8px !important;
+            left: 8px !important;
+            width: auto !important;
+            max-width: calc(100vw - 16px) !important;
+            bottom: 0 !important;
+            border-radius: 14px 14px 0 0 !important;
+        }
+        #fbMessengerDropdown {
+            right: 8px !important;
+            left: 8px !important;
+            width: auto !important;
+            max-width: calc(100vw - 16px) !important;
+            top: 50px !important;
+        }
+        #fbIncomingCallToast {
+            right: 12px !important;
+            left: 12px !important;
+            width: auto !important;
+            max-width: calc(100vw - 24px) !important;
+            top: 15px !important;
+        }
+        #fbCallRoomModal {
+            padding: 12px 10px calc(14px + env(safe-area-inset-bottom, 0px)) 10px !important;
+        }
+        .fb-call-ctrl-btn {
+            width: 48px !important;
+            height: 48px !important;
+        }
+        .fb-call-hangup-btn {
+            width: 56px !important;
+            height: 56px !important;
+        }
+        #callVideoSimBox {
+            width: 120px !important;
+            height: 90px !important;
+            margin: 8px !important;
+        }
+    }
+</style>
+
+<!-- Thư viện Microsoft SignalR Client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+<script>
+    // Tự động bỏ qua màn hình chặn cảnh báo của ngrok khi gọi API từ điện thoại di động
+    if (window.fetch) {
+        const _origFetch = window.fetch;
+        window.fetch = function (url, options = {}) {
+            options = options || {};
+            if (!options.headers) options.headers = {};
+            if (options.headers instanceof Headers) {
+                options.headers.set('ngrok-skip-browser-warning', 'true');
+            } else if (Array.isArray(options.headers)) {
+                options.headers.push(['ngrok-skip-browser-warning', 'true']);
+            } else {
+                options.headers['ngrok-skip-browser-warning'] = 'true';
+            }
+            return _origFetch(url, options);
+        };
+    }
+
+    // State Variables
+    const currentSessionUserId = @(sessionUserId ?? 0);
+    const currentSessionUserName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(sessionUserName));
+    let currentChatMode = 'teacher'; // 'teacher' hoặc 'group'
+    let currentTargetTeacherId = null;
+    let currentTargetGroupId = null;
+    let currentGroupData = null;
+    let currentTeacherData = null;
+    let chatPollInterval = null;
+    let cachedTeachers = [];
+    let cachedGroups = [];
+    let chat_isUserLoggedIn = @(isLoggedIn ? "true" : "false");
+    let chat_userRole = "@(userRole ?? "")";
+    let chat_canUserCreateGroup = @(canCreateGroup ? "true" : "false");
+
+    // Calling & WebRTC & SignalR Variables
+    let signalRCallConn = null;
+    let peerConnection = null;
+    let localStream = null;
+    let activeCallType = null; // 'voice' hoặc 'video'
+    let activeCallTargetUserId = null;
+    let activeCallGroupId = null;
+    let isCaller = false;
+    let isCallActive = false;
+    let isCallConnected = false;
+    let callTimerInterval = null;
+    let callSecondsCount = 0;
+    let isMicMuted = false;
+    let isCamOff = false;
+    let incomingCallData = null;
+    let callWindowMinimized = false;
+    let groupPeerConnections = {}; // remoteUserId -> RTCPeerConnection
+    let groupIceQueues = {}; // remoteUserId -> []
+    let currentFacingMode = 'user';
+
+    // 1. Khởi tạo
+    document.addEventListener('DOMContentLoaded', function () {
+        loadUnreadCount();
+        setInterval(loadUnreadCount, 8000);
+
+        // Khởi tạo SignalR Realtime Calling Hub
+        if (chat_isUserLoggedIn && currentSessionUserId > 0) {
+            initCallSignalR();
+        }
+
+        bindMessengerButtons();
+
+        // Unlock Web Audio API trên điện thoại khi người dùng chạm màn hình lần đầu
+        const unlockAudio = () => {
+            CallSound.init();
+            document.removeEventListener('touchstart', unlockAudio);
+            document.removeEventListener('click', unlockAudio);
+        };
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('click', unlockAudio, { once: true });
+
+        // Đóng dropdown khi click ra ngoài
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('fbMessengerDropdown');
+            if (!dropdown) return;
+            const isClickInsideDropdown = dropdown.contains(e.target);
+            const isClickOnChatButton = e.target.closest('.fb-circle-btn[title*="Messenger"]') || 
+                                        e.target.closest('#fbFloatingMessengerBubble') ||
+                                        e.target.closest('[onclick*="toggleMessengerDropdown"]');
+
+            if (!isClickInsideDropdown && !isClickOnChatButton && dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+                dropdown.classList.add('d-none');
+            }
+        });
+    });
+
+    function bindMessengerButtons() {
+        const btns = document.querySelectorAll('.fb-circle-btn[title*="Messenger"]');
+        btns.forEach(btn => {
+            btn.removeAttribute('href');
+            btn.style.cursor = 'pointer';
+            btn.onclick = function (e) {
+                toggleMessengerDropdown(e);
+            };
+        });
+    }
+
+    // 2. Chuyển đổi Tab (Giáo viên vs Nhóm chat)
+    function switchMessengerTab(tab) {
+        const tabTeachers = document.getElementById('fbTabTeachersContent');
+        const tabGroups = document.getElementById('fbTabGroupsContent');
+        const btnT = document.getElementById('tabBtnTeachers');
+        const btnG = document.getElementById('tabBtnGroups');
+
+        if (tab === 'teachers') {
+            tabTeachers.style.display = 'block';
+            tabGroups.style.display = 'none';
+            btnT.className = 'btn btn-sm rounded-pill flex-fill fw-semibold btn-white shadow-sm';
+            btnG.className = 'btn btn-sm rounded-pill flex-fill fw-semibold text-secondary';
+            loadMessengerTeachers();
+        } else {
+            tabTeachers.style.display = 'none';
+            tabGroups.style.display = 'block';
+            btnG.className = 'btn btn-sm rounded-pill flex-fill fw-semibold btn-white shadow-sm';
+            btnT.className = 'btn btn-sm rounded-pill flex-fill fw-semibold text-secondary';
+            loadMessengerGroups();
+        }
+    }
+
+    // 3. Mở / Đóng Dropdown
+    function toggleMessengerDropdown(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const dropdown = document.getElementById('fbMessengerDropdown');
+        if (!dropdown) return;
+
+        const isHidden = dropdown.classList.contains('d-none') || dropdown.style.display === 'none' || dropdown.style.display === '';
+        if (isHidden) {
+            dropdown.classList.remove('d-none');
+            dropdown.style.display = 'block';
+            loadMessengerTeachers();
+            loadMessengerGroups();
+        } else {
+            dropdown.classList.add('d-none');
+            dropdown.style.display = 'none';
+        }
+    }
+
+    // 4. Tải danh sách TẤT CẢ người dùng (chat 1-1 với bất kỳ ai)
+    function loadMessengerTeachers() {
+        const loading = document.getElementById('fbTeacherLoading');
+        const listEl = document.getElementById('fbTeacherItemsList');
+        if (loading) loading.style.display = 'block';
+
+        fetch('/Chat/GetAllUsers')
+            .then(res => res.json())
+            .then(data => {
+                if (loading) loading.style.display = 'none';
+                if (data && data.success && data.users) {
+                    cachedTeachers = data.users;
+                    renderTeachersList(cachedTeachers);
+                }
+            })
+            .catch(() => { if (loading) loading.style.display = 'none'; });
+    }
+
+    function renderTeachersList(users) {
+        const listEl = document.getElementById('fbTeacherItemsList');
+        if (!listEl) return;
+        if (!users || users.length === 0) {
+            listEl.innerHTML = '<div class="text-muted small p-3 text-center">Không tìm thấy người dùng nào.</div>';
+            return;
+        }
+
+        let html = '';
+        users.forEach(u => {
+            const hasUnread = (u.unreadCount && u.unreadCount > 0);
+            const unreadBadge = hasUnread ? `<span class="badge rounded-pill bg-danger shadow-sm">${u.unreadCount}</span>` : '';
+            const roleBadgeColor = u.vaiTro === 'GiaoVien' ? 'bg-primary' : (u.vaiTro === 'Admin' ? 'bg-danger' : 'bg-secondary');
+            const highlightClass = u.isTopHighlight ? 'fb-top-highlight' : '';
+            const msgTextStyle = hasUnread ? 'fw-bold text-dark' : 'text-muted';
+
+            html += `
+                <div class="fb-messenger-item ${highlightClass}" onclick="openChatWithTeacher(${u.maTaiKhoan})">
+                    <div class="position-relative">
+                        <img src="${u.anhDaiDien}" alt="${u.hoTen}" class="rounded-circle object-fit-cover shadow-sm" style="width: 44px; height: 44px;" />
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle" style="width: 11px; height: 11px;"></span>
+                    </div>
+                    <div class="flex-grow-1 text-truncate">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold ${hasUnread ? 'text-primary' : 'text-dark'} text-truncate" style="font-size: 14px;">${u.hoTen}</span>
+                            <span class="${hasUnread ? 'fw-bold text-primary' : 'text-muted'}" style="font-size: 11px;">${u.lastMessageTime || ''}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <span class="badge ${roleBadgeColor} text-white border text-truncate" style="max-width: 150px; font-size: 10px;">${u.chuyenMon}</span>
+                            ${unreadBadge}
+                        </div>
+                        <div class="${msgTextStyle} text-truncate mt-1" style="font-size: 12px;">${escapeHtml(u.lastMessage)}</div>
+                    </div>
+                </div>
+            `;
+        });
+        listEl.innerHTML = html;
+    }
+
+    // 5. Tải danh sách NHÓM CHAT
+    function loadMessengerGroups() {
+        const loading = document.getElementById('fbGroupLoading');
+        const listEl = document.getElementById('fbGroupItemsList');
+        if (loading) loading.style.display = 'block';
+
+        fetch('/Chat/GetGroups')
+            .then(res => res.json())
+            .then(data => {
+                if (loading) loading.style.display = 'none';
+                if (data && data.success && data.groups) {
+                    cachedGroups = data.groups;
+                    renderGroupsList(cachedGroups);
+                }
+            })
+            .catch(() => { if (loading) loading.style.display = 'none'; });
+    }
+
+    function renderGroupsList(groups) {
+        const listEl = document.getElementById('fbGroupItemsList');
+        if (!listEl) return;
+        if (!groups || groups.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-muted small p-4 text-center">
+                    <i class="bi bi-people fs-2 text-secondary d-block mb-2"></i>
+                    <div>Bạn chưa tham gia nhóm chat nào.</div>
+                    ${chat_canUserCreateGroup ? '<button type="button" class="btn btn-outline-primary btn-sm rounded-pill mt-2" onclick="openCreateGroupModal()">Tạo nhóm ngay</button>' : ''}
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        groups.forEach(g => {
+            const callBadge = g.cuocGoiDangDienRa 
+                ? `<span class="badge bg-success small"><span class="spinner-grow spinner-grow-sm me-1"></span>Đang gọi ${g.loaiCuocGoi === 'video' ? 'Video' : 'Thoại'}</span>`
+                : `<span class="badge bg-light text-secondary border">${g.memberCount} thành viên</span>`;
+            const highlightClass = g.isTopHighlight ? 'fb-top-highlight' : '';
+            const msgTextStyle = g.isTopHighlight ? 'fw-bold text-dark' : 'text-muted';
+
+            html += `
+                <div class="fb-messenger-item ${highlightClass}" onclick="openChatWithGroup(${g.maNhom})">
+                    <div class="position-relative">
+                        <img src="${g.anhNhom}" alt="${g.tenNhom}" class="rounded-3 object-fit-cover shadow-sm" style="width: 44px; height: 44px;" />
+                    </div>
+                    <div class="flex-grow-1 text-truncate">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark text-truncate" style="font-size: 14px;">${g.tenNhom}</span>
+                            <span class="text-muted" style="font-size: 11px;">${g.lastMessageTime || ''}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            ${callBadge}
+                        </div>
+                        <div class="${msgTextStyle} text-truncate mt-1" style="font-size: 12px;">${escapeHtml(g.lastMessage)}</div>
+                    </div>
+                </div>
+            `;
+        });
+        listEl.innerHTML = html;
+    }
+
+    // 6. Lọc danh sách chung
+    function filterMessengerList() {
+        const kw = document.getElementById('fbSearchInput').value.toLowerCase().trim();
+        if (!kw) {
+            renderTeachersList(cachedTeachers);
+            renderGroupsList(cachedGroups);
+            return;
+        }
+
+        renderTeachersList(cachedTeachers.filter(gv => gv.hoTen.toLowerCase().includes(kw) || gv.chuyenMon.toLowerCase().includes(kw)));
+        renderGroupsList(cachedGroups.filter(g => g.tenNhom.toLowerCase().includes(kw)));
+    }
+
+    // =========================================================================
+    // 7. MỞ CHAT 1-1 HOẶC CHAT NHÓM
+    // =========================================================================
+    function openChatWithTeacher(teacherUserId) {
+        currentChatMode = 'teacher';
+        currentTargetTeacherId = teacherUserId;
+        currentTargetGroupId = null;
+        currentTeacherData = cachedTeachers.find(g => g.maTaiKhoan === teacherUserId);
+
+        const dropdown = document.getElementById('fbMessengerDropdown');
+        if (dropdown) { dropdown.classList.add('d-none'); dropdown.style.display = 'none'; }
+
+        // Header
+        document.getElementById('fbGroupSettingsDropdown').classList.add('d-none');
+        document.getElementById('fbActiveCallBanner').classList.add('d-none');
+        document.getElementById('fbActiveCallBanner').classList.remove('d-flex');
+
+        if (currentTeacherData) {
+            document.getElementById('fbChatTitle').innerText = currentTeacherData.hoTen;
+            document.getElementById('fbChatSubtitle').innerText = `Đang hoạt động • ${currentTeacherData.chuyenMon}`;
+            document.getElementById('fbChatAvatar').src = currentTeacherData.anhDaiDien;
+            document.getElementById('fbChatAvatar').className = 'rounded-circle object-fit-cover shadow-sm';
+        }
+
+        showChatBox();
+        loadMessages(teacherUserId);
+        startPollingChat();
+    }
+
+    function openChatWithGroup(groupId) {
+        currentChatMode = 'group';
+        currentTargetGroupId = groupId;
+        currentTargetTeacherId = null;
+        currentGroupData = cachedGroups.find(g => g.maNhom === groupId);
+
+        const dropdown = document.getElementById('fbMessengerDropdown');
+        if (dropdown) { dropdown.classList.add('d-none'); dropdown.style.display = 'none'; }
+
+        // Đảm bảo kết nối SignalR đã tham gia room của nhóm
+        if (signalRCallConn && signalRCallConn.state === signalR.HubConnectionState.Connected) {
+            signalRCallConn.invoke("JoinGroupChat", groupId).catch(e => console.warn(e));
+        }
+
+        // Header
+        document.getElementById('fbGroupSettingsDropdown').classList.remove('d-none');
+
+        if (currentGroupData) {
+            document.getElementById('fbChatTitle').innerText = currentGroupData.tenNhom;
+            document.getElementById('fbChatSubtitle').innerText = `${currentGroupData.memberCount} thành viên • Quản trị`;
+            document.getElementById('fbChatAvatar').src = currentGroupData.anhNhom;
+            document.getElementById('fbChatAvatar').className = 'rounded-3 object-fit-cover shadow-sm';
+
+            // Menu quyền
+            const menuDel = document.getElementById('menuItemDeleteGroup');
+            const menuAdd = document.getElementById('menuItemAddMember');
+            if (menuDel) menuDel.style.display = currentGroupData.canManage ? 'block' : 'none';
+            if (menuAdd) menuAdd.style.display = currentGroupData.canManage ? 'block' : 'none';
+
+            // Banner cuộc gọi
+            updateGroupCallBanner(currentGroupData);
+        }
+
+        showChatBox();
+        loadGroupMessages(groupId);
+        startPollingChat();
+    }
+
+    function showChatBox() {
+        const chatBox = document.getElementById('fbChatBox');
+        if (chatBox) { chatBox.classList.remove('d-none'); chatBox.style.display = 'flex'; }
+        const chatBody = document.getElementById('fbChatBody');
+        if (chatBody) { chatBody.style.display = 'flex'; }
+    }
+
+    function startPollingChat() {
+        if (chatPollInterval) clearInterval(chatPollInterval);
+        chatPollInterval = setInterval(() => {
+            if (currentChatMode === 'teacher' && currentTargetTeacherId) {
+                loadMessages(currentTargetTeacherId, true);
+            } else if (currentChatMode === 'group' && currentTargetGroupId) {
+                loadGroupMessages(currentTargetGroupId, true);
+            }
+        }, 3000);
+    }
+
+    // =========================================================================
+    // 8. TẢI & GỬI TIN NHẮN (1-1 & NHÓM)
+    // =========================================================================
+    function loadMessages(teacherUserId, isPolling = false) {
+        const msgListEl = document.getElementById('fbChatMessageList');
+        if (!msgListEl) return;
+
+        fetch('/Chat/GetMessages?targetUserId=' + teacherUserId)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.requireLogin) {
+                    msgListEl.innerHTML = `
+                        <div class="text-center py-4 px-3 text-muted">
+                            <i class="bi bi-person-lock text-primary display-4 mb-2 d-block"></i>
+                            <h6 class="fw-bold text-dark">Vui lòng đăng nhập tài khoản</h6>
+                            <p class="small text-muted mb-3">Bạn cần đăng nhập để trao đổi trực tiếp với ${currentTeacherData ? currentTeacherData.hoTen : 'giáo viên'}.</p>
+                            <a href="/TaiKhoan/Login?returnUrl=${encodeURIComponent(window.location.pathname)}" class="btn btn-primary btn-sm rounded-pill px-4">Đăng nhập ngay</a>
+                        </div>
+                    `;
+                    return;
+                }
+                if (data && data.success) {
+                    renderMessages(data.messages, isPolling);
+                    loadUnreadCount();
+                }
+            })
+            .catch(() => {});
+    }
+
+    function loadGroupMessages(groupId, isPolling = false) {
+        const msgListEl = document.getElementById('fbChatMessageList');
+        if (!msgListEl) return;
+
+        fetch('/Chat/GetGroupMessages?maNhom=' + groupId)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.requireLogin) {
+                    msgListEl.innerHTML = `<div class="text-center py-4 px-3 text-muted"><h6 class="fw-bold">Vui lòng đăng nhập để xem nhóm!</h6></div>`;
+                    return;
+                }
+                if (data && data.success) {
+                    if (data.groupInfo) {
+                        if (!currentGroupData) currentGroupData = {};
+                        Object.assign(currentGroupData, data.groupInfo);
+                        updateGroupCallBanner(data.groupInfo);
+                    }
+                    renderGroupMessages(data.messages, isPolling);
+                }
+            })
+            .catch(() => {});
+    }
+
+    function updateGroupCallBanner(info) {
+        const banner = document.getElementById('fbActiveCallBanner');
+        if (!banner) return;
+        if (info && info.cuocGoiDangDienRa) {
+            banner.classList.remove('d-none');
+            banner.classList.add('d-flex');
+            const callTypeLabel = (info.loaiCuocGoi === 'video') ? 'Video' : 'Thoại';
+            const callerName = info.nguoiGoiTen || 'Thành viên';
+            document.getElementById('fbActiveCallText').innerHTML = `Cuộc gọi <strong>${callTypeLabel}</strong> đang diễn ra • ${escapeHtml(callerName)}`;
+
+            const btnJoin = document.getElementById('btnBannerJoinCall');
+            const btnEnd = document.getElementById('btnBannerEndCall');
+
+            if (btnJoin) {
+                if (isCallActive && activeCallGroupId === info.maNhom) {
+                    btnJoin.classList.add('d-none');
+                } else {
+                    btnJoin.classList.remove('d-none');
+                    btnJoin.innerHTML = `<i class="bi bi-telephone-inbound-fill"></i> Tham gia (${callTypeLabel})`;
+                }
+            }
+
+            if (btnEnd) {
+                const canEnd = (info.nguoiGoiId === currentSessionUserId) || (currentGroupData && currentGroupData.canManage) || (isCallActive && activeCallGroupId === info.maNhom);
+                if (canEnd) {
+                    btnEnd.classList.remove('d-none');
+                } else {
+                    btnEnd.classList.add('d-none');
+                }
+            }
+        } else {
+            banner.classList.add('d-none');
+            banner.classList.remove('d-flex');
+        }
+    }
+
+    function renderMessages(messages, isPolling) {
+        const msgListEl = document.getElementById('fbChatMessageList');
+        if (!msgListEl) return;
+        // So sánh bằng ID tin nhắn cuối cùng (chính xác hơn count)
+        const lastId = messages.length > 0 ? messages[messages.length - 1].maTinNhan : 0;
+        if (isPolling && msgListEl.dataset.lastId == lastId) return;
+        msgListEl.dataset.lastId = lastId;
+
+        if (messages.length === 0) {
+            msgListEl.innerHTML = `<div class="text-center py-5 text-muted small"><i class="bi bi-chat-heart text-primary fs-1 mb-2 d-block"></i><div>Bắt đầu cuộc trò chuyện với <strong>${currentTeacherData ? currentTeacherData.hoTen : 'giáo viên'}</strong>.</div></div>`;
+            return;
+        }
+
+        let html = '';
+        messages.forEach(msg => {
+            if (msg.loaiTinNhan === 'HeThong' || msg.loaiTinNhan === 'CuocGoi') {
+                html += `<div class="fb-bubble-system"><i class="bi ${msg.loaiTinNhan === 'CuocGoi' ? 'bi-telephone-fill text-success' : 'bi-info-circle'} me-1"></i>${escapeHtml(msg.noiDung)} <span class="ms-1 text-muted" style="font-size:10px;">${msg.thoiGian}</span></div>`;
+                return;
+            }
+
+            const isMine = msg.isMine;
+            const bubbleClass = isMine ? 'fb-bubble-mine' : 'fb-bubble-theirs';
+            const isLikeThumb = msg.noiDung === '👍' && !msg.hinhAnhUrl;
+
+            let imageHtml = msg.hinhAnhUrl ? `<div class="mb-1"><a href="${msg.hinhAnhUrl}" target="_blank"><img src="${msg.hinhAnhUrl}" class="rounded shadow-sm" style="max-width: 100%; max-height: 200px; object-fit: cover;" /></a></div>` : '';
+            let textHtml = isLikeThumb ? `<div class="fb-bubble-like">👍</div>` : `<div>${escapeHtml(msg.noiDung)}</div>`;
+
+            html += `
+                <div class="${bubbleClass} ${isLikeThumb ? 'fb-bubble-like' : ''}">
+                    ${imageHtml}
+                    ${textHtml}
+                    <div class="fb-chat-msg-time text-end">${msg.thoiGian}</div>
+                </div>
+            `;
+        });
+        msgListEl.innerHTML = html;
+        msgListEl.scrollTop = msgListEl.scrollHeight;
+    }
+
+    function renderGroupMessages(messages, isPolling) {
+        const msgListEl = document.getElementById('fbChatMessageList');
+        if (!msgListEl) return;
+        // So sánh bằng ID tin nhắn cuối cùng
+        const lastId = messages.length > 0 ? messages[messages.length - 1].maTinNhan : 0;
+        if (isPolling && msgListEl.dataset.lastId == lastId) return;
+        msgListEl.dataset.lastId = lastId;
+
+        if (messages.length === 0) {
+            msgListEl.innerHTML = `<div class="text-center py-5 text-muted small"><i class="bi bi-people text-success fs-1 mb-2 d-block"></i><div>Chào mừng bạn đến với nhóm chat! Hãy gửi lời chào đầu tiên.</div></div>`;
+            return;
+        }
+
+        let html = '';
+        messages.forEach(msg => {
+            if (msg.loaiTinNhan === 'CuocGoi') {
+                const isLive = currentGroupData && currentGroupData.cuocGoiDangDienRa;
+                if (isLive) {
+                    html += `
+                        <div class="fb-call-msg-card w-100 my-2">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                <span class="spinner-grow spinner-grow-sm text-success" style="width: 10px; height: 10px;" role="status"></span>
+                                <span class="badge bg-success text-white fw-semibold rounded-pill px-2 py-1" style="font-size:11px;">Cuộc gọi nhóm đang diễn ra</span>
+                                <span class="text-muted" style="font-size: 11px;">${msg.thoiGian}</span>
+                            </div>
+                            <div class="fw-bold text-dark my-1" style="font-size: 13px;">${escapeHtml(msg.noiDung)}</div>
+                            <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold px-3 py-1 mt-2 shadow-sm d-inline-flex align-items-center gap-2" onclick="joinActiveGroupCall()">
+                                <i class="bi bi-telephone-inbound-fill"></i> Tham gia cuộc gọi ngay
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="fb-call-msg-card ended w-100 my-1">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-1 text-muted" style="font-size: 11px;">
+                                <i class="bi bi-telephone-x-fill text-secondary"></i>
+                                <span>Cuộc gọi nhóm • ${msg.thoiGian}</span>
+                            </div>
+                            <div class="small text-secondary fw-semibold">${escapeHtml(msg.noiDung)}</div>
+                            <div class="badge bg-secondary-subtle text-secondary border mt-1">Cuộc gọi đã kết thúc</div>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            if (msg.loaiTinNhan === 'HeThong') {
+                html += `<div class="fb-bubble-system"><i class="bi bi-info-circle me-1"></i>${escapeHtml(msg.noiDung)} <span class="ms-1" style="font-size:10px;">${msg.thoiGian}</span></div>`;
+                return;
+            }
+
+            const isMine = msg.isMine;
+            const bubbleClass = isMine ? 'fb-bubble-mine' : 'fb-bubble-theirs';
+            const isLikeThumb = msg.noiDung === '👍' && !msg.hinhAnhUrl;
+
+            let senderHeader = !isMine ? `<div class="small fw-bold text-primary mb-1 d-flex align-items-center gap-1" style="font-size:11px;"><img src="${msg.nguoiGuiAvatar}" class="rounded-circle" style="width:16px;height:16px;object-fit:cover;" /> ${escapeHtml(msg.nguoiGuiTen)}</div>` : '';
+            let imageHtml = msg.hinhAnhUrl ? `<div class="mb-1"><a href="${msg.hinhAnhUrl}" target="_blank"><img src="${msg.hinhAnhUrl}" class="rounded shadow-sm" style="max-width: 100%; max-height: 200px; object-fit: cover;" /></a></div>` : '';
+            let textHtml = isLikeThumb ? `<div class="fb-bubble-like">👍</div>` : `<div>${escapeHtml(msg.noiDung)}</div>`;
+
+            html += `
+                <div class="${bubbleClass} ${isLikeThumb ? 'fb-bubble-like' : ''}">
+                    ${senderHeader}
+                    ${imageHtml}
+                    ${textHtml}
+                    <div class="fb-chat-msg-time text-end">${msg.thoiGian}</div>
+                </div>
+            `;
+        });
+        msgListEl.innerHTML = html;
+        msgListEl.scrollTop = msgListEl.scrollHeight;
+    }
+
+    // Gửi tin nhắn (1-1 hoặc Nhóm)
+    function onSendChatClick() {
+        const input = document.getElementById('fbChatTextInput');
+        const fileInput = document.getElementById('fbChatFileInput');
+        const text = input.value.trim();
+        const hasImage = fileInput.files && fileInput.files.length > 0;
+
+        if (!text && !hasImage) {
+            sendPayload('👍', null);
+            return;
+        }
+        sendPayload(text, hasImage ? fileInput.files[0] : null);
+    }
+
+    function sendPayload(text, imageFile) {
+        const formData = new FormData();
+        if (text) formData.append('noiDung', text);
+        if (imageFile) formData.append('imageFile', imageFile);
+
+        document.getElementById('fbChatTextInput').value = '';
+        clearSelectedChatImage();
+        updateSendButtonState();
+        closeEmojiPicker();
+
+        if (currentChatMode === 'teacher') {
+            if (!currentTargetTeacherId) return;
+            const targetId = currentTargetTeacherId;
+            formData.append('targetUserId', targetId);
+            fetch('/Chat/SendMessage', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.requireLogin) { alert('Vui lòng đăng nhập!'); return; }
+                    if (data && data.success) {
+                        loadMessages(targetId);
+                        pushTeacherToTop(targetId, null, null, text || '[Hình ảnh]', false);
+                    }
+                });
+        } else {
+            if (!currentTargetGroupId) return;
+            const grpId = currentTargetGroupId;
+            formData.append('maNhom', grpId);
+            fetch('/Chat/SendGroupMessage', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.requireLogin) { alert('Vui lòng đăng nhập!'); return; }
+                    if (data && data.success) {
+                        loadGroupMessages(grpId);
+                        pushGroupToTop(grpId, null, null, 'Bạn: ' + (text || '[Hình ảnh]'), false);
+                    }
+                });
+        }
+    }
+
+    // =========================================================================
+    // 9. QUẢN LÝ NHÓM: TẠO NHÓM, XEM THÀNH VIÊN, KICK, THÊM, XÓA NHÓM
+    // =========================================================================
+    function openCreateGroupModal() {
+        if (!chat_canUserCreateGroup) {
+            alert('Chỉ Giáo viên, Quản lý hoặc Admin mới có quyền tạo nhóm chat!');
+            return;
+        }
+        document.getElementById('newGroupNameInput').value = '';
+        const modal = new bootstrap.Modal(document.getElementById('fbCreateGroupModal'));
+        modal.show();
+
+        // Tải danh sách ứng viên có thể thêm vào nhóm
+        const container = document.getElementById('createGroupCandidatesList');
+        container.innerHTML = '<div class="text-center py-3 text-muted small"><div class="spinner-border spinner-border-sm text-primary mb-1"></div><div>Đang tải danh sách thành viên...</div></div>';
+
+        fetch('/Chat/GetCandidateMembers?maNhom=0')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.candidates) {
+                    let html = '';
+                    data.candidates.forEach(c => {
+                        html += `
+                            <div class="form-check d-flex align-items-center gap-2 p-2 border-bottom hover-bg">
+                                <input class="form-check-input group-member-checkbox" type="checkbox" value="${c.maTaiKhoan}" id="chkUser_${c.maTaiKhoan}" onchange="updateSelectedCount()" />
+                                <img src="${c.anhDaiDien}" class="rounded-circle object-fit-cover" style="width:28px;height:28px;" />
+                                <label class="form-check-label flex-grow-1 small" for="chkUser_${c.maTaiKhoan}" style="cursor:pointer;">
+                                    <strong>${c.hoTen}</strong> <span class="badge bg-light text-muted border ms-1">${c.chuyenMon}</span>
+                                </label>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html || '<div class="text-muted p-2 small">Không có ứng viên nào.</div>';
+                }
+            });
+    }
+
+    function updateSelectedCount() {
+        const count = document.querySelectorAll('.group-member-checkbox:checked').length;
+        document.getElementById('selectedMembersCount').innerText = `Đã chọn: ${count}`;
+    }
+
+    function submitCreateGroup() {
+        const name = document.getElementById('newGroupNameInput').value.trim();
+        const avatar = document.getElementById('newGroupAvatarInput').value.trim();
+        if (!name) { alert('Vui lòng nhập tên nhóm chat!'); return; }
+
+        const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
+        const memberIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        fetch('/Chat/CreateGroup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tenNhom: name,
+                anhNhom: avatar,
+                memberIds: memberIds
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('fbCreateGroupModal')).hide();
+                loadMessengerGroups();
+                openChatWithGroup(data.maNhom);
+            } else {
+                alert(data.message || 'Không thể tạo nhóm chat!');
+            }
+        });
+    }
+
+    // Xem danh sách thành viên nhóm
+    function openGroupMembersModal() {
+        if (!currentTargetGroupId) return;
+        const container = document.getElementById('groupMembersListContainer');
+        container.innerHTML = '<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary mb-2"></div><div>Đang tải thành viên...</div></div>';
+        const modal = new bootstrap.Modal(document.getElementById('fbGroupMembersModal'));
+        modal.show();
+
+        fetch('/Chat/GetGroupMembers?maNhom=' + currentTargetGroupId)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.members) {
+                    let html = '';
+                    data.members.forEach(m => {
+                        const isLeader = m.vaiTroTrongNhom === 'TruongNhom';
+                        const kickBtn = m.canKick ? `<button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 rounded-pill" onclick="kickMember(${m.maTaiKhoan}, '${escapeHtml(m.hoTen)}')"><i class="bi bi-x-circle me-1"></i>Kick</button>` : '';
+
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center p-2 border-bottom hover-bg rounded">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="${m.anhDaiDien}" class="rounded-circle object-fit-cover shadow-sm" style="width:36px;height:36px;" />
+                                    <div>
+                                        <div class="fw-bold small text-dark">${m.hoTen}</div>
+                                        <div class="text-muted" style="font-size:11px;">
+                                            <span class="badge ${isLeader ? 'bg-primary' : 'bg-light text-dark border'}">${isLeader ? 'Trưởng nhóm' : 'Thành viên'}</span>
+                                            &bull; ${m.vaiTro === 'Admin' ? 'Admin' : (m.vaiTro === 'GiaoVien' ? 'Giáo viên' : 'Học viên')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>${kickBtn}</div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+            });
+    }
+
+    // Kick thành viên
+    function kickMember(userId, userName) {
+        if (!confirm(`Bạn có chắc chắn muốn mời thành viên "${userName}" ra khỏi nhóm chat này?`)) return;
+        fetch('/Chat/KickGroupMember?maNhom=' + currentTargetGroupId + '&maTaiKhoan=' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    openGroupMembersModal();
+                    loadGroupMessages(currentTargetGroupId);
+                } else {
+                    alert(data.message || 'Lỗi khi kick thành viên!');
+                }
+            });
+    }
+
+    // Thêm thành viên vào nhóm
+    function openAddMemberModal() {
+        if (!currentTargetGroupId) return;
+        const container = document.getElementById('addCandidateListContainer');
+        container.innerHTML = '<div class="text-center py-3 text-muted small"><div class="spinner-border spinner-border-sm text-primary mb-1"></div><div>Đang tải ứng viên...</div></div>';
+        const modal = new bootstrap.Modal(document.getElementById('fbAddMemberModal'));
+        modal.show();
+
+        fetch('/Chat/GetCandidateMembers?maNhom=' + currentTargetGroupId)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.candidates) {
+                    if (data.candidates.length === 0) {
+                        container.innerHTML = '<div class="text-muted p-3 text-center small">Tất cả tài khoản trong hệ thống đều đã có trong nhóm!</div>';
+                        return;
+                    }
+                    let html = '';
+                    data.candidates.forEach(c => {
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center p-2 border-bottom hover-bg rounded">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="${c.anhDaiDien}" class="rounded-circle object-fit-cover" style="width:32px;height:32px;" />
+                                    <div>
+                                        <div class="fw-bold small text-dark">${c.hoTen}</div>
+                                        <div class="text-muted" style="font-size:11px;">${c.chuyenMon}</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm py-0 px-2 rounded-pill" onclick="submitAddMember(${c.maTaiKhoan})">
+                                    <i class="bi bi-plus-lg me-1"></i>Thêm
+                                </button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+            });
+    }
+
+    function submitAddMember(userId) {
+        fetch('/Chat/AddGroupMember?maNhom=' + currentTargetGroupId + '&maTaiKhoan=' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    openAddMemberModal(); // Refresh list
+                    loadGroupMessages(currentTargetGroupId);
+                } else {
+                    alert(data.message || 'Không thể thêm thành viên!');
+                }
+            });
+    }
+
+    // Xóa nhóm chat
+    function confirmDeleteCurrentGroup() {
+        if (!confirm('Bạn có chắc chắn muốn XÓA VĨNH VIỄN nhóm chat này cùng toàn bộ tin nhắn bên trong?')) return;
+        fetch('/Chat/DeleteGroup?maNhom=' + currentTargetGroupId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    closeChatBox();
+                    loadMessengerGroups();
+                } else {
+                    alert(data.message || 'Lỗi khi xóa nhóm!');
+                }
+            });
+    }
+
+    // =========================================================================
+    // 10. GỌI THOẠI & GỌI VIDEO CALL (WEBRTC + SIGNALR + WEB AUDIO API CHUÔNG REO)
+    // =========================================================================
+
+    // 10.1 Web Audio API Synthesizer - Âm thanh cuộc gọi không phụ thuộc file mp3
+    const CallSound = {
+        ctx: null,
+        oscLoopInterval: null,
+        init: function () {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        },
+        playTone: function (freq1, freq2, duration) {
+            this.init();
+            if (!this.ctx) return;
+            try {
+                const now = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(freq1, now);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(freq2, now);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + duration);
+                osc2.stop(now + duration);
+            } catch (e) {
+                console.warn('AudioContext playTone error:', e);
+            }
+        },
+        playOutgoingTone: function () {
+            this.stop();
+            this.init();
+            // Âm tút viễn thông: 440Hz + 480Hz vang 1.2s, lặp lại mỗi 3.5s
+            const ring = () => this.playTone(440, 480, 1.2);
+            ring();
+            this.oscLoopInterval = setInterval(ring, 3500);
+        },
+        playIncomingRingtone: function () {
+            this.stop();
+            this.init();
+            // Giai điệu chuông Messenger ngân nga: C5, E5, G5
+            const ring = () => {
+                this.playTone(523, 659, 0.35);
+                setTimeout(() => this.playTone(659, 784, 0.45), 200);
+                setTimeout(() => this.playTone(523, 659, 0.35), 700);
+                setTimeout(() => this.playTone(659, 784, 0.55), 900);
+            };
+            ring();
+            this.oscLoopInterval = setInterval(ring, 3000);
+        },
+        playBusyTone: function () {
+            this.stop();
+            this.init();
+            let count = 0;
+            const busy = () => {
+                this.playTone(480, 620, 0.25);
+                count++;
+                if (count >= 5 && this.oscLoopInterval) {
+                    clearInterval(this.oscLoopInterval);
+                    this.oscLoopInterval = null;
+                }
+            };
+            busy();
+            this.oscLoopInterval = setInterval(busy, 500);
+        },
+        playEndTone: function () {
+            this.stop();
+            this.init();
+            if (!this.ctx) return;
+            try {
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.35);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } catch (e) {}
+        },
+        playMessageChime: function () {
+            this.init();
+            if (!this.ctx) return;
+            try {
+                const now = this.ctx.currentTime;
+                // Tiếng ting kép Messenger: 880Hz (A5) -> 1320Hz (E6)
+                const osc1 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+                osc1.frequency.setValueAtTime(880, now);
+                gain1.gain.setValueAtTime(0.15, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc1.connect(gain1);
+                gain1.connect(this.ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+
+                const osc2 = this.ctx.createOscillator();
+                const gain2 = this.ctx.createGain();
+                osc2.frequency.setValueAtTime(1320, now + 0.08);
+                gain2.gain.setValueAtTime(0.2, now + 0.08);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc2.connect(gain2);
+                gain2.connect(this.ctx.destination);
+                osc2.start(now + 0.08);
+                osc2.stop(now + 0.35);
+            } catch (e) {}
+        },
+        playMessagePop: function () {
+            this.init();
+            if (!this.ctx) return;
+            try {
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.setValueAtTime(550, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } catch (e) {}
+        },
+        stop: function () {
+            if (this.oscLoopInterval) {
+                clearInterval(this.oscLoopInterval);
+                this.oscLoopInterval = null;
+            }
+        }
+    };
+
+    // 10.2 WebRTC RTCPeerConnection Helpers & Cross-device / Mobile Polyfill
+    let rtcConfiguration = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+            // TURN servers công khai (hỗ trợ NAT/Firewall/LAN/ngrok/mobile)
+            {
+                urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443'],
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            }
+        ],
+        iceTransportPolicy: 'all',
+        iceCandidatePoolSize: 10,
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require'
+    };
+
+    // Tải TURN servers từ backend để có danh sách cập nhật nhất
+    (async function loadIceServers() {
+        try {
+            const resp = await fetch('/Chat/GetIceServers');
+            if (resp.ok) {
+                const servers = await resp.json();
+                if (Array.isArray(servers) && servers.length > 0) {
+                    rtcConfiguration.iceServers = servers;
+                    console.log('[WebRTC] Đã tải ICE servers:', servers.length, 'servers');
+                }
+            }
+        } catch (e) {
+            console.log('[WebRTC] Dùng ICE servers mặc định:', e.message);
+        }
+    })();
+
+
+
+    // Tạo Video Track động hiển thị Avatar + Tên + Hiệu ứng sóng âm thanh (Không bao giờ bị màn đen, an toàn 100% không bị dính lỗi CORS Canvas)
+    function createDynamicAvatarVideoTrack(name, avatarUrl) {
+        try {
+            let canvas = document.getElementById('rtcDynamicAvatarCanvas');
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                canvas.id = 'rtcDynamicAvatarCanvas';
+                canvas.width = 640;
+                canvas.height = 480;
+                canvas.style.position = 'fixed';
+                canvas.style.top = '-9999px';
+                canvas.style.left = '-9999px';
+                canvas.style.opacity = '0';
+                canvas.style.pointerEvents = 'none';
+                document.body.appendChild(canvas);
+            }
+            const ctx = canvas.getContext('2d');
+
+            let angle = 0;
+            const drawFrame = () => {
+                angle += 0.08;
+                // Nền gradient công nghệ mượt mà
+                const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                grad.addColorStop(0, '#0f172a');
+                grad.addColorStop(0.5, '#1e1b4b');
+                grad.addColorStop(1, '#0f172a');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const cx = canvas.width / 2;
+                const cy = 190;
+
+                // Các vòng tròn phát sóng động
+                for (let i = 1; i <= 3; i++) {
+                    const r = 68 + (i * 26) + Math.sin(angle + i * 1.5) * 12;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 - i * 0.1})`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                // Vẽ Avatar hình tròn vector đẹp (Không load ảnh ngoài để tránh bị CORS taint canvas)
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+                ctx.fillStyle = '#0284c7';
+                ctx.fill();
+
+                // Chữ cái đầu tiên
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 52px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const initialChar = (name && name.trim().length > 0) ? name.trim().charAt(0).toUpperCase() : 'U';
+                ctx.fillText(initialChar, cx, cy);
+                ctx.restore();
+
+                // Viền sáng avatar
+                ctx.beginPath();
+                ctx.arc(cx, cy, 62, 0, Math.PI * 2);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
+                // Tên người dùng
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(name || 'Người dùng', cx, 310);
+
+                // Badge trạng thái
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillText('🎙️ Âm thanh HD • Camera mô phỏng trực tuyến', cx, 345);
+            };
+
+            drawFrame();
+            const timer = setInterval(drawFrame, 66); // ~15 fps
+
+            const captureFunc = canvas.captureStream || canvas.mozCaptureStream;
+            if (captureFunc) {
+                const stream = captureFunc.call(canvas, 15);
+                if (stream && stream.getVideoTracks().length > 0) {
+                    const track = stream.getVideoTracks()[0];
+                    const origStop = track.stop.bind(track);
+                    track.stop = () => {
+                        clearInterval(timer);
+                        if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+                        origStop();
+                    };
+                    return track;
+                }
+            }
+        } catch (e) {
+            console.warn("[WebRTC] createDynamicAvatarVideoTrack error:", e);
+        }
+        return null;
+    }
+
+    function createSyntheticAudioTrack() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                const actx = new AudioCtx();
+                if (actx.state === 'suspended') actx.resume();
+                const dest = actx.createMediaStreamDestination();
+                const osc = actx.createOscillator();
+                const gain = actx.createGain();
+                gain.gain.value = 0.001;
+                osc.connect(gain);
+                gain.connect(dest);
+                osc.start();
+                if (dest.stream && dest.stream.getAudioTracks().length > 0) {
+                    return dest.stream.getAudioTracks()[0];
+                }
+            }
+        } catch (e) {
+            console.warn("[WebRTC] Synthetic audio error:", e);
+        }
+        return null;
+    }
+
+    // Hàm lấy MediaStream an toàn: Hỗ trợ PC, Mobile, fallback camera linh hoạt không bao giờ bị đen màn hình
+    async function getSafeUserMedia(constraints) {
+        // 1. Kiểm tra Secure Context (Bảo mật trình duyệt)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (!window.isSecureContext && !isLocal && window.location.protocol === 'http:') {
+            const httpsPort = '5001';
+            const httpsUrl = 'https://' + window.location.hostname + ':' + httpsPort + window.location.pathname + window.location.search;
+            const shouldRedirect = confirm("📱 THÔNG BÁO CHO THIẾT BỊ DI ĐỘNG & MẠNG LAN:\n\nTrình duyệt điện thoại chặn Camera & Micro khi truy cập bằng giao thức HTTP thường.\n\nBạn có muốn chuyển sang HTTPS (Cổng 5001) để bật đầy đủ hình ảnh camera & âm thanh không?\n(Sau khi chuyển, chọn 'Nâng cao / Advanced' -> 'Tiếp tục truy cập')");
+            if (shouldRedirect) {
+                window.location.href = httpsUrl;
+                return null;
+            }
+        }
+
+        let mediaStream = null;
+
+        // 2. Chuẩn WebRTC hiện đại
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Thử lần 1: với constraints yêu cầu
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                console.log("[WebRTC] Lấy MediaStream thành công với constraints ban đầu.");
+                return mediaStream;
+            } catch (err1) {
+                console.warn("[WebRTC] Lần 1 thất bại:", err1.name, err1.message);
+            }
+
+            // Thử lần 2: Nới lỏng cấu hình video (hỗ trợ mobile & camera đặc thù)
+            if (constraints.video) {
+                try {
+                    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                    mediaStream = await navigator.mediaDevices.getUserMedia({
+                        audio: true,
+                        video: isMobile ? { facingMode: 'user' } : true
+                    });
+                    console.log("[WebRTC] Lấy MediaStream thành công (chế độ tương thích).");
+                    return mediaStream;
+                } catch (err2) {
+                    console.warn("[WebRTC] Lần 2 (relaxed) thất bại:", err2.name, err2.message);
+                }
+
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                    console.log("[WebRTC] Lấy MediaStream thành công (video: true).");
+                    return mediaStream;
+                } catch (err3) {
+                    console.warn("[WebRTC] Lần 3 (video: true) thất bại:", err3.name, err3.message);
+                }
+            }
+
+            // Thử lần 4: Lấy âm thanh thật (Microphone) nếu camera đang bận do ứng dụng khác hoặc tab khác
+            let audioOnlyStream = null;
+            try {
+                audioOnlyStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                console.log("[WebRTC] Đã lấy Microphone thật thành công!");
+            } catch (errAudio) {
+                console.warn("[WebRTC] Không thể mở Microphone:", errAudio.name, errAudio.message);
+            }
+
+            // Nếu người dùng gọi video nhưng Camera bị khóa/bận/không có:
+            // Ghép Microphone thật với Video Track mô phỏng Avatar động rực rỡ để KHÔNG BAO GIỜ BỊ MÀN ĐEN
+            if (constraints.video) {
+                const combined = new MediaStream();
+                if (audioOnlyStream && audioOnlyStream.getAudioTracks().length > 0) {
+                    audioOnlyStream.getAudioTracks().forEach(t => combined.addTrack(t));
+                } else {
+                    const synthA = createSyntheticAudioTrack();
+                    if (synthA) combined.addTrack(synthA);
+                }
+
+                const myAvatar = (currentTeacherData && currentTeacherData.anhDaiDien) ? currentTeacherData.anhDaiDien : '';
+                const synthV = createDynamicAvatarVideoTrack(currentSessionUserName || 'Bạn', myAvatar);
+                if (synthV) combined.addTrack(synthV);
+
+                return combined;
+            } else if (audioOnlyStream) {
+                return audioOnlyStream;
+            }
+        }
+
+        // 3. Fallback hoàn toàn nếu không có getUserMedia
+        const fallbackStream = new MediaStream();
+        const synthA = createSyntheticAudioTrack();
+        if (synthA) fallbackStream.addTrack(synthA);
+        if (constraints.video) {
+            const synthV = createDynamicAvatarVideoTrack(currentSessionUserName || 'Bạn', '');
+            if (synthV) fallbackStream.addTrack(synthV);
+        }
+        return fallbackStream;
+    }
+
+    // Helper chuẩn hóa dữ liệu WebRTC (Candidate & SDP) gửi nhận qua SignalR chống lỗi serialization
+    function formatIceCandidateForSignal(cand) {
+        if (!cand) return null;
+        return {
+            candidate: cand.candidate || '',
+            sdpMid: (cand.sdpMid !== undefined && cand.sdpMid !== null) ? String(cand.sdpMid) : '0',
+            sdpMLineIndex: (cand.sdpMLineIndex !== undefined && cand.sdpMLineIndex !== null) ? Number(cand.sdpMLineIndex) : 0,
+            usernameFragment: cand.usernameFragment || ''
+        };
+    }
+
+    function parseIceCandidateFromSignal(raw) {
+        if (!raw) return null;
+        const candStr = (typeof raw === 'string') ? raw : (raw.candidate || '');
+        if (!candStr) return null;
+        return {
+            candidate: candStr,
+            sdpMid: (raw.sdpMid !== undefined && raw.sdpMid !== null) ? String(raw.sdpMid) : '0',
+            sdpMLineIndex: (raw.sdpMLineIndex !== undefined && raw.sdpMLineIndex !== null) ? Number(raw.sdpMLineIndex) : 0,
+            usernameFragment: raw.usernameFragment || ''
+        };
+    }
+
+    function formatSdpForSignal(desc) {
+        if (!desc) return null;
+        return {
+            type: desc.type,
+            sdp: desc.sdp
+        };
+    }
+
+    // Hàng đợi giải quyết triệt để Race-Condition của ICE Candidate giữa PC & Mobile
+    let iceCandidatesQueue = [];
+
+    async function processQueuedIceCandidates() {
+        if (!peerConnection || !peerConnection.remoteDescription || !peerConnection.remoteDescription.type) {
+            return;
+        }
+        if (iceCandidatesQueue.length > 0) {
+            console.log(`[WebRTC] Đang nạp ${iceCandidatesQueue.length} queued ICE candidates`);
+            while (iceCandidatesQueue.length > 0) {
+                const cand = iceCandidatesQueue.shift();
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(cand));
+                } catch (e) {
+                    console.warn("[WebRTC] Lỗi addIceCandidate từ queue:", e);
+                }
+            }
+        }
+    }
+
+    function createPeerConnection(remoteTargetId, isGroup = false) {
+        if (peerConnection) {
+            try { peerConnection.close(); } catch (e) {}
+            peerConnection = null;
+        }
+
+        try {
+            peerConnection = new RTCPeerConnection(rtcConfiguration);
+            console.log('[WebRTC] RTCPeerConnection khởi tạo thành công.');
+        } catch (e) {
+            console.error('[WebRTC] Không thể tạo RTCPeerConnection:', e);
+            return null;
+        }
+
+        // Truyền tracks từ localStream sang đối phương
+        if (localStream) {
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+                console.log('[WebRTC] addTrack:', track.kind, track.label);
+            });
+        }
+
+        // Gửi ICE Candidate qua SignalR (chuẩn hóa dữ liệu object an toàn)
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate && signalRCallConn) {
+                const candData = formatIceCandidateForSignal(event.candidate);
+                if (candData && candData.candidate) {
+                    if (isGroup) {
+                        signalRCallConn.invoke("SendGroupSignal", remoteTargetId, currentSessionUserId, { candidate: candData })
+                            .catch(err => console.error("SignalR SendGroupSignal error:", err));
+                    } else {
+                        signalRCallConn.invoke("SendSignal", remoteTargetId, currentSessionUserId, { candidate: candData })
+                            .catch(err => console.error("SignalR SendSignal error:", err));
+                    }
+                }
+            }
+        };
+
+        // Khi nhận track media từ đối phương
+        if (!peerConnection._remoteStream) {
+            peerConnection._remoteStream = new MediaStream();
+        }
+        peerConnection.ontrack = (event) => {
+            console.log('[WebRTC] ontrack received:', event.track.kind, 'streams:', event.streams ? event.streams.length : 0);
+            const remoteVideo = document.getElementById('callLiveRemoteVideo');
+            const remoteAudio = document.getElementById('callLiveRemoteAudio');
+            const voiceStage = document.getElementById('callVoiceStageBox');
+
+            // 1. Luôn thêm track vào _remoteStream tích lũy an toàn
+            if (!peerConnection._remoteStream.getTracks().some(t => t.id === event.track.id)) {
+                peerConnection._remoteStream.addTrack(event.track);
+                console.log('[WebRTC] Track added to _remoteStream:', event.track.kind, event.track.id);
+            }
+
+            const nativeStream = peerConnection._remoteStream;
+
+            // 2. Gán vào video element khi nhận được video track
+            if (event.track.kind === 'video' && remoteVideo) {
+                if (!remoteVideo.srcObject || remoteVideo.srcObject.id !== nativeStream.id) {
+                    remoteVideo.srcObject = nativeStream;
+                }
+                remoteVideo.muted = false;
+                remoteVideo.volume = 1.0;
+                remoteVideo.classList.remove('d-none');
+                if (voiceStage) voiceStage.classList.add('d-none');
+                remoteVideo.play().catch(e => {
+                    console.warn("[WebRTC] remoteVideo play unmuted error, fallback muted:", e);
+                    remoteVideo.muted = true;
+                    remoteVideo.play().catch(() => {});
+                });
+            }
+
+            // 3. Gán vào audio element để phát âm thanh rõ ràng
+            if (event.track.kind === 'audio' && remoteAudio) {
+                if (!remoteAudio.srcObject || remoteAudio.srcObject.id !== nativeStream.id) {
+                    remoteAudio.srcObject = nativeStream;
+                }
+                remoteAudio.muted = false;
+                remoteAudio.volume = 1.0;
+                remoteAudio.play().catch(e => console.warn("[WebRTC] remoteAudio play warning:", e));
+            }
+
+            // 4. Lắng nghe track unmuted & ended events
+            event.track.onunmute = () => {
+                console.log(`[WebRTC] Track unmuted: ${event.track.kind}`);
+                if (event.track.kind === 'video' && remoteVideo) {
+                    remoteVideo.play().catch(() => {});
+                }
+                if (event.track.kind === 'audio' && remoteAudio) {
+                    remoteAudio.muted = false;
+                    remoteAudio.play().catch(() => {});
+                }
+            };
+            event.track.onended = () => {
+                console.log(`[WebRTC] Track ended: ${event.track.kind}`);
+            };
+        };
+
+        peerConnection.onconnectionstatechange = () => {
+            console.log('[WebRTC] ConnectionState:', peerConnection.connectionState);
+            const sub = document.getElementById('callRoomSubTitle');
+            if (peerConnection.connectionState === 'connected') {
+                if (sub) sub.innerText = 'Đã kết nối trực tuyến HD';
+                onCallEstablished();
+            } else if (peerConnection.connectionState === 'connecting') {
+                if (sub) sub.innerText = 'Đang thiết lập kênh trực tiếp...';
+            } else if (peerConnection.connectionState === 'failed') {
+                if (sub) sub.innerText = 'Lỗi kết nối P2P (Failed)';
+            }
+        };
+
+        peerConnection.oniceconnectionstatechange = () => {
+            console.log('[WebRTC] ICE ConnectionState:', peerConnection.iceConnectionState);
+            const sub = document.getElementById('callRoomSubTitle');
+            if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
+                if (sub) sub.innerText = 'Đã kết nối trực tuyến HD';
+                onCallEstablished();
+            } else if (peerConnection.iceConnectionState === 'checking') {
+                if (sub) sub.innerText = 'Đang bắt tay ICE...';
+            } else if (peerConnection.iceConnectionState === 'failed') {
+                if (sub) sub.innerText = 'Lỗi ICE kết nối';
+            }
+        };
+
+        return peerConnection;
+    }
+
+    // Khởi tạo RTCPeerConnection riêng biệt cho từng thành viên trong cuộc gọi nhóm (WebRTC Mesh)
+    function createPeerConnectionForGroupMember(remoteUserId, remoteUserName, isInitiator) {
+        if (groupPeerConnections[remoteUserId]) {
+            try { groupPeerConnections[remoteUserId].close(); } catch (e) {}
+            delete groupPeerConnections[remoteUserId];
+        }
+
+        let pc;
+        try {
+            pc = new RTCPeerConnection(rtcConfiguration);
+            groupPeerConnections[remoteUserId] = pc;
+            console.log(`[WebRTC Group] Đã tạo RTCPeerConnection cho user ${remoteUserId}`);
+        } catch (e) {
+            console.error('[WebRTC Group] Lỗi tạo PeerConnection:', e);
+            return null;
+        }
+
+        // Truyền tracks từ localStream sang đối phương
+        if (localStream) {
+            localStream.getTracks().forEach(track => {
+                pc.addTrack(track, localStream);
+            });
+        }
+
+        // Gửi ICE Candidate cho riêng user này qua SignalR
+        pc.onicecandidate = (event) => {
+            if (event.candidate && signalRCallConn && activeCallGroupId) {
+                const candData = formatIceCandidateForSignal(event.candidate);
+                if (candData && candData.candidate) {
+                    signalRCallConn.invoke("SendGroupSignalToPeer", activeCallGroupId, currentSessionUserId, remoteUserId, { candidate: candData })
+                        .catch(err => console.error("SendGroupSignalToPeer candidate error:", err));
+                }
+            }
+        };
+
+        // Khi nhận track media từ đối phương (WebRTC Mesh nhóm)
+        // --- FIX: Dùng _remoteStream tích lũy an toàn, không phụ thuộc vào event.streams ---
+        pc._remoteStream = new MediaStream();
+        pc.ontrack = (event) => {
+            console.log(`[WebRTC Group] ontrack received từ user ${remoteUserId}:`, event.track.kind);
+            const remoteVideo = document.getElementById('callLiveRemoteVideo');
+            const remoteAudio = document.getElementById('callLiveRemoteAudio');
+            const voiceStage = document.getElementById('callVoiceStageBox');
+
+            if (!pc._remoteStream.getTracks().some(t => t.id === event.track.id)) {
+                pc._remoteStream.addTrack(event.track);
+            }
+
+            // Luôn dùng _remoteStream tích lũy (ổn định trên PC lẫn mobile)
+            const nativeStream = pc._remoteStream;
+
+            if (event.track.kind === 'video' && remoteVideo) {
+                if (!remoteVideo.srcObject || remoteVideo.srcObject.id !== nativeStream.id) {
+                    remoteVideo.srcObject = nativeStream;
+                }
+                remoteVideo.muted = false;
+                remoteVideo.volume = 1.0;
+                remoteVideo.classList.remove('d-none');
+                if (voiceStage) voiceStage.classList.add('d-none');
+                remoteVideo.play().catch(e => {
+                    console.warn("[WebRTC Group] Video play unmuted warning, trying muted:", e);
+                    remoteVideo.muted = true;
+                    remoteVideo.play().catch(() => {});
+                });
+            }
+
+            if (event.track.kind === 'audio' && remoteAudio) {
+                if (!remoteAudio.srcObject || remoteAudio.srcObject.id !== nativeStream.id) {
+                    remoteAudio.srcObject = nativeStream;
+                }
+                remoteAudio.muted = false;
+                remoteAudio.volume = 1.0;
+                remoteAudio.play().catch(e => console.warn("[WebRTC Group] Audio play warning:", e));
+            }
+
+            event.track.onunmute = () => {
+                console.log(`[WebRTC Group] Track unmuted từ user ${remoteUserId}:`, event.track.kind);
+                if (event.track.kind === 'video' && remoteVideo) remoteVideo.play().catch(() => {});
+                if (event.track.kind === 'audio' && remoteAudio) {
+                    remoteAudio.muted = false;
+                    remoteAudio.play().catch(() => {});
+                }
+            };
+
+            onCallEstablished();
+        };
+
+        pc.onconnectionstatechange = () => {
+            console.log(`[WebRTC Group] User ${remoteUserId} ConnectionState:`, pc.connectionState);
+            if (pc.connectionState === 'connected') {
+                onCallEstablished();
+            }
+        };
+
+        pc.oniceconnectionstatechange = () => {
+            console.log(`[WebRTC Group] User ${remoteUserId} ICE ConnectionState:`, pc.iceConnectionState);
+            if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+                onCallEstablished();
+            }
+        };
+
+        return pc;
+    }
+
+    // 10.3 Khởi tạo kết nối SignalR CallHub
+    function initCallSignalR() {
+        if (!chat_isUserLoggedIn || !currentSessionUserId || typeof signalR === 'undefined') return;
+
+        signalRCallConn = new signalR.HubConnectionBuilder()
+            .withUrl("/callHub")
+            .withAutomaticReconnect([0, 2000, 5000, 10000])
+            .build();
+
+        // Tự động đăng ký lại khi SignalR kết nối lại (đặc biệt hữu ích trên di động khi khóa màn hình)
+        signalRCallConn.onreconnected(connectionId => {
+            console.log("[SignalR] CallHub đã kết nối lại! connectionId:", connectionId);
+            if (currentSessionUserId > 0) {
+                signalRCallConn.invoke("RegisterUser", currentSessionUserId)
+                    .catch(e => console.error("[SignalR] Lỗi đăng ký lại sau reconnect:", e));
+            }
+        });
+
+        // A. Nhận cuộc gọi đến 1-1
+        signalRCallConn.on("IncomingCall", function (data) {
+            console.log("SignalR IncomingCall:", data);
+            if (isCallActive) {
+                signalRCallConn.invoke("RejectCall", data.callerUserId, currentSessionUserId, "Người dùng đang trong cuộc gọi khác");
+                return;
+            }
+            incomingCallData = data;
+            incomingCallData.isGroup = false;
+
+            document.getElementById('incomingCallerName').innerText = data.callerName;
+            document.getElementById('incomingGroupTitle').innerText = 'đang gọi cho bạn...';
+            document.getElementById('incomingCallerAvatar').src = data.callerAvatar;
+            document.getElementById('incomingCallTypeBadge').innerText = data.callType === 'video' ? '📹 Cuộc gọi Video đến' : '📞 Cuộc gọi Thoại đến';
+
+            document.getElementById('fbIncomingCallToast').classList.remove('d-none');
+            CallSound.playIncomingRingtone();
+        });
+
+        // B. Đối phương đã nhấc máy / chấp nhận cuộc gọi
+        signalRCallConn.on("CallAccepted", async function (data) {
+            console.log("SignalR CallAccepted:", data);
+            CallSound.stop();
+            onCallEstablished();
+
+            // Nếu là người gọi, bắt đầu tạo WebRTC Offer
+            if (isCaller && peerConnection) {
+                try {
+                    const senders = peerConnection.getSenders();
+                    if (senders.length === 0 && localStream) {
+                        localStream.getTracks().forEach(track => {
+                            peerConnection.addTrack(track, localStream);
+                            console.log('[WebRTC] Re-addTrack (CallAccepted):', track.kind);
+                        });
+                    }
+
+                    const offer = await peerConnection.createOffer({
+                        offerToReceiveAudio: true,
+                        offerToReceiveVideo: (activeCallType === 'video')
+                    });
+                    await peerConnection.setLocalDescription(offer);
+                    console.log('[WebRTC] Offer SDP tạo thành công, gửi tới đối phương...');
+                    const sdpPayload = formatSdpForSignal(peerConnection.localDescription);
+                    await signalRCallConn.invoke("SendSignal", activeCallTargetUserId, currentSessionUserId, { sdp: sdpPayload });
+                } catch (err) {
+                    console.error("Lỗi khi tạo WebRTC Offer:", err);
+                }
+            }
+        });
+
+        // C. Đối phương từ chối
+        signalRCallConn.on("CallRejected", function (data) {
+            console.log("SignalR CallRejected:", data);
+            CallSound.stop();
+            CallSound.playBusyTone();
+
+            const badge = document.getElementById('callRoomStatusBadge');
+            if (badge) badge.className = 'badge bg-danger px-3 py-2 fs-6 rounded-pill d-flex align-items-center gap-2';
+            document.getElementById('callRoomStatusText').innerText = data.reason || 'Đối phương đã từ chối';
+            document.getElementById('callSignalDesc').innerText = 'Cuộc gọi kết thúc';
+
+            setTimeout(() => {
+                cleanupAndCloseCallUI();
+            }, 2500);
+        });
+
+        // D. Đối phương gác máy
+        signalRCallConn.on("CallEnded", function (data) {
+            console.log("SignalR CallEnded:", data);
+            CallSound.playEndTone();
+            cleanupAndCloseCallUI();
+            if (currentChatMode === 'teacher' && currentTargetTeacherId) {
+                loadMessages(currentTargetTeacherId);
+            }
+        });
+
+        // E. Trao đổi tín hiệu WebRTC P2P (SDP Offer/Answer & ICE Candidates với Queue chống rớt gói)
+        signalRCallConn.on("ReceiveSignal", async function (data) {
+            console.log("[SignalR] ReceiveSignal:", data);
+
+            // 1. Nếu là ICE Candidate
+            if (data.signalData && data.signalData.candidate) {
+                const candData = parseIceCandidateFromSignal(data.signalData.candidate);
+                if (candData && candData.candidate) {
+                    if (!peerConnection || !peerConnection.remoteDescription || !peerConnection.remoteDescription.type) {
+                        console.log("[WebRTC] RemoteDescription chưa sẵn sàng, lưu candidate vào hàng đợi.");
+                        iceCandidatesQueue.push(candData);
+                    } else {
+                        try {
+                            await peerConnection.addIceCandidate(new RTCIceCandidate(candData));
+                        } catch (err) {
+                            console.warn("[WebRTC] Lỗi addIceCandidate:", err);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // 2. Nếu là SDP Offer / Answer
+            if (data.signalData && data.signalData.sdp) {
+                const sdp = data.signalData.sdp;
+                if (!peerConnection) {
+                    console.warn("[WebRTC] Nhận SDP nhưng peerConnection chưa tạo, khởi tạo ngay...");
+                    createPeerConnection(data.senderUserId, false);
+                }
+
+                try {
+                    const sdpType = sdp.type;
+                    const sdpContent = sdp.sdp || sdp;
+                    const rtcDesc = new RTCSessionDescription({ type: sdpType, sdp: sdpContent });
+
+                    if (sdpType === 'offer') {
+                        console.log("[WebRTC] Nhận Offer từ đối phương, đang thiết lập RemoteDescription...");
+                        await peerConnection.setRemoteDescription(rtcDesc);
+                        await processQueuedIceCandidates();
+
+                        // Đảm bảo localStream tracks đã được add trước khi tạo answer
+                        if (localStream) {
+                            const existingSenders = peerConnection.getSenders();
+                            localStream.getTracks().forEach(track => {
+                                const alreadyAdded = existingSenders.some(s => s.track && s.track.id === track.id);
+                                if (!alreadyAdded) {
+                                    peerConnection.addTrack(track, localStream);
+                                    console.log('[WebRTC] addTrack trước createAnswer:', track.kind);
+                                }
+                            });
+                        }
+
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+                        console.log("[WebRTC] Đã tạo Answer, gửi về người gọi...");
+                        const sdpPayload = formatSdpForSignal(peerConnection.localDescription);
+                        await signalRCallConn.invoke("SendSignal", data.senderUserId, currentSessionUserId, { sdp: sdpPayload });
+                    } else if (sdpType === 'answer') {
+                        console.log("[WebRTC] Nhận Answer từ đối phương, đang thiết lập RemoteDescription...");
+                        await peerConnection.setRemoteDescription(rtcDesc);
+                        await processQueuedIceCandidates();
+                    }
+                } catch (err) {
+                    console.error("[WebRTC] Lỗi xử lý SDP:", err);
+                }
+            }
+        });
+
+        // F. Cuộc gọi nhóm
+        signalRCallConn.on("GroupIncomingCall", function (data) {
+            console.log("SignalR GroupIncomingCall:", data);
+            // 1. Cập nhật trạng thái nhóm trong cachedGroups
+            const grp = cachedGroups.find(g => g.maNhom === data.groupId);
+            if (grp) {
+                grp.cuocGoiDangDienRa = true;
+                grp.loaiCuocGoi = data.callType;
+                grp.nguoiGoiTen = data.callerName;
+                renderGroupsList(cachedGroups);
+            }
+            // 2. Cập nhật banner nếu đang mở nhóm này
+            if (currentChatMode === 'group' && currentTargetGroupId === data.groupId) {
+                if (!currentGroupData) currentGroupData = {};
+                currentGroupData.cuocGoiDangDienRa = true;
+                currentGroupData.loaiCuocGoi = data.callType;
+                currentGroupData.nguoiGoiTen = data.callerName;
+                updateGroupCallBanner(currentGroupData);
+            }
+            // 3. Nếu chưa trong cuộc gọi nào và không phải chính mình gọi, hiện Toast chuông gọi đến
+            if (!isCallActive && data.callerUserId !== currentSessionUserId) {
+                incomingCallData = data;
+                incomingCallData.isGroup = true;
+
+                document.getElementById('incomingCallerName').innerText = data.callerName;
+                document.getElementById('incomingGroupTitle').innerText = `trong nhóm "${data.groupName}"`;
+                document.getElementById('incomingCallerAvatar').src = data.callerAvatar || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=150&auto=format&fit=crop&q=80';
+                document.getElementById('incomingCallTypeBadge').innerText = data.callType === 'video' ? '📹 Cuộc gọi Video nhóm' : '📞 Cuộc gọi Thoại nhóm';
+
+                document.getElementById('fbIncomingCallToast').classList.remove('d-none');
+                CallSound.playIncomingRingtone();
+            }
+        });
+
+        signalRCallConn.on("GroupCallEnded", function (data) {
+            console.log("SignalR GroupCallEnded:", data);
+            // 1. Nếu đang hiển thị toast chuông gọi đến của nhóm này, ẩn đi
+            if (incomingCallData && incomingCallData.isGroup && incomingCallData.groupId === data.groupId) {
+                dismissIncomingCall();
+            }
+            // 2. Nếu đang trong cuộc gọi nhóm này, đóng phòng gọi
+            if (activeCallGroupId === data.groupId) {
+                CallSound.playEndTone();
+                cleanupAndCloseCallUI();
+            }
+            // 3. Cập nhật cachedGroups
+            const grp = cachedGroups.find(g => g.maNhom === data.groupId);
+            if (grp) {
+                grp.cuocGoiDangDienRa = false;
+                grp.loaiCuocGoi = null;
+                grp.nguoiGoiTen = null;
+                renderGroupsList(cachedGroups);
+            }
+            // 4. Cập nhật banner nếu đang mở nhóm này
+            if (currentChatMode === 'group' && currentTargetGroupId === data.groupId) {
+                if (currentGroupData) {
+                    currentGroupData.cuocGoiDangDienRa = false;
+                    updateGroupCallBanner(currentGroupData);
+                }
+                loadGroupMessages(data.groupId, true);
+            }
+        });
+
+        // Nhận thông báo thay đổi trạng thái cuộc gọi nhóm (bắt đầu / kết thúc)
+        signalRCallConn.on("GroupCallStateChanged", function (data) {
+            console.log("SignalR GroupCallStateChanged:", data);
+            const grp = cachedGroups.find(g => g.maNhom === data.groupId);
+            if (grp) {
+                grp.cuocGoiDangDienRa = data.isCallActive;
+                grp.loaiCuocGoi = data.callType;
+                grp.nguoiGoiTen = data.callerName;
+                renderGroupsList(cachedGroups);
+            }
+            if (currentChatMode === 'group' && currentTargetGroupId === data.groupId) {
+                if (!currentGroupData) currentGroupData = {};
+                currentGroupData.cuocGoiDangDienRa = data.isCallActive;
+                currentGroupData.loaiCuocGoi = data.callType;
+                currentGroupData.nguoiGoiTen = data.callerName;
+                updateGroupCallBanner(currentGroupData);
+                loadGroupMessages(data.groupId, true);
+            }
+        });
+
+        // Khi có thành viên mới tham gia vào cuộc gọi nhóm đang diễn ra (WebRTC Mesh Initiator)
+        signalRCallConn.on("UserJoinedGroupCall", async function (data) {
+            console.log("SignalR UserJoinedGroupCall:", data);
+            if (!isCallActive || activeCallGroupId !== data.groupId || data.userId === currentSessionUserId) return;
+
+            const remoteId = data.userId;
+            const pc = createPeerConnectionForGroupMember(remoteId, data.userName, true);
+            if (!pc) return;
+
+            try {
+                const offer = await pc.createOffer({
+                    offerToReceiveAudio: true,
+                    offerToReceiveVideo: (activeCallType === 'video')
+                });
+                await pc.setLocalDescription(offer);
+                console.log(`[WebRTC Group] Đã tạo Offer, gửi tới user ${remoteId}...`);
+                const sdpPayload = formatSdpForSignal(pc.localDescription);
+                await signalRCallConn.invoke("SendGroupSignalToPeer", activeCallGroupId, currentSessionUserId, remoteId, { sdp: sdpPayload });
+            } catch (err) {
+                console.error("[WebRTC Group] Lỗi tạo Offer:", err);
+            }
+        });
+
+        // Khi một thành viên rời khỏi cuộc gọi nhóm
+        signalRCallConn.on("UserLeftGroupCall", function (data) {
+            console.log("SignalR UserLeftGroupCall:", data);
+            if (groupPeerConnections[data.userId]) {
+                try { groupPeerConnections[data.userId].close(); } catch (e) {}
+                delete groupPeerConnections[data.userId];
+            }
+        });
+
+        // Trao đổi tín hiệu WebRTC P2P trong nhóm (SDP Offer/Answer & ICE Candidates)
+        signalRCallConn.on("ReceiveGroupSignal", async function (data) {
+            console.log("[SignalR] ReceiveGroupSignal:", data);
+            if (data.targetUserId && data.targetUserId !== currentSessionUserId) return;
+            if (data.senderUserId === currentSessionUserId) return;
+
+            const senderId = data.senderUserId;
+
+            // 1. ICE Candidate
+            if (data.signalData && data.signalData.candidate) {
+                const candData = parseIceCandidateFromSignal(data.signalData.candidate);
+                if (candData && candData.candidate) {
+                    const pc = groupPeerConnections[senderId] || peerConnection;
+                    if (!pc || !pc.remoteDescription || !pc.remoteDescription.type) {
+                        if (!groupIceQueues[senderId]) groupIceQueues[senderId] = [];
+                        groupIceQueues[senderId].push(candData);
+                    } else {
+                        try {
+                            await pc.addIceCandidate(new RTCIceCandidate(candData));
+                        } catch (err) {
+                            console.warn("[WebRTC Group] Lỗi addIceCandidate:", err);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // 2. SDP Offer / Answer
+            if (data.signalData && data.signalData.sdp) {
+                const sdp = data.signalData.sdp;
+                const sdpType = sdp.type;
+                const sdpContent = sdp.sdp || sdp;
+                const rtcDesc = new RTCSessionDescription({ type: sdpType, sdp: sdpContent });
+
+                if (sdpType === 'offer') {
+                    console.log(`[WebRTC Group] Nhận Offer từ user ${senderId}, tạo Answer...`);
+                    let pc = groupPeerConnections[senderId];
+                    if (!pc) {
+                        pc = createPeerConnectionForGroupMember(senderId, 'Thành viên', false);
+                    }
+                    try {
+                        await pc.setRemoteDescription(rtcDesc);
+                        if (groupIceQueues[senderId] && groupIceQueues[senderId].length > 0) {
+                            for (const c of groupIceQueues[senderId]) {
+                                try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
+                            }
+                            groupIceQueues[senderId] = [];
+                        }
+
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        console.log(`[WebRTC Group] Đã tạo Answer, gửi về user ${senderId}...`);
+                        const sdpPayload = formatSdpForSignal(pc.localDescription);
+                        await signalRCallConn.invoke("SendGroupSignalToPeer", activeCallGroupId, currentSessionUserId, senderId, { sdp: sdpPayload });
+                    } catch (err) {
+                        console.error("[WebRTC Group] Lỗi xử lý Offer SDP:", err);
+                    }
+                } else if (sdpType === 'answer') {
+                    console.log(`[WebRTC Group] Nhận Answer từ user ${senderId}...`);
+                    const pc = groupPeerConnections[senderId];
+                    if (pc) {
+                        try {
+                            await pc.setRemoteDescription(rtcDesc);
+                            if (groupIceQueues[senderId] && groupIceQueues[senderId].length > 0) {
+                                for (const c of groupIceQueues[senderId]) {
+                                    try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
+                                }
+                                groupIceQueues[senderId] = [];
+                            }
+                        } catch (err) {
+                            console.error("[WebRTC Group] Lỗi setRemoteDescription Answer:", err);
+                        }
+                    }
+                }
+            }
+        });
+
+        // G. Nhận tin nhắn trực tiếp 1-1 thời gian thực
+        signalRCallConn.on("ReceiveDirectMessage", function (data) {
+            console.log("SignalR ReceiveDirectMessage:", data);
+            handleIncomingDirectMessage(data);
+        });
+
+        // H. Nhận tin nhắn nhóm thời gian thực
+        signalRCallConn.on("ReceiveGroupMessage", function (data) {
+            console.log("SignalR ReceiveGroupMessage:", data);
+            handleIncomingGroupMessage(data);
+        });
+
+        // Bắt đầu kết nối và đăng ký user
+        signalRCallConn.start()
+            .then(() => {
+                console.log("SignalR CallHub đã kết nối thành công!");
+                signalRCallConn.invoke("RegisterUser", currentSessionUserId);
+            })
+            .catch(err => console.error("SignalR CallHub start error:", err));
+    }
+
+    // =========================================================================
+    // 10.3.1 XỬ LÝ NHẬN TIN NHẮN REALTIME & ĐẨY LÊN ĐẦU DANH SÁCH
+    // =========================================================================
+    let toastNewMessageTimer = null;
+    let currentToastSenderData = null;
+
+    function handleIncomingDirectMessage(data) {
+        const isChatOpenWithSender = (currentChatMode === 'teacher' && 
+                                      currentTargetTeacherId === data.senderUserId && 
+                                      isChatBoxVisible());
+
+        if (isChatOpenWithSender) {
+            appendDirectMessage(data);
+            CallSound.playMessagePop();
+            fetch('/Chat/GetMessages?targetUserId=' + data.senderUserId).catch(() => {});
+        } else {
+            showNewMessageToast({
+                type: 'teacher',
+                targetId: data.senderUserId,
+                title: data.senderName,
+                avatar: data.senderAvatar,
+                content: data.noiDung || (data.loaiTinNhan === 'HinhAnh' ? '[Hình ảnh]' : 'Tin nhắn mới'),
+                badge: 'Tin nhắn mới'
+            });
+            CallSound.playMessageChime();
+            loadUnreadCount();
+        }
+
+        // Đẩy người gửi lên trên đầu danh sách tin nhắn
+        pushTeacherToTop(data.senderUserId, data.senderName, data.senderAvatar, data.noiDung || (data.loaiTinNhan === 'HinhAnh' ? '[Hình ảnh]' : 'Tin nhắn mới'), !isChatOpenWithSender);
+    }
+
+    function handleIncomingGroupMessage(data) {
+        if (data.senderUserId === currentSessionUserId) return;
+
+        const isChatOpenWithGroup = (currentChatMode === 'group' && 
+                                     currentTargetGroupId === data.groupId && 
+                                     isChatBoxVisible());
+
+        if (isChatOpenWithGroup) {
+            appendGroupMessage(data);
+            CallSound.playMessagePop();
+        } else {
+            showNewMessageToast({
+                type: 'group',
+                targetId: data.groupId,
+                title: `${data.senderName} (${data.groupName})`,
+                avatar: data.senderAvatar,
+                content: data.noiDung || (data.loaiTinNhan === 'HinhAnh' ? '[Hình ảnh]' : 'Tin nhắn mới'),
+                badge: 'Tin nhắn nhóm'
+            });
+            CallSound.playMessageChime();
+        }
+
+        // Đẩy nhóm lên trên đầu danh sách tin nhắn
+        pushGroupToTop(data.groupId, data.groupName, null, `${data.senderName}: ${data.noiDung || '[Hình ảnh]'}`, !isChatOpenWithGroup);
+    }
+
+    function pushTeacherToTop(userId, name, avatar, lastText, isUnread) {
+        let user = cachedTeachers.find(u => u.maTaiKhoan === userId);
+        if (user) {
+            user.lastMessage = lastText;
+            user.lastMessageTime = 'Vừa xong';
+            if (isUnread) user.unreadCount = (user.unreadCount || 0) + 1;
+            user.isTopHighlight = true;
+            cachedTeachers = [user, ...cachedTeachers.filter(u => u.maTaiKhoan !== userId)];
+        } else if (name) {
+            user = {
+                maTaiKhoan: userId,
+                hoTen: name,
+                anhDaiDien: avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+                chuyenMon: 'Người dùng',
+                vaiTro: 'HocVien',
+                isOnline: true,
+                lastMessage: lastText,
+                lastMessageTime: 'Vừa xong',
+                unreadCount: isUnread ? 1 : 0,
+                isTopHighlight: true
+            };
+            cachedTeachers = [user, ...cachedTeachers];
+        }
+        renderTeachersList(cachedTeachers);
+        setTimeout(() => { if (user) user.isTopHighlight = false; }, 3000);
+    }
+
+    function pushGroupToTop(groupId, groupName, groupAvatar, lastText, isUnread) {
+        let group = cachedGroups.find(g => g.maNhom === groupId);
+        if (group) {
+            group.lastMessage = lastText;
+            group.lastMessageTime = 'Vừa xong';
+            group.isTopHighlight = true;
+            cachedGroups = [group, ...cachedGroups.filter(g => g.maNhom !== groupId)];
+        } else if (groupName) {
+            group = {
+                maNhom: groupId,
+                tenNhom: groupName,
+                anhNhom: groupAvatar || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=150&auto=format&fit=crop&q=80',
+                memberCount: 2,
+                lastMessage: lastText,
+                lastMessageTime: 'Vừa xong',
+                isTopHighlight: true
+            };
+            cachedGroups = [group, ...cachedGroups];
+        }
+        renderGroupsList(cachedGroups);
+        setTimeout(() => { if (group) group.isTopHighlight = false; }, 3000);
+    }
+
+    function appendDirectMessage(data) {
+        const msgListEl = document.getElementById('fbChatMessageList');
+        if (!msgListEl) return;
+        if (msgListEl.querySelector(`[data-msg-id="${data.maTinNhan}"]`)) return;
+
+        const isLike = data.noiDung === '👍' && !data.hinhAnhUrl;
+        const imgHtml = data.hinhAnhUrl ? `<div class="mb-1"><a href="${data.hinhAnhUrl}" target="_blank"><img src="${data.hinhAnhUrl}" class="rounded shadow-sm" style="max-width: 100%; max-height: 200px; object-fit: cover;" /></a></div>` : '';
+        const txtHtml = isLike ? `<div class="fb-bubble-like">👍</div>` : `<div>${escapeHtml(data.noiDung)}</div>`;
+
+        const bubble = document.createElement('div');
+        bubble.dataset.msgId = data.maTinNhan;
+        bubble.className = `fb-bubble-theirs ${isLike ? 'fb-bubble-like' : ''}`;
+        bubble.innerHTML = `
+            ${imgHtml}
+            ${txtHtml}
+            <div class="fb-chat-msg-time text-end">${data.thoiGian}</div>
+        `;
+        msgListEl.appendChild(bubble);
+        msgListEl.scrollTop = msgListEl.scrollHeight;
+        msgListEl.dataset.lastId = data.maTinNhan;
+    }
+
+    function appendGroupMessage(data) {
+        const msgListEl = document.getElementById('fbChatMessageList');
+        if (!msgListEl) return;
+        if (msgListEl.querySelector(`[data-msg-id="${data.maTinNhan}"]`)) return;
+
+        const bubble = document.createElement('div');
+        bubble.dataset.msgId = data.maTinNhan;
+
+        if (data.loaiTinNhan === 'CuocGoi') {
+            const isLive = currentGroupData && currentGroupData.cuocGoiDangDienRa;
+            bubble.className = 'w-100 my-2';
+            bubble.innerHTML = isLive ? `
+                <div class="fb-call-msg-card w-100">
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                        <span class="spinner-grow spinner-grow-sm text-success" style="width: 10px; height: 10px;" role="status"></span>
+                        <span class="badge bg-success text-white fw-semibold rounded-pill px-2 py-1" style="font-size:11px;">Cuộc gọi nhóm đang diễn ra</span>
+                        <span class="text-muted" style="font-size: 11px;">${data.thoiGian}</span>
+                    </div>
+                    <div class="fw-bold text-dark my-1" style="font-size: 13px;">${escapeHtml(data.noiDung)}</div>
+                    <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold px-3 py-1 mt-2 shadow-sm d-inline-flex align-items-center gap-2" onclick="joinActiveGroupCall()">
+                        <i class="bi bi-telephone-inbound-fill"></i> Tham gia cuộc gọi ngay
+                    </button>
+                </div>
+            ` : `
+                <div class="fb-call-msg-card ended w-100 my-1">
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-1 text-muted" style="font-size: 11px;">
+                        <i class="bi bi-telephone-x-fill text-secondary"></i>
+                        <span>Cuộc gọi nhóm • ${data.thoiGian}</span>
+                    </div>
+                    <div class="small text-secondary fw-semibold">${escapeHtml(data.noiDung)}</div>
+                    <div class="badge bg-secondary-subtle text-secondary border mt-1">Cuộc gọi đã kết thúc</div>
+                </div>
+            `;
+            msgListEl.appendChild(bubble);
+            msgListEl.scrollTop = msgListEl.scrollHeight;
+            msgListEl.dataset.lastId = data.maTinNhan;
+            return;
+        }
+
+        if (data.loaiTinNhan === 'HeThong') {
+            bubble.className = 'fb-bubble-system';
+            bubble.innerHTML = `<i class="bi bi-info-circle me-1"></i>${escapeHtml(data.noiDung)} <span class="ms-1" style="font-size:10px;">${data.thoiGian}</span>`;
+            msgListEl.appendChild(bubble);
+            msgListEl.scrollTop = msgListEl.scrollHeight;
+            msgListEl.dataset.lastId = data.maTinNhan;
+            return;
+        }
+
+        const isLike = data.noiDung === '👍' && !data.hinhAnhUrl;
+        const senderHeader = `<div class="small fw-bold text-primary mb-1 d-flex align-items-center gap-1" style="font-size:11px;"><img src="${data.senderAvatar}" class="rounded-circle" style="width:16px;height:16px;object-fit:cover;" /> ${escapeHtml(data.senderName)}</div>`;
+        const imgHtml = data.hinhAnhUrl ? `<div class="mb-1"><a href="${data.hinhAnhUrl}" target="_blank"><img src="${data.hinhAnhUrl}" class="rounded shadow-sm" style="max-width: 100%; max-height: 200px; object-fit: cover;" /></a></div>` : '';
+        const txtHtml = isLike ? `<div class="fb-bubble-like">👍</div>` : `<div>${escapeHtml(data.noiDung)}</div>`;
+
+        bubble.className = `fb-bubble-theirs ${isLike ? 'fb-bubble-like' : ''}`;
+        bubble.innerHTML = `
+            ${senderHeader}
+            ${imgHtml}
+            ${txtHtml}
+            <div class="fb-chat-msg-time text-end">${data.thoiGian}</div>
+        `;
+        msgListEl.appendChild(bubble);
+        msgListEl.scrollTop = msgListEl.scrollHeight;
+        msgListEl.dataset.lastId = data.maTinNhan;
+    }
+
+    function isChatBoxVisible() {
+        const box = document.getElementById('fbChatBox');
+        return box && !box.classList.contains('d-none') && box.style.display !== 'none';
+    }
+
+    function showNewMessageToast(info) {
+        currentToastSenderData = info;
+        const toast = document.getElementById('fbNewMessageToast');
+        if (!toast) return;
+
+        document.getElementById('newMsgToastAvatar').src = info.avatar;
+        document.getElementById('newMsgToastTitle').innerText = info.title;
+        document.getElementById('newMsgToastBody').innerText = info.content;
+        document.getElementById('newMsgToastBadge').innerText = info.badge;
+
+        toast.classList.remove('d-none');
+
+        if (toastNewMessageTimer) clearTimeout(toastNewMessageTimer);
+        toastNewMessageTimer = setTimeout(() => {
+            toast.classList.add('d-none');
+        }, 5500);
+    }
+
+    function onToastNewMessageClick() {
+        const toast = document.getElementById('fbNewMessageToast');
+        if (toast) toast.classList.add('d-none');
+        if (!currentToastSenderData) return;
+
+        if (currentToastSenderData.type === 'teacher') {
+            openChatWithTeacher(currentToastSenderData.targetId);
+        } else if (currentToastSenderData.type === 'group') {
+            openChatWithGroup(currentToastSenderData.targetId);
+        }
+    }
+
+    function dismissNewMessageToast(e) {
+        if (e) e.stopPropagation();
+        const toast = document.getElementById('fbNewMessageToast');
+        if (toast) toast.classList.add('d-none');
+        if (toastNewMessageTimer) clearTimeout(toastNewMessageTimer);
+    }
+
+    // 10.4 Bắt đầu cuộc gọi (Người gọi / Caller)
+    async function initiateCall(callType) {
+        if (!chat_isUserLoggedIn) {
+            alert('Vui lòng đăng nhập để thực hiện cuộc gọi!');
+            return;
+        }
+
+        CallSound.init();
+        const preRemoteAudio = document.getElementById('callLiveRemoteAudio');
+        const preRemoteVideo = document.getElementById('callLiveRemoteVideo');
+        if (preRemoteAudio) preRemoteAudio.play().catch(() => {});
+        if (preRemoteVideo) preRemoteVideo.play().catch(() => {});
+
+        if (currentChatMode === 'group') {
+            // Nếu nhóm đang có cuộc gọi diễn ra, tham gia trực tiếp thay vì tạo cuộc gọi đè
+            if (currentGroupData && currentGroupData.cuocGoiDangDienRa) {
+                await joinGroupCallDirectly(currentTargetGroupId, currentGroupData.loaiCuocGoi || callType);
+                return;
+            }
+
+            if (!currentTargetGroupId) return;
+            activeCallGroupId = currentTargetGroupId;
+            activeCallTargetUserId = null;
+            activeCallType = callType;
+            isCaller = true;
+            isCallActive = true;
+            isCallConnected = false;
+
+            const grpName = currentGroupData ? currentGroupData.tenNhom : 'Nhóm chat';
+            const grpAvatar = currentGroupData ? currentGroupData.anhNhom : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=150&auto=format&fit=crop&q=80';
+
+            openCallRoomModal(callType, grpName, grpAvatar, 'Đang chờ thành viên tham gia...');
+
+            // Lấy stream an toàn (hỗ trợ cả PC lẫn điện thoại di động)
+            const constraints = {
+                audio: true,
+                video: callType === 'video' ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false
+            };
+
+            localStream = await getSafeUserMedia(constraints);
+            const localVid = document.getElementById('callLiveLocalVideo');
+            if (localVid && localStream) localVid.srcObject = localStream;
+
+            onCallEstablished();
+
+            // Gọi API backend và phát SignalR tới toàn bộ thành viên nhóm
+            fetch(`/Chat/StartGroupCall?maNhom=${activeCallGroupId}&loaiCuocGoi=${callType}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.success) {
+                        if (currentGroupData) {
+                            currentGroupData.cuocGoiDangDienRa = true;
+                            currentGroupData.loaiCuocGoi = callType;
+                            currentGroupData.nguoiGoiTen = res.nguoiGoiTen || 'Bạn';
+                            updateGroupCallBanner(currentGroupData);
+                        }
+                        if (signalRCallConn) {
+                            signalRCallConn.invoke("StartGroupCall", activeCallGroupId, currentSessionUserId, callType, grpName, res.nguoiGoiTen || 'Thành viên', res.callerAvatar || '')
+                                .catch(err => console.error("StartGroupCall invoke error:", err));
+                        }
+                    }
+                });
+
+        } else {
+            // Cuộc gọi 1-1 với giáo viên / người dùng
+            if (!currentTargetTeacherId) {
+                alert('Vui lòng chọn người cần gọi trong danh sách!');
+                return;
+            }
+            activeCallType = callType;
+            isCaller = true;
+            isCallActive = true;
+            isCallConnected = false;
+            activeCallTargetUserId = currentTargetTeacherId;
+            activeCallGroupId = null;
+
+            const targetName = currentTeacherData ? currentTeacherData.hoTen : 'Người nhận';
+            const targetAvatar = currentTeacherData ? currentTeacherData.anhDaiDien : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+
+            openCallRoomModal(callType, targetName, targetAvatar, 'Đang đổ chuông...');
+            CallSound.playOutgoingTone();
+
+            const constraints = {
+                audio: true,
+                video: callType === 'video' ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false
+            };
+
+            localStream = await getSafeUserMedia(constraints);
+            const localVid = document.getElementById('callLiveLocalVideo');
+            if (localVid && localStream) localVid.srcObject = localStream;
+
+            createPeerConnection(activeCallTargetUserId, false);
+
+            fetch(`/Chat/StartDirectCall?targetUserId=${activeCallTargetUserId}&loaiCuocGoi=${callType}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.success && signalRCallConn) {
+                        signalRCallConn.invoke("CallUser", activeCallTargetUserId, currentSessionUserId, callType, res.callerName, res.callerAvatar)
+                            .catch(err => console.error("CallUser invoke error:", err));
+                    }
+                });
+        }
+    }
+
+    // 10.4.1 Tham gia trực tiếp vào cuộc gọi nhóm đang diễn ra (Join Ongoing Group Call)
+    async function joinGroupCallDirectly(groupId, callType) {
+        if (!chat_isUserLoggedIn) {
+            alert('Vui lòng đăng nhập để tham gia cuộc gọi nhóm!');
+            return;
+        }
+
+        dismissIncomingCall();
+        CallSound.init();
+
+        const preRemoteAudio = document.getElementById('callLiveRemoteAudio');
+        const preRemoteVideo = document.getElementById('callLiveRemoteVideo');
+        if (preRemoteAudio) preRemoteAudio.play().catch(() => {});
+        if (preRemoteVideo) preRemoteVideo.play().catch(() => {});
+
+        activeCallType = callType || 'video';
+        activeCallGroupId = groupId;
+        activeCallTargetUserId = null;
+        isCaller = false;
+        isCallActive = true;
+        isCallConnected = false;
+
+        const grpName = currentGroupData ? currentGroupData.tenNhom : 'Nhóm chat';
+        const grpAvatar = currentGroupData ? currentGroupData.anhNhom : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=150&auto=format&fit=crop&q=80';
+
+        openCallRoomModal(activeCallType, grpName, grpAvatar, 'Đang trong cuộc gọi nhóm');
+
+        const constraints = {
+            audio: true,
+            video: activeCallType === 'video' ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false
+        };
+
+        localStream = await getSafeUserMedia(constraints);
+        const localVid = document.getElementById('callLiveLocalVideo');
+        if (localVid && localStream) localVid.srcObject = localStream;
+
+        onCallEstablished();
+
+        // Gửi SignalR báo cho cả nhóm biết mình đã tham gia phòng
+        const myName = (currentTeacherData && currentTeacherData.hoTen) ? currentTeacherData.hoTen : 'Thành viên';
+        const myAvatar = (currentTeacherData && currentTeacherData.anhDaiDien) ? currentTeacherData.anhDaiDien : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+
+        if (signalRCallConn) {
+            signalRCallConn.invoke("JoinGroupChat", groupId).catch(e => {});
+            signalRCallConn.invoke("JoinGroupCall", groupId, currentSessionUserId, myName, myAvatar)
+                .catch(err => console.error("JoinGroupCall error:", err));
+        }
+
+        // Cập nhật banner trong chat
+        if (currentGroupData) {
+            updateGroupCallBanner(currentGroupData);
+        }
+    }
+
+    // 10.5 Trả lời cuộc gọi đến (Người nhận / Receiver)
+    async function acceptIncomingCall() {
+        if (!incomingCallData) return;
+        const callInfo = incomingCallData;
+        dismissIncomingCall();
+
+        if (callInfo.isGroup) {
+            await joinGroupCallDirectly(callInfo.groupId, callInfo.callType);
+        } else {
+            // Cuộc gọi 1-1
+            CallSound.init();
+            const preRemoteAudio = document.getElementById('callLiveRemoteAudio');
+            const preRemoteVideo = document.getElementById('callLiveRemoteVideo');
+            if (preRemoteAudio) preRemoteAudio.play().catch(() => {});
+            if (preRemoteVideo) preRemoteVideo.play().catch(() => {});
+
+            isCaller = false;
+            isCallActive = true;
+            isCallConnected = false;
+            activeCallType = callInfo.callType;
+            activeCallTargetUserId = callInfo.callerUserId;
+            activeCallGroupId = null;
+
+            openCallRoomModal(activeCallType, callInfo.callerName, callInfo.callerAvatar, 'Đang kết nối...');
+
+            const constraints = {
+                audio: true,
+                video: activeCallType === 'video' ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false
+            };
+
+            localStream = await getSafeUserMedia(constraints);
+            const localVid = document.getElementById('callLiveLocalVideo');
+            if (localVid && localStream) localVid.srcObject = localStream;
+
+            // FIX: Tạo PeerConnection TRƯỚC khi gửi AcceptCall để ICE candidate không bị mất
+            createPeerConnection(activeCallTargetUserId, false);
+
+            if (signalRCallConn) {
+                signalRCallConn.invoke("AcceptCall", activeCallTargetUserId, currentSessionUserId, activeCallType)
+                    .catch(err => console.error("AcceptCall error:", err));
+            }
+            onCallEstablished();
+        }
+    }
+
+    // 10.6 Từ chối cuộc gọi
+    function rejectIncomingCall() {
+        if (!incomingCallData) return;
+        const callInfo = incomingCallData;
+        dismissIncomingCall();
+
+        if (!callInfo.isGroup && signalRCallConn) {
+            signalRCallConn.invoke("RejectCall", callInfo.callerUserId, currentSessionUserId, "Đối phương bận hoặc đã từ chối");
+            fetch(`/Chat/EndDirectCall?targetUserId=${callInfo.callerUserId}&loaiCuocGoi=${callInfo.callType}&durationSeconds=0&status=rejected`, { method: 'POST' });
+        }
+        incomingCallData = null;
+    }
+
+    function dismissIncomingCall() {
+        CallSound.stop();
+        const toast = document.getElementById('fbIncomingCallToast');
+        if (toast) toast.classList.add('d-none');
+    }
+
+    // 10.7 Khi cuộc gọi đã kết nối thành công (Đếm thời gian + UI xanh)
+    function onCallEstablished() {
+        isCallConnected = true;
+        CallSound.stop();
+
+        const badge = document.getElementById('callRoomStatusBadge');
+        if (badge) {
+            badge.className = 'badge bg-success px-3 py-2 fs-6 rounded-pill d-flex align-items-center gap-2';
+        }
+        document.getElementById('callRoomStatusText').innerText = activeCallType === 'video' ? 'Đang gọi Video' : 'Đang gọi Thoại';
+        document.getElementById('callSignalDesc').innerText = 'Kết nối trực tuyến HD • Âm thanh rõ nét';
+
+        if (!callTimerInterval) {
+            callSecondsCount = 0;
+            callTimerInterval = setInterval(() => {
+                callSecondsCount++;
+                const m = String(Math.floor(callSecondsCount / 60)).padStart(2, '0');
+                const s = String(callSecondsCount % 60).padStart(2, '0');
+                document.getElementById('callDurationTimer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+    }
+
+    // 10.8 Gác máy / Kết thúc cuộc gọi
+    function hangupCall() {
+        const savedDuration = callSecondsCount;
+        const savedTargetUser = activeCallTargetUserId;
+        const savedType = activeCallType;
+        const savedIsGroup = !!activeCallGroupId;
+        const savedGroupId = activeCallGroupId;
+        const wasCaller = isCaller;
+
+        CallSound.playEndTone();
+
+        // Gửi SignalR thông báo kết thúc hoặc rời phòng
+        if (signalRCallConn) {
+            if (savedIsGroup) {
+                if (wasCaller) {
+                    // Người bắt đầu cuộc gọi kết thúc cuộc gọi cho cả nhóm
+                    signalRCallConn.invoke("EndGroupCall", savedGroupId, currentSessionUserId).catch(e => {});
+                    fetch(`/Chat/EndGroupCall?maNhom=${savedGroupId}`, { method: 'POST' }).then(() => {
+                        if (currentTargetGroupId === savedGroupId) loadGroupMessages(savedGroupId);
+                    });
+                } else {
+                    // Thành viên tham gia gác máy rời khỏi phòng
+                    signalRCallConn.invoke("LeaveGroupCall", savedGroupId, currentSessionUserId).catch(e => {});
+                }
+            } else if (savedTargetUser) {
+                signalRCallConn.invoke("EndCall", savedTargetUser, currentSessionUserId).catch(e => {});
+                const status = (savedDuration > 0 || isCallConnected) ? 'ended' : 'missed';
+                fetch(`/Chat/EndDirectCall?targetUserId=${savedTargetUser}&loaiCuocGoi=${savedType}&durationSeconds=${savedDuration}&status=${status}`, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (currentChatMode === 'teacher' && currentTargetTeacherId === savedTargetUser) {
+                            loadMessages(savedTargetUser);
+                        }
+                    });
+            }
+        }
+
+        cleanupAndCloseCallUI();
+    }
+
+    function cleanupAndCloseCallUI() {
+        CallSound.stop();
+        if (callTimerInterval) {
+            clearInterval(callTimerInterval);
+            callTimerInterval = null;
+        }
+        callSecondsCount = 0;
+        isCallActive = false;
+        isCallConnected = false;
+        isCaller = false;
+        activeCallTargetUserId = null;
+        activeCallGroupId = null;
+        iceCandidatesQueue = [];
+
+        // Dừng các media tracks
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+
+        // Đóng peer connection đơn 1-1
+        if (peerConnection) {
+            try { peerConnection.close(); } catch (e) {}
+            peerConnection = null;
+        }
+
+        // Đóng tất cả peer connections nhóm mesh
+        Object.keys(groupPeerConnections).forEach(uid => {
+            try { groupPeerConnections[uid].close(); } catch (e) {}
+        });
+        groupPeerConnections = {};
+        groupIceQueues = {};
+
+        // Dọn dẹp video & audio elements — FIX: dừng hết tracks trước khi set null
+        const localVid = document.getElementById('callLiveLocalVideo');
+        if (localVid) {
+            if (localVid.srcObject) {
+                localVid.srcObject.getTracks().forEach(t => t.stop());
+            }
+            localVid.srcObject = null;
+        }
+        const remoteVid = document.getElementById('callLiveRemoteVideo');
+        if (remoteVid) {
+            remoteVid.srcObject = null;
+            remoteVid.classList.add('d-none');
+        }
+        const remoteAud = document.getElementById('callLiveRemoteAudio');
+        if (remoteAud) {
+            remoteAud.srcObject = null;
+        }
+
+        // Ẩn Call Room modal
+        const room = document.getElementById('fbCallRoomModal');
+        if (room) {
+            room.classList.add('d-none');
+            room.style.display = 'none';
+            room.classList.remove('fb-call-minimized');
+            callWindowMinimized = false;
+        }
+        document.getElementById('callDurationTimer').innerText = '00:00';
+
+        // Cập nhật lại banner nhóm nếu đang mở
+        if (currentGroupData) {
+            updateGroupCallBanner(currentGroupData);
+        }
+    }
+
+    // 10.9 Mở giao diện Call Room
+    function openCallRoomModal(callType, title, avatar, statusText) {
+        const room = document.getElementById('fbCallRoomModal');
+        room.classList.remove('d-none');
+        room.style.display = 'flex';
+
+        document.getElementById('callRoomTitle').innerText = title;
+        document.getElementById('callRoomActiveName').innerText = title;
+        if (avatar) document.getElementById('callRoomActiveAvatar').src = avatar;
+
+        const badge = document.getElementById('callRoomStatusBadge');
+        badge.className = 'badge bg-primary px-3 py-2 fs-6 rounded-pill d-flex align-items-center gap-2';
+        document.getElementById('callRoomStatusText').innerText = statusText;
+        document.getElementById('callSignalDesc').innerText = 'Đang phát tín hiệu cuộc gọi...';
+        document.getElementById('callDurationTimer').innerText = '00:00';
+
+        // Giao diện Video vs Thoại
+        const pipBox = document.getElementById('callVideoSimBox');
+        const remoteVideo = document.getElementById('callLiveRemoteVideo');
+        const voiceStage = document.getElementById('callVoiceStageBox');
+        const switchCamBtn = document.getElementById('btnSwitchCam');
+
+        if (callType === 'video') {
+            pipBox.classList.remove('d-none');
+            remoteVideo.classList.add('d-none');
+            voiceStage.classList.remove('d-none');
+            if (switchCamBtn) switchCamBtn.classList.remove('d-none');
+        } else {
+            pipBox.classList.add('d-none');
+            remoteVideo.classList.add('d-none');
+            voiceStage.classList.remove('d-none');
+            if (switchCamBtn) switchCamBtn.classList.add('d-none');
+        }
+
+        // Reset trạng thái Mic / Cam
+        isMicMuted = false;
+        isCamOff = false;
+        document.getElementById('iconMic').className = 'bi bi-mic-fill fs-4 text-dark';
+        document.getElementById('iconCam').className = 'bi bi-camera-video-fill fs-4 text-dark';
+
+        // Kiểm tra và hiển thị banner cảnh báo nếu thiết bị di động truy cập bằng HTTP
+        checkAndShowHttpsWarning();
+    }
+
+    function checkAndShowHttpsWarning() {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (!window.isSecureContext && !isLocal && window.location.protocol === 'http:') {
+            const banner = document.getElementById('callHttpMobileWarningBanner');
+            if (banner) banner.classList.remove('d-none');
+        }
+    }
+
+    function redirectToHttpsCall() {
+        const httpsPort = '5001';
+        const httpsUrl = 'https://' + window.location.hostname + ':' + httpsPort + window.location.pathname + window.location.search;
+        window.location.href = httpsUrl;
+    }
+
+    // 10.10 Nút thu nhỏ / phóng to cửa sổ cuộc gọi
+    function toggleCallWindowSize() {
+        const room = document.getElementById('fbCallRoomModal');
+        const icon = document.getElementById('btnResizeIcon');
+        callWindowMinimized = !callWindowMinimized;
+        if (callWindowMinimized) {
+            room.classList.add('fb-call-minimized');
+            icon.className = 'bi bi-arrows-angle-expand';
+        } else {
+            room.classList.remove('fb-call-minimized');
+            icon.className = 'bi bi-arrows-angle-contract';
+        }
+    }
+
+    // 10.11 Nút Bật/Tắt Mic & Camera thực tế
+    function toggleMicrophone() {
+        if (!localStream) return;
+        isMicMuted = !isMicMuted;
+        localStream.getAudioTracks().forEach(track => {
+            track.enabled = !isMicMuted;
+        });
+        const icon = document.getElementById('iconMic');
+        if (isMicMuted) {
+            icon.className = 'bi bi-mic-mute-fill fs-4 text-danger';
+        } else {
+            icon.className = 'bi bi-mic-fill fs-4 text-dark';
+        }
+    }
+
+    function toggleCamera() {
+        if (!localStream) return;
+        isCamOff = !isCamOff;
+        localStream.getVideoTracks().forEach(track => {
+            track.enabled = !isCamOff;
+        });
+        const icon = document.getElementById('iconCam');
+        const videoBox = document.getElementById('callVideoSimBox');
+        if (isCamOff) {
+            icon.className = 'bi bi-camera-video-off-fill fs-4 text-danger';
+            if (videoBox) videoBox.style.opacity = '0.2';
+        } else {
+            icon.className = 'bi bi-camera-video-fill fs-4 text-dark';
+            if (videoBox) videoBox.style.opacity = '1';
+        }
+    }
+
+    // Đổi camera trước / sau trên điện thoại di động
+    async function switchCamera() {
+        if (!localStream || activeCallType !== 'video') return;
+        try {
+            currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: currentFacingMode, width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            const oldVideoTrack = localStream.getVideoTracks()[0];
+            if (oldVideoTrack) {
+                oldVideoTrack.stop();
+                localStream.removeTrack(oldVideoTrack);
+            }
+            localStream.addTrack(newVideoTrack);
+            const localVid = document.getElementById('callLiveLocalVideo');
+            if (localVid) localVid.srcObject = localStream;
+
+            const replaceTrackOnPc = (pc) => {
+                if (!pc) return;
+                const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (sender) sender.replaceTrack(newVideoTrack);
+            };
+            if (peerConnection) replaceTrackOnPc(peerConnection);
+            Object.values(groupPeerConnections).forEach(pc => {
+                replaceTrackOnPc(pc);
+            });
+        } catch (e) {
+            console.warn("switchCamera error:", e);
+        }
+    }
+
+    // Tham gia cuộc gọi nhóm đang diễn ra (từ banner hoặc từ tin nhắn)
+    async function joinActiveGroupCall() {
+        if (!currentTargetGroupId) return;
+        const callType = (currentGroupData && currentGroupData.loaiCuocGoi) ? currentGroupData.loaiCuocGoi : 'video';
+        await joinGroupCallDirectly(currentTargetGroupId, callType);
+    }
+
+    // Kết thúc cuộc gọi nhóm từ banner hoặc phòng gọi
+    function endCurrentCall() {
+        if (isCallActive) {
+            hangupCall();
+        } else if (currentTargetGroupId) {
+            if (confirm("Bạn có chắc chắn muốn kết thúc cuộc gọi của nhóm này không?")) {
+                if (signalRCallConn) {
+                    signalRCallConn.invoke("EndGroupCall", currentTargetGroupId, currentSessionUserId).catch(e => {});
+                }
+                fetch(`/Chat/EndGroupCall?maNhom=${currentTargetGroupId}`, { method: 'POST' })
+                    .then(() => {
+                        loadGroupMessages(currentTargetGroupId);
+                    });
+            }
+        }
+    }
+
+    // =========================================================================
+    // 12. CÁC HÀM TIỆN ÍCH KHÁC (EMOJI, ẢNH, COLLAPSE, BADGES)
+    // =========================================================================
+    function onChatImageSelected(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('fbChatImagePreview').src = e.target.result;
+                document.getElementById('fbChatImageName').innerText = file.name;
+                document.getElementById('fbChatImagePreviewContainer').classList.remove('d-none');
+                document.getElementById('fbChatImagePreviewContainer').classList.add('d-flex');
+                updateSendButtonState();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function clearSelectedChatImage() {
+        document.getElementById('fbChatFileInput').value = '';
+        const previewContainer = document.getElementById('fbChatImagePreviewContainer');
+        previewContainer.classList.add('d-none');
+        previewContainer.classList.remove('d-flex');
+        updateSendButtonState();
+    }
+
+    function toggleEmojiPicker() {
+        document.getElementById('fbEmojiPicker').classList.toggle('d-none');
+    }
+    function closeEmojiPicker() {
+        const p = document.getElementById('fbEmojiPicker');
+        if (p) p.classList.add('d-none');
+    }
+    function insertEmoji(emoji) {
+        const input = document.getElementById('fbChatTextInput');
+        input.value += emoji;
+        input.focus();
+        updateSendButtonState();
+    }
+    function updateSendButtonState() {
+        const input = document.getElementById('fbChatTextInput');
+        const fileInput = document.getElementById('fbChatFileInput');
+        const icon = document.getElementById('fbChatActionIcon');
+        const hasText = input.value.trim().length > 0;
+        const hasImage = fileInput.files && fileInput.files.length > 0;
+
+        if (hasText || hasImage) {
+            icon.className = 'bi bi-send-fill text-primary';
+            icon.style.fontSize = '17px';
+        } else {
+            icon.className = 'bi bi-hand-thumbs-up-fill';
+            icon.style.fontSize = '20px';
+            icon.style.color = '#0866ff';
+        }
+    }
+    function handleChatInputKey(e) {
+        if (e.key === 'Enter') onSendChatClick();
+    }
+    function toggleChatCollapse(e) {
+        if (e) e.stopPropagation();
+        const body = document.getElementById('fbChatBody');
+        body.style.display = (body.style.display === 'none') ? 'flex' : 'none';
+    }
+    function closeChatBox() {
+        const chatBox = document.getElementById('fbChatBox');
+        if (chatBox) { chatBox.classList.add('d-none'); chatBox.style.display = 'none'; }
+        if (chatPollInterval) clearInterval(chatPollInterval);
+        currentTargetTeacherId = null;
+        currentTargetGroupId = null;
+    }
+    function loadUnreadCount() {
+        fetch('/Chat/GetUnreadCount')
+            .then(res => res.json())
+            .then(data => {
+                const count = (data && data.count) ? data.count : 0;
+                const badges = document.querySelectorAll('.fb-badge-count, #fbFloatingUnreadBadge');
+                badges.forEach(badge => {
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                    if (count > 0) badge.innerText = count;
+                });
+            })
+            .catch(() => {});
+    }
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+</script>

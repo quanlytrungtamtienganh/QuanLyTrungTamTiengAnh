@@ -1,0 +1,175 @@
+@model IEnumerable<TrungTamNgoaiNgu.Models.LopHoc>
+@{
+    var isAdmin = ViewBag.IsAdmin as bool? ?? false;
+    Layout = isAdmin ? "_AdminLayout" : "_StudentLayout";
+    ViewData["Title"] = "Lịch Giảng Dạy & Thời Khóa Biểu · Trung Tâm";
+
+    var teacher = ViewBag.CurrentTeacher as TrungTamNgoaiNgu.Models.GiaoVien;
+    var allTeachers = ViewBag.AllTeachers as List<TrungTamNgoaiNgu.Models.GiaoVien> ?? new List<TrungTamNgoaiNgu.Models.GiaoVien>();
+}
+
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-calendar-check-fill text-primary"></i> Lịch Giảng Dạy Cá Nhân
+            </h3>
+            <p class="text-muted mb-0 small">Thời khóa biểu, phòng học và danh sách học viên theo từng lớp phụ trách</p>
+        </div>
+
+        @if (isAdmin)
+        {
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted fw-semibold">Chọn giáo viên:</span>
+                <form method="get" asp-action="LichDay" class="d-inline-flex gap-2">
+                    <select name="maGiaoVien" class="form-select form-select-sm" onchange="this.form.submit()">
+                        @foreach (var gv in allTeachers)
+                        {
+                            <option value="@gv.MaGiaoVien" selected="@(teacher != null && gv.MaGiaoVien == teacher.MaGiaoVien)">
+                                @gv.HoTen (@gv.ChuyenMon)
+                            </option>
+                        }
+                    </select>
+                </form>
+                <a asp-action="PhanLich" class="fb-btn fb-btn-primary fb-btn-sm text-nowrap">
+                    <i class="bi bi-plus-lg me-1"></i> Phân công thêm
+                </a>
+            </div>
+        }
+    </div>
+
+    <!-- Teacher Info Card -->
+    @if (teacher != null)
+    {
+        <div class="fb-card p-3 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="@(string.IsNullOrEmpty(teacher.AnhDaiDien) ? "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" : teacher.AnhDaiDien)" 
+                         alt="@teacher.HoTen" class="rounded-circle shadow-sm object-fit-cover" style="width: 64px; height: 64px;" />
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="fw-bold mb-0 text-dark">@teacher.HoTen</h5>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                <i class="bi bi-patch-check-fill me-1"></i>@teacher.ChuyenMon
+                            </span>
+                        </div>
+                        <div class="text-muted small mt-1">
+                            <i class="bi bi-mortarboard me-1"></i>@(teacher.HocVi ?? "Giảng viên trung tâm") &bull;
+                            <i class="bi bi-envelope me-1"></i>@(teacher.Email ?? "giaovien@educenter.edu.vn") &bull;
+                            <i class="bi bi-telephone me-1"></i>@(teacher.SoDienThoai ?? "098.xxx.xxxx")
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 text-center">
+                    <div class="px-3 py-2 bg-light rounded border">
+                        <div class="fs-4 fw-bold text-primary">@(Model?.Count() ?? 0)</div>
+                        <div class="small text-muted">Lớp phụ trách</div>
+                    </div>
+                    <div class="px-3 py-2 bg-light rounded border">
+                        @{
+                            var totalStudents = Model?.Sum(l => l.DangKyHocs?.Count ?? 0) ?? 0;
+                        }
+                        <div class="fs-4 fw-bold text-success">@totalStudents</div>
+                        <div class="small text-muted">Tổng học viên</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Schedule Grid -->
+    <div class="row g-3">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var lop in Model)
+            {
+                var enrolled = lop.DangKyHocs?.Count ?? 0;
+                <div class="col-md-6 col-lg-4">
+                    <div class="fb-card h-100 d-flex flex-column justify-content-between p-3 border-top border-4 border-primary">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                    @(lop.KhoaHoc?.NgoaiNgu ?? "Ngoại ngữ")
+                                </span>
+                                <span class="badge @(lop.TrangThai == "Đang học" ? "bg-success" : "bg-info") text-white">
+                                    @lop.TrangThai
+                                </span>
+                            </div>
+
+                            <h5 class="fw-bold text-dark mb-1">@lop.TenLop</h5>
+                            <p class="text-muted small mb-3">@(lop.KhoaHoc?.TenKhoaHoc)</p>
+
+                            <div class="bg-light p-2 rounded small mb-3">
+                                <div class="d-flex align-items-center gap-2 mb-1 text-primary fw-semibold">
+                                    <i class="bi bi-clock-fill"></i>
+                                    <span>@lop.LichHoc</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 text-secondary">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                    <span>Phòng: <strong>@lop.PhongHoc</strong></span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 text-secondary mt-1">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>Khai giảng: <strong>@lop.NgayKhaiGiang.ToString("dd/MM/yyyy")</strong></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center small mb-1">
+                                <span class="text-muted">Sĩ số lớp:</span>
+                                <span class="fw-bold">@enrolled / @lop.SoLuongToiDa học viên</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 6px;">
+                                @{
+                                    var pct = lop.SoLuongToiDa > 0 ? (enrolled * 100 / lop.SoLuongToiDa) : 0;
+                                }
+                                <div class="progress-bar @(pct >= 100 ? "bg-danger" : "bg-primary")" style="width: @pct%"></div>
+                            </div>
+
+                            <button type="button" class="fb-btn fb-btn-secondary w-100" onclick="showStudentList(@lop.MaLop)">
+                                <i class="bi bi-people-fill me-1"></i> Danh sách học viên (@enrolled)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="fb-card p-5 text-center text-muted">
+                    <i class="bi bi-calendar-x display-4 text-secondary mb-3 d-block"></i>
+                    <h5 class="fw-bold text-dark">Chưa có lịch giảng dạy nào được phân công</h5>
+                    <p class="small text-muted mb-0">Ban quản trị trung tâm sẽ sắp xếp và cập nhật lịch giảng dạy cho bạn trong thời gian sớm nhất.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal xem danh sách học viên trong lớp -->
+<div class="modal fade" id="studentListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0" id="studentListModalBody">
+            <!-- Content loaded via Ajax -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function showStudentList(maLop) {
+        fetch('/GiaoVien/DanhSachHocVien?maLop=' + maLop)
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('studentListModalBody').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('studentListModal'));
+                modal.show();
+            })
+            .catch(err => alert('Không thể tải danh sách học viên!'));
+    }
+</script>
+}

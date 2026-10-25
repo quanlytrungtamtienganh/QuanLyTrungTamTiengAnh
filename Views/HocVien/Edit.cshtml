@@ -1,0 +1,101 @@
+@model TrungTamNgoaiNgu.Models.HocVien
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Chỉnh Sửa Học Viên #" + Model.MaHocVien;
+}
+
+<!-- Page Header (4.14 Sửa học viên) -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-person-gear text-primary"></i> Sửa Thông Tin Học Viên
+        </h3>
+        <p class="text-muted mb-0 small">Cập nhật họ tên, liên hệ, ngày sinh và địa chỉ của học viên #HV-@Model.MaHocVien.ToString("D4")</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="fb-btn fb-btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="fb-card p-4">
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MaHocVien" />
+                <input type="hidden" asp-for="MaTaiKhoan" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label asp-for="HoTen" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                            <input asp-for="HoTen" class="form-control" />
+                        </div>
+                        <span asp-validation-for="HoTen" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="GioiTinh" class="form-label fw-semibold"></label>
+                        <select asp-for="GioiTinh" class="form-select">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                        <span asp-validation-for="GioiTinh" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NgaySinh" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-calendar"></i></span>
+                            <input asp-for="NgaySinh" type="date" class="form-control" value="@Model.NgaySinh.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <span asp-validation-for="NgaySinh" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="SoDienThoai" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                            <input asp-for="SoDienThoai" class="form-control" />
+                        </div>
+                        <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Email" class="form-control" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Trường thông tin: Địa chỉ (User Spec 4.14) -->
+                    <div class="col-md-12">
+                        <label asp-for="DiaChi" class="form-label fw-semibold">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> @Html.DisplayNameFor(m => m.DiaChi)
+                        </label>
+                        <textarea asp-for="DiaChi" class="form-control" rows="2" placeholder="Số nhà, đường, phường/xã, quận/huyện..."></textarea>
+                        <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a asp-action="Index" class="fb-btn fb-btn-secondary">Hủy bỏ</a>
+                    <button type="submit" class="fb-btn fb-btn-primary">
+                        <i class="bi bi-check-lg me-1"></i> Cập nhật học viên
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

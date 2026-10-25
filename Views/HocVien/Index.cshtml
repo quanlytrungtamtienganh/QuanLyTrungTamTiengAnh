@@ -1,0 +1,130 @@
+@model IEnumerable<TrungTamNgoaiNgu.Models.HocVien>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Học Viên · Meta Business Suite";
+}
+
+<!-- Page Header (4.14. Giao diện quản lý học viên) -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill text-primary"></i> Quản Lý Danh Sách Học Viên
+        </h3>
+        <p class="text-muted mb-0 small">Hồ sơ thông tin học viên, thông tin liên hệ, địa chỉ cư trú và theo dõi lịch sử học tập</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="fb-badge fb-badge-green align-self-center">@Model.Count() học viên trong hệ thống</span>
+        <!-- Chức năng Thêm học viên -->
+        <a asp-action="Create" class="fb-btn fb-btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Thêm học viên mới
+        </a>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="fb-card p-3 mb-3">
+    <form method="get" asp-action="Index" class="row g-2 align-items-center">
+        <div class="col-md-10">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="searchString" value="@ViewBag.SearchString" class="form-control border-start-0" placeholder="Tìm kiếm theo tên học viên, số điện thoại, email, địa chỉ cư trú..." />
+            </div>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="fb-btn fb-btn-primary w-100">
+                <i class="bi bi-search me-1"></i> Tìm kiếm
+            </button>
+            @if (!string.IsNullOrEmpty(ViewBag.SearchString as string))
+            {
+                <a asp-action="Index" class="fb-btn fb-btn-secondary" title="Xóa bộ lọc"><i class="bi bi-x-lg"></i></a>
+            }
+        </div>
+    </form>
+</div>
+
+<!-- Members Directory Card -->
+<div class="fb-card">
+    <div class="fb-card-header d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-person-lines-fill text-primary"></i> Danh bạ thông tin học viên
+        </div>
+        <div class="text-muted small">
+            Hiển thị @Model.Count() thành viên
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-person-x fs-1 text-muted d-block mb-2"></i>
+            <h6 class="fw-bold">Không tìm thấy học viên nào phù hợp</h6>
+            <a asp-action="Index" class="fb-btn fb-btn-secondary mt-2">Xem tất cả học viên</a>
+        </div>
+    }
+    else
+    {
+        <div class="divide-y">
+            @foreach (var item in Model)
+            {
+                var regCount = item.DangKyHocs?.Count ?? 0;
+
+                <div class="p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-3 hover-bg">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="fb-avatar fb-avatar-lg" style="background: #e7f3ff; color: #0866ff;">
+                            @(item.HoTen.Length > 0 ? item.HoTen.Substring(0, 1).ToUpper() : "H")
+                        </div>
+
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <a asp-action="Details" asp-route-id="@item.MaHocVien" class="fw-bold fs-5 text-decoration-none text-dark">
+                                    @item.HoTen
+                                </a>
+                                <span class="badge bg-light text-dark border font-monospace">#HV-@item.MaHocVien.ToString("D4")</span>
+                                <span class="badge @(item.GioiTinh == "Nam" ? "bg-info-subtle text-info-emphasis" : "bg-warning-subtle text-warning-emphasis")">
+                                    @item.GioiTinh
+                                </span>
+                                @if (item.TaiKhoan != null)
+                                {
+                                    <span class="text-muted small"><i class="bi bi-person-badge me-1"></i>@item.TaiKhoan.TenDangNhap</span>
+                                }
+                            </div>
+
+                            <div class="text-secondary small d-flex flex-wrap align-items-center gap-3 mb-1">
+                                <span><i class="bi bi-envelope me-1"></i>@item.Email</span>
+                                <span><i class="bi bi-telephone me-1"></i><strong class="font-monospace">@item.SoDienThoai</strong></span>
+                                <span><i class="bi bi-calendar me-1"></i>Ngày sinh: @item.NgaySinh.ToString("dd/MM/yyyy")</span>
+                            </div>
+
+                            <!-- Thông tin hiển thị: Địa chỉ cư trú (User Spec 4.14) -->
+                            <div class="d-flex align-items-center gap-2 text-dark small mt-1">
+                                <span class="badge bg-light text-secondary border d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-geo-alt-fill text-danger"></i> <strong>Địa chỉ:</strong>
+                                    @(string.IsNullOrWhiteSpace(item.DiaChi) ? "Chưa cập nhật địa chỉ" : item.DiaChi)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Action Buttons: Thêm / Sửa / Xóa / Chi tiết (User Spec 4.14) -->
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fb-badge fb-badge-blue">@regCount lớp tham gia</span>
+
+                        <a asp-action="Details" asp-route-id="@item.MaHocVien" class="fb-btn fb-btn-secondary fb-btn-sm" title="Xem hồ sơ học viên">
+                            <i class="bi bi-eye me-1"></i> Chi tiết
+                        </a>
+
+                        <!-- Chức năng Sửa học viên -->
+                        <a asp-action="Edit" asp-route-id="@item.MaHocVien" class="fb-btn fb-btn-secondary fb-btn-sm" title="Chỉnh sửa thông tin học viên">
+                            <i class="bi bi-pencil me-1"></i> Sửa
+                        </a>
+
+                        <!-- Chức năng Xóa học viên -->
+                        <a asp-action="Delete" asp-route-id="@item.MaHocVien" class="fb-btn fb-btn-sm text-danger border-danger-subtle bg-danger-subtle" title="Xóa học viên">
+                            <i class="bi bi-trash-fill me-1"></i> Xóa
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

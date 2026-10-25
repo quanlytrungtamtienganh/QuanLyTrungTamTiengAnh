@@ -1,0 +1,82 @@
+@model TrungTamNgoaiNgu.Models.LopHoc
+
+<div class="modal-header bg-light">
+    <div>
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-mortarboard-fill text-primary"></i> Danh Sách Học Viên Lớp: @Model.TenLop
+        </h5>
+        <div class="small text-muted">
+            Khóa học: <strong>@(Model.KhoaHoc?.TenKhoaHoc)</strong> &bull; Lịch: <strong>@Model.LichHoc</strong> &bull; Phòng: <strong>@Model.PhongHoc</strong>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body p-0">
+    <div class="p-3 bg-light-subtle border-bottom d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-primary px-3 py-2 fs-6">Sĩ số: @(Model.DangKyHocs?.Count ?? 0) / @Model.SoLuongToiDa học viên</span>
+        </div>
+        <div>
+            <span class="text-muted small">Giảng viên: <strong>@(Model.GiaoVien?.HoTen ?? "Chưa phân công")</strong></span>
+        </div>
+    </div>
+
+    @if (Model.DangKyHocs != null && Model.DangKyHocs.Any())
+    {
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light sticky-top">
+                    <tr>
+                        <th style="width: 40px;">STT</th>
+                        <th>Học viên</th>
+                        <th>Số điện thoại</th>
+                        <th>Email</th>
+                        <th>Ngày đăng ký</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int index = 1; }
+                    @foreach (var dk in Model.DangKyHocs)
+                    {
+                        var hv = dk.HocVien;
+                        <tr>
+                            <td class="text-muted fw-bold">@(index++)</td>
+                            <td>
+                                <div class="fw-bold text-dark">@(hv?.HoTen ?? "Học viên ẩn")</div>
+                                <div class="text-muted small">Mã HV: #@(hv?.MaHocVien)</div>
+                            </td>
+                            <td>@(hv?.SoDienThoai ?? "---")</td>
+                            <td>@(hv?.Email ?? "---")</td>
+                            <td>@dk.NgayDangKy.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (dk.TrangThai == "Đã xác nhận")
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Đã xác nhận</span>
+                                }
+                                else if (dk.TrangThai == "Chờ xác nhận")
+                                {
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Chờ duyệt</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary">@dk.TrangThai</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-people fs-1 text-secondary d-block mb-2"></i>
+            Chưa có học viên nào đăng ký lớp học này.
+        </div>
+    }
+</div>
+<div class="modal-footer bg-light">
+    <button type="button" class="fb-btn fb-btn-secondary" data-bs-dismiss="modal">Đóng</button>
+</div>

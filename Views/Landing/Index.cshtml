@@ -1,0 +1,881 @@
+@model TrungTamNgoaiNgu.ViewModels.LandingViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "LanguageBook - Trung Tâm Ngoại Ngữ Hàng Đầu & Nền Tảng Luyện Thi Trực Tuyến";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <!-- Google Fonts: Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, button, input, select, textarea {
+            font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            background: #fff;
+            color: #050505;
+        }
+
+        /* NAV */
+        .lp-nav { background: rgba(255,255,255,0.96); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #e4e6eb; padding: 12px 0; }
+        .lp-logo { font-size: 22px; font-weight: 800; color: #0866ff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .lp-logo span { color: #050505; }
+
+        /* HERO */
+        .hero { background: linear-gradient(135deg, #0044b3 0%, #0866ff 50%, #1a7bff 100%); min-height: 90vh; display: flex; align-items: center; position: relative; overflow: hidden; }
+        .hero-circle1 { position: absolute; top: -120px; right: -120px; width: 550px; height: 550px; background: rgba(255,255,255,0.06); border-radius: 50%; }
+        .hero-circle2 { position: absolute; bottom: -80px; left: -60px; width: 360px; height: 360px; background: rgba(255,255,255,0.04); border-radius: 50%; }
+        .hero h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; color: #fff; line-height: 1.18; }
+        .hero p.lead { font-size: 1.15rem; color: rgba(255,255,255,0.9); }
+        .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 50px; padding: 6px 18px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+        
+        .stat-box { text-align: center; padding: 20px 14px; background: rgba(255,255,255,0.12); border-radius: 16px; color: #fff; border: 1px solid rgba(255,255,255,0.22); backdrop-filter: blur(6px); transition: transform 0.2s; }
+        .stat-box:hover { transform: translateY(-3px); background: rgba(255,255,255,0.18); }
+        .stat-box .num { font-size: 2.2rem; font-weight: 900; line-height: 1.1; }
+        .stat-box .lbl { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+        
+        .btn-hero { background: #fff; color: #0866ff; border: none; border-radius: 12px; padding: 14px 32px; font-size: 1rem; font-weight: 800; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.15); display: inline-flex; align-items: center; gap: 8px; }
+        .btn-hero:hover { background: #e8f0fe; color: #004ac0; transform: translateY(-2px); }
+        .btn-hero-outline { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.7); border-radius: 12px; padding: 13px 30px; font-size: 1rem; font-weight: 700; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-hero-outline:hover { background: rgba(255,255,255,0.18); border-color: #fff; color: #fff; }
+
+        /* FEATURES PILLARS */
+        .feat-card { background: #ffffff; border: 1px solid #e4e6eb; border-radius: 16px; padding: 24px 20px; height: 100%; transition: all 0.25s; }
+        .feat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 28px rgba(0,0,0,0.08); border-color: #c7d2fe; }
+        .feat-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 24px; }
+
+        /* ONLINE EXAM SHOWCASE SECTION */
+        .exam-showcase-section { background: linear-gradient(180deg, #f0f7ff 0%, #eaf2ff 100%); border-top: 1px solid #dbeafe; border-bottom: 1px solid #dbeafe; }
+        .exam-card-preview { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; height: 100%; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
+        .exam-card-preview:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(8,102,255,0.12); border-color: #0866ff; }
+
+        /* COURSE CARDS */
+        .course-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,0.06); transition: all 0.2s; height: 100%; border: 1px solid #f0f2f5; display: flex; flex-direction: column; }
+        .course-card:hover { transform: translateY(-5px); box-shadow: 0 14px 30px rgba(0,0,0,0.12); }
+        .course-card-img { height: 155px; overflow: hidden; position: relative; background: #000; }
+        .course-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+        .course-card:hover .course-card-img img { transform: scale(1.05); }
+
+        /* HALL OF FAME / SOCIAL PROOF */
+        .fame-card { background: #ffffff; border-radius: 16px; padding: 22px; border: 1px solid #e4e6eb; height: 100%; position: relative; transition: all 0.2s; }
+        .fame-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-color: #fcd34d; }
+        .fame-score-badge { position: absolute; top: 16px; right: 16px; background: #fef3c7; color: #92400e; font-weight: 800; font-size: 13px; padding: 4px 10px; border-radius: 20px; border: 1px solid #fde68a; }
+
+        /* LEARNING PATHWAY */
+        .step-circle { width: 50px; height: 50px; border-radius: 50%; background: #0866ff; color: #fff; font-weight: 800; font-size: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; box-shadow: 0 6px 16px rgba(8,102,255,0.3); }
+
+        /* TEACHER */
+        .teacher-card { background: #fff; border-radius: 16px; padding: 24px 16px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #f0f2f5; transition: transform 0.2s; }
+        .teacher-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .teacher-avatar { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid #0866ff; margin: 0 auto 12px; display: block; }
+
+        /* PROMO BANNER */
+        .promo-banner { background: linear-gradient(135deg, #1e3a8a 0%, #0866ff 60%, #06b6d4 100%); border-radius: 20px; padding: 36px 32px; color: #ffffff; box-shadow: 0 14px 34px rgba(8,102,255,0.25); }
+
+        /* REGISTER */
+        .register-section { background: linear-gradient(135deg, #f0f7ff 0%, #e8efff 100%); }
+        .register-card { background: #fff; border-radius: 20px; box-shadow: 0 8px 36px rgba(8,102,255,0.12); border: 1px solid #e0e7ff; }
+
+        /* FOOTER */
+        .lp-footer { background: #0f172a; color: rgba(255,255,255,0.7); }
+        .lp-footer a { color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.15s; }
+        .lp-footer a:hover { color: #fff; }
+
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+
+<!-- =========================================================================
+     1. STICKY NAVIGATION BAR
+     ========================================================================= -->
+<nav class="lp-nav">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="/" class="lp-logo">
+            <span style="font-size:26px;">📚</span>
+            <span>Language<span style="color:#0866ff;">Book</span></span>
+        </a>
+        <div class="d-none d-lg-flex gap-4 align-items-center">
+            <a href="#about" class="text-dark text-decoration-none fw-semibold small">Giới thiệu</a>
+            <a href="#luyenthi" class="text-primary text-decoration-none fw-bold small"><i class="bi bi-journal-check me-1"></i>Luyện thi online</a>
+            <a href="#courses" class="text-dark text-decoration-none fw-semibold small">Khóa học</a>
+            <a href="#achievements" class="text-dark text-decoration-none fw-semibold small">Thành tích học viên</a>
+            <a href="#teachers" class="text-dark text-decoration-none fw-semibold small">Giảng viên</a>
+            <a href="#faq" class="text-dark text-decoration-none fw-semibold small">Hỏi đáp</a>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="/LuyenThi" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold d-none d-sm-inline-flex">
+                <i class="bi bi-laptop me-1"></i>Thi thử Online
+            </a>
+            <a href="#register" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Đăng ký</a>
+            <a href="/TaiKhoan/Login" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="background:#0866ff;">
+                Đăng nhập
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- =========================================================================
+     2. HERO BANNER
+     ========================================================================= -->
+<section class="hero">
+    <div class="hero-circle1"></div>
+    <div class="hero-circle2"></div>
+    <div class="container position-relative" style="z-index:1;">
+        <div class="row align-items-center g-5 py-5">
+            <div class="col-lg-7">
+                <span class="hero-badge">
+                    <i class="bi bi-award-fill text-warning"></i> Trung tâm ngoại ngữ quốc tế hàng đầu & Luyện thi thông minh
+                </span>
+                <h1 class="mb-4">Mở Rộng Cơ Hội<br/>Bứt Phá <span style="color:#a5c8ff;">Điểm Số Chuẩn</span></h1>
+                <p class="lead mb-4">
+                    Đào tạo toàn diện <strong>Tiếng Anh (IELTS, TOEIC) &bull; Tiếng Nhật &bull; Tiếng Hàn &bull; Tiếng Trung</strong>.<br/>
+                    Cam kết chuẩn đầu ra bằng văn bản pháp lý &bull; Nền tảng luyện đề thi online chấm điểm tức thì.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mb-5">
+                    <a href="#register" class="btn-hero">
+                        <i class="bi bi-pencil-square"></i> Đăng ký nhận ưu đãi 25%
+                    </a>
+                    <a href="/LuyenThi" class="btn-hero-outline">
+                        <i class="bi bi-journal-check"></i> Thi thử miễn phí ngay
+                    </a>
+                </div>
+
+                <!-- 4 Thống kê ấn tượng -->
+                <div class="row g-2 text-center">
+                    <div class="col-3">
+                        <div class="stat-box">
+                            <div class="num">5,000+</div>
+                            <div class="lbl">Học viên theo học</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-box">
+                            <div class="num">98.6%</div>
+                            <div class="lbl">Đạt mục tiêu cam kết</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-box">
+                            <div class="num">350K+</div>
+                            <div class="lbl">Lượt luyện đề online</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-box">
+                            <div class="num">15+</div>
+                            <div class="lbl">Năm uy tín đào tạo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="position-relative">
+                    <img src="/images/anhtienganh/trung-tam-tieng-anh-wall-street-english.jpg" 
+                         class="img-fluid rounded-4 shadow-lg w-100 border border-white border-3"
+                         alt="Cơ sở vật chất chuẩn quốc tế tại LanguageBook" 
+                         style="height:340px; object-fit:cover;" />
+                    
+                    <!-- Floating badge 1 -->
+                    <div class="position-absolute bottom-0 start-0 m-3 p-3 bg-white rounded-3 shadow-lg border d-flex align-items-center gap-3" style="max-width:280px;">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-2 text-success fs-4">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small text-dark">Cam kết đầu ra 100%</div>
+                            <div class="text-muted" style="font-size:11px;">Học lại hoàn toàn miễn phí nếu chưa đạt band điểm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     3. 4 TRỤ CỘT CHẤT LƯỢNG (FEATURES)
+     ========================================================================= -->
+<section id="about" class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-2" style="font-size:13px;">⭐ Vì sao chọn chúng tôi</span>
+            <h2 class="fw-bold fs-1">Chuẩn Mực Đào Tạo Quốc Tế</h2>
+            <p class="text-muted">Phương pháp giảng dạy hiện đại kết hợp công nghệ giúp rút ngắn 50% thời gian học</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="feat-card">
+                    <div class="feat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Cam kết chuẩn đầu ra</h5>
+                    <p class="text-muted small mb-0">Hợp đồng đào tạo minh bạch. Học viên được hỗ trợ học lại miễn phí 100% nếu không đạt mục tiêu đề ra.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feat-card">
+                    <div class="feat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Lớp sĩ số vàng 8-12 HV</h5>
+                    <p class="text-muted small mb-0">Giảng viên theo sát từng học viên, sửa phát âm chi tiết, kèm cặp 1-1 với trợ giảng chất lượng cao.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feat-card">
+                    <div class="feat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Giáo trình chuẩn Cambridge</h5>
+                    <p class="text-muted small mb-0">Giáo trình cập nhật liên tục từ Cambridge, Oxford, ETS & Hanban bám sát 100% đề thi thực tế tại IDP & BC.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feat-card">
+                    <div class="feat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-laptop-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Phòng luyện thi online</h5>
+                    <p class="text-muted small mb-0">Hệ thống luyện đề thi trực tuyến thông minh: Tự động chấm điểm sau 1 giây, phân tích câu sai kèm lời giải chi tiết.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     4. PHÒNG LUYỆN THI ONLINE (GIỚI THIỆU THI THỬ TRỰC TUYẾN)
+     ========================================================================= -->
+<section id="luyenthi" class="py-5 exam-showcase-section">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col-lg-8">
+                <span class="badge bg-primary text-white px-3 py-2 mb-2" style="font-size:12px;">💻 PHÒNG LUYỆN THI ONLINE</span>
+                <h2 class="fw-bold fs-1 text-dark">Nền Tảng Luyện Đề Thi Trực Tuyến Độc Quyền</h2>
+                <p class="text-muted">Luyện tập từng phần thi, làm bài full test và xem chi tiết câu sai kèm lý do giải thích chuẩn xác như thi thật.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="/LuyenThi" class="btn btn-primary rounded-pill px-4 py-2 fw-bold" style="background:#0866ff;">
+                    Vào thư viện đề thi <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Featured Exams List -->
+        @if (Model.DeThisHot.Any())
+        {
+            <div class="row g-3 mb-4">
+                @foreach (var dt in Model.DeThisHot)
+                {
+                    <div class="col-lg-3 col-md-6">
+                        <div class="exam-card-preview shadow-sm">
+                            <div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="badge bg-primary-subtle text-primary border" style="font-size:11px;">#@dt.TheLoai</span>
+                                    <span class="badge bg-light text-secondary border" style="font-size:11px;">@dt.KyNang</span>
+                                </div>
+                                <h6 class="fw-bold text-dark mb-2" style="font-size:14px; line-height:1.4;">@dt.TieuDe</h6>
+                                <div class="text-muted small mb-3">
+                                    <div><i class="bi bi-clock me-1 text-primary"></i>@dt.ThoiGianPhut phút &bull; @dt.TongSoCau câu hỏi</div>
+                                    <div class="mt-1"><i class="bi bi-people me-1 text-secondary"></i>@dt.SoLuotLam.ToString("N0") lượt luyện thi</div>
+                                </div>
+                            </div>
+                            <div class="pt-2 border-top">
+                                <a href="/LuyenThi/ChiTiet/@dt.MaDeThi" class="btn btn-outline-primary btn-sm w-100 rounded-pill fw-semibold">
+                                    Thi thử ngay &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- 3 Điểm vượt trội của hệ thống luyện đề -->
+        <div class="row g-3 text-center">
+            <div class="col-md-4">
+                <div class="p-3 bg-white rounded-3 border">
+                    <i class="bi bi-stopwatch text-primary fs-3 mb-2 d-block"></i>
+                    <strong class="text-dark small d-block mb-1">Chấm điểm tức thì sau 1 giây</strong>
+                    <span class="text-muted" style="font-size:12px;">Biết ngay số câu đúng, câu sai và tỷ lệ chính xác %</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-white rounded-3 border">
+                    <i class="bi bi-lightbulb text-warning fs-3 mb-2 d-block"></i>
+                    <strong class="text-dark small d-block mb-1">Lý do giải thích chi tiết từng câu</strong>
+                    <span class="text-muted" style="font-size:12px;">Trích dẫn Transcript nghe, từ khóa đọc và phân tích ngữ pháp</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-white rounded-3 border">
+                    <i class="bi bi-chat-heart text-danger fs-3 mb-2 d-block"></i>
+                    <strong class="text-dark small d-block mb-1">Cộng đồng thảo luận sôi nổi</strong>
+                    <span class="text-muted" style="font-size:12px;">Hỏi đáp trực tiếp dưới mỗi bài kiểm tra cùng giảng viên</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     5. CÁC KHÓA HỌC NỔI BẬT (COURSES)
+     ========================================================================= -->
+<section id="courses" class="py-5" style="background:#f7f8fa;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-2" style="font-size:13px;">📖 Chương trình đào tạo</span>
+            <h2 class="fw-bold fs-1">Khóa Học Nổi Bật & Ưu Đãi</h2>
+            <p class="text-muted">Lộ trình học bài bản được thiết kế riêng cho người đi làm và học sinh - sinh viên</p>
+        </div>
+
+        @if (Model.KhoaHocs.Any())
+        {
+            <div class="row g-4">
+                @foreach (var course in Model.KhoaHocs)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="course-card">
+                            <div class="course-card-img">
+                                <img src="@ImageHelper.GetCourseImage(course.NgoaiNgu, course.TenKhoaHoc, course.MaKhoaHoc)" alt="@course.TenKhoaHoc" />
+                                <div class="position-absolute top-0 start-0 p-2 d-flex gap-1">
+                                    <span class="badge bg-primary" style="font-size:10px;">@course.NgoaiNgu</span>
+                                    <span class="badge bg-warning text-dark fw-bold" style="font-size:10px;">@course.CapDo</span>
+                                </div>
+                            </div>
+                            <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <h6 class="fw-bold mb-1 text-truncate" title="@course.TenKhoaHoc" style="font-size:14px;">@course.TenKhoaHoc</h6>
+                                    <div class="text-muted small mb-2"><i class="bi bi-clock me-1"></i>@course.SoBuoi buổi học chuyên sâu</div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <div>
+                                        <div class="fw-bold text-primary" style="font-size:15px;">@course.HocPhi.ToString("N0") ₫</div>
+                                        <div class="text-muted text-decoration-line-through" style="font-size:11px;">@((course.HocPhi * 1.25m).ToString("N0")) ₫</div>
+                                    </div>
+                                    <a href="#register" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold" style="font-size:11px; background:#0866ff;">
+                                        Đăng ký
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- =========================================================================
+     6. BẢNG VÀNG THÀNH TÍCH HỌC VIÊN (SOCIAL PROOF / HALL OF FAME)
+     ========================================================================= -->
+<section id="achievements" class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 mb-2" style="font-size:13px;">🏆 HALL OF FAME</span>
+            <h2 class="fw-bold fs-1">Bảng Vàng Thành Tích Học Viên</h2>
+            <p class="text-muted">Hơn 5,000 học viên đã xuất sắc vượt mục tiêu và đạt chứng chỉ quốc tế</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="fame-card shadow-sm">
+                    <span class="fame-score-badge"><i class="bi bi-star-fill text-warning me-1"></i>IELTS 8.5</span>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" 
+                             class="rounded-circle border border-primary border-2" style="width:54px;height:54px;object-fit:cover;" alt="Nguyễn Hoàng Nam" />
+                        <div>
+                            <div class="fw-bold text-dark small">Nguyễn Hoàng Nam</div>
+                            <div class="text-muted" style="font-size:11px;">Listening: 9.0 | Reading: 8.5</div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0 fst-italic">
+                        "Kho đề thi online của trung tâm cực kỳ sát đề thi thật. Giải thích chi tiết từng câu giúp mình khắc phục triệt để bẫy Part 3 & 4."
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="fame-card shadow-sm">
+                    <span class="fame-score-badge"><i class="bi bi-star-fill text-warning me-1"></i>TOEIC 965</span>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80" 
+                             class="rounded-circle border border-primary border-2" style="width:54px;height:54px;object-fit:cover;" alt="Trần Thảo Vy" />
+                        <div>
+                            <div class="fw-bold text-dark small">Trần Thảo Vy</div>
+                            <div class="text-muted" style="font-size:11px;">Đại học Ngoại Thương TP.HCM</div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0 fst-italic">
+                        "Tăng 420 điểm chỉ sau 2 tháng học cấp tốc. Giảng viên chỉ rõ các mẹo Part 5 và chiến thuật phân bổ thời gian hiệu quả!"
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="fame-card shadow-sm">
+                    <span class="fame-score-badge"><i class="bi bi-star-fill text-warning me-1"></i>HSK 6 (278)</span>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80" 
+                             class="rounded-circle border border-primary border-2" style="width:54px;height:54px;object-fit:cover;" alt="Lê Minh Khang" />
+                        <div>
+                            <div class="fw-bold text-dark small">Lê Minh Khang</div>
+                            <div class="text-muted" style="font-size:11px;">Học bổng Chính phủ Trung Quốc</div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0 fst-italic">
+                        "Nhờ giáo trình bám sát và sự tận tụy của cô giáo, mình đã tự tin đỗ học bổng toàn phần du học tại Đại học Bắc Kinh."
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="fame-card shadow-sm">
+                    <span class="fame-score-badge"><i class="bi bi-star-fill text-warning me-1"></i>JLPT N2</span>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80" 
+                             class="rounded-circle border border-primary border-2" style="width:54px;height:54px;object-fit:cover;" alt="Phạm Phương Anh" />
+                        <div>
+                            <div class="fw-bold text-dark small">Phạm Phương Anh</div>
+                            <div class="text-muted" style="font-size:11px;">Kỹ sư phần mềm công ty Nhật</div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0 fst-italic">
+                        "Lớp học nhỏ tương tác cao giúp mình tự tin giao tiếp với khách hàng Nhật Bản và đỗ N2 ngay trong lần thi đầu tiên."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     7. LỘ TRÌNH HỌC TẬP 4 GIAI ĐOẠN (LEARNING PATHWAY)
+     ========================================================================= -->
+<section class="py-5" style="background:#f8fafc;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-2" style="font-size:13px;">🗺️ Lộ trình đào tạo</span>
+            <h2 class="fw-bold fs-1">4 Bước Chinh Phục Điểm Số Mục Tiêu</h2>
+            <p class="text-muted">Quy trình khoa học đã được kiểm chứng qua 15 năm kinh nghiệm</p>
+        </div>
+
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 bg-white rounded-3 border h-100 shadow-sm">
+                    <div class="step-circle">1</div>
+                    <h5 class="fw-bold text-dark mb-2">Đánh giá đầu vào</h5>
+                    <p class="text-muted small mb-0">Kiểm tra 4 kỹ năng miễn phí, phân tích lỗ hổng kiến thức và xây dựng lộ trình cá nhân hóa.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 bg-white rounded-3 border h-100 shadow-sm">
+                    <div class="step-circle">2</div>
+                    <h5 class="fw-bold text-dark mb-2">Xây chắc nền tảng</h5>
+                    <p class="text-muted small mb-0">Bổ sung từ vựng, chuẩn hóa ngữ âm bản xứ và củng cố các cấu trúc ngữ pháp học thuật trọng điểm.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 bg-white rounded-3 border h-100 shadow-sm">
+                    <div class="step-circle" style="background:#0284c7;">3</div>
+                    <h5 class="fw-bold text-dark mb-2">Thực chiến đề thi</h5>
+                    <p class="text-muted small mb-0">Luyện các bộ đề forecast sát đề thật trên hệ thống online, nắm bắt chiến thuật né bẫy.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 bg-white rounded-3 border h-100 shadow-sm">
+                    <div class="step-circle" style="background:#16a34a;">4</div>
+                    <h5 class="fw-bold text-dark mb-2">Bứt phá & Về đích</h5>
+                    <p class="text-muted small mb-0">Thi thử áp lực như tại hội đồng thi, tự tin đạt chứng chỉ vượt kỳ vọng ngay lần đầu.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     8. ĐỘI NGŨ GIẢNG VIÊN (TEACHERS)
+     ========================================================================= -->
+@if (Model.GiaoViens.Any())
+{
+    <section id="teachers" class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="badge bg-success-subtle text-success px-3 py-2 mb-2" style="font-size:13px;">👨‍🏫 Đội ngũ giảng viên</span>
+                <h2 class="fw-bold fs-1">Giảng Viên Tâm Huyết & Giàu Kinh Nghiệm</h2>
+                <p class="text-muted">100% Giảng viên có chứng chỉ quốc tế IELTS 8.0+, Thạc sĩ TESOL, tận tâm và nhiệt tình</p>
+            </div>
+            <div class="row g-4 justify-content-center">
+                @foreach (var gv in Model.GiaoViens)
+                {
+                    <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                        <div class="teacher-card">
+                            <img src="@(!string.IsNullOrEmpty(gv.AnhDaiDien) ? gv.AnhDaiDien : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80")"
+                                 class="teacher-avatar" alt="@gv.HoTen" />
+                            <h6 class="fw-bold mb-1" style="font-size:14px;">@gv.HoTen</h6>
+                            <span class="badge bg-primary-subtle text-primary" style="font-size:11px;">@gv.ChuyenMon</span>
+                            @if (!string.IsNullOrEmpty(gv.HocVi))
+                            {
+                                <div class="text-muted mt-1" style="font-size:11px;">@gv.HocVi</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- =========================================================================
+     9. ƯU ĐÃI THÁNG NÀY (PROMOTION BANNER)
+     ========================================================================= -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="promo-banner">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <span class="badge bg-warning text-dark fw-bold px-3 py-1 mb-2">ƯU ĐÃI THÁNG 10</span>
+                    <h2 class="fw-bold fs-1 mb-2">Giảm Ngay 25% Học Phí & Tặng Bộ Đề 2026</h2>
+                    <p class="mb-0 text-white-50">
+                        Áp dụng cho <strong>50 học viên đầu tiên</strong> đăng ký trong tuần này. Tặng kèm tài khoản VIP luyện thi online không giới hạn!
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="#register" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold text-dark shadow">
+                        <i class="bi bi-gift-fill me-1"></i> Nhận ưu đãi ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     10. CÂU HỎI THƯỜNG GẶP (FAQ ACCORDION)
+     ========================================================================= -->
+<section id="faq" class="py-5" style="background:#f8fafc;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-info-subtle text-info-emphasis px-3 py-2 mb-2" style="font-size:13px;">❓ Giải đáp thắc mắc</span>
+            <h2 class="fw-bold fs-1">Câu Hỏi Thường Gặp</h2>
+            <p class="text-muted">Những thông tin cần biết trước khi bắt đầu hành trình học tập tại LanguageBook</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item rounded-3 mb-3 border shadow-sm overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Người mất gốc tiếng Anh hoặc chưa từng học ngoại ngữ có theo kịp không?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                <strong>Hoàn toàn yên tâm!</strong> Trung tâm có lộ trình riêng dành cho học viên mất gốc bắt đầu từ con số 0. Lớp học sĩ số nhỏ giúp giảng viên theo sát từng học viên và có trợ giảng hỗ trợ kèm 1-1 miễn phí ngoài giờ học.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item rounded-3 mb-3 border shadow-sm overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Trung tâm có hỗ trợ trả góp học phí không?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Có! Trung tâm liên kết với các ngân hàng lớn hỗ trợ trả góp học phí <strong>0% lãi suất</strong> kỳ hạn 3 - 6 - 12 tháng, giúp bạn an tâm học tập mà không chịu áp lực tài chính.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item rounded-3 mb-3 border shadow-sm overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Nếu bận việc đột xuất thì có được học bù hoặc đổi ca không?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Được! Bạn có thể học bù linh hoạt tại các lớp cùng trình độ trong tuần hoặc xem lại video bài giảng được ghi hình đầy đủ trên hệ thống học tập trực tuyến của trung tâm.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item rounded-3 mb-3 border shadow-sm overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                Cam kết đầu ra bằng văn bản có hiệu lực như thế nào?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Khi nhập học, học viên sẽ ký hợp đồng đào tạo cam kết chuẩn đầu ra. Nếu học viên đi học đầy đủ và làm bài tập theo hướng dẫn mà không đạt điểm cam kết, trung tâm sẽ hoàn trả học phí hoặc đào tạo lại miễn phí 100% cho đến khi đạt mục tiêu!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     11. FORM ĐĂNG KÝ TÀI KHOẢN & TƯ VẤN (BẢO MẬT & REALTIME VALIDATION)
+     ========================================================================= -->
+<section id="register" class="py-5 register-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-9">
+                <div class="register-card p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="mb-2" style="font-size:2.8rem;">🎓</div>
+                        <h2 class="fw-bold mb-2">Đăng Ký Tài Khoản & Nhận Tư Vấn</h2>
+                        <p class="text-muted small">
+                            Gửi thông tin của bạn — Admin sẽ duyệt tài khoản và gửi thông tin đăng nhập về Gmail của bạn trong vòng <strong>24 giờ</strong>.
+                        </p>
+                    </div>
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success rounded-3 d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill fs-5 mt-1 text-success"></i>
+                            <div>@TempData["Success"]</div>
+                        </div>
+                    }
+                    @if (TempData["Info"] != null)
+                    {
+                        <div class="alert alert-info rounded-3 d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill fs-5 mt-1"></i>
+                            <div>@TempData["Info"]</div>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger rounded-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                        </div>
+                    }
+
+                    <form method="post" action="/Landing/GuiYeuCau" id="formDangKy" novalidate>
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" name="hoTen" id="inputHoTen" class="form-control rounded-3" placeholder="Nguyễn Văn A" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Gmail <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="email" name="email" id="inputEmail" class="form-control rounded-3" 
+                                           placeholder="example@gmail.com" required autocomplete="off" />
+                                    <span class="input-group-text bg-white border-start-0 rounded-end-3" id="emailStatusIcon" style="border-left:none;"></span>
+                                </div>
+                                <div id="emailFeedback" class="mt-1" style="display:none;font-size:13px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Số điện thoại</label>
+                                <div class="input-group">
+                                    <input type="tel" name="soDienThoai" id="inputSDT" class="form-control rounded-3" 
+                                           placeholder="0901 234 567" autocomplete="off" />
+                                    <span class="input-group-text bg-white border-start-0 rounded-end-3" id="sdtStatusIcon" style="border-left:none;"></span>
+                                </div>
+                                <div id="sdtFeedback" class="mt-1" style="display:none;font-size:13px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Đăng ký với tư cách <span class="text-danger">*</span></label>
+                                <select name="vaiTroMongMuon" class="form-select rounded-3" required>
+                                    <option value="HocVien">🎓 Học viên</option>
+                                    <option value="GiaoVien">👨‍🏫 Giáo viên / Giảng viên</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small">Ghi chú thêm (tùy chọn)</label>
+                                <textarea name="ghiChu" class="form-control rounded-3" rows="2"
+                                          placeholder="Bạn muốn học khóa gì? Trình độ hiện tại? Mục tiêu của bạn?"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" id="btnGuiYeuCau" class="btn btn-primary w-100 py-3 fw-bold rounded-3" style="font-size:1rem; background:#0866ff;">
+                                    <i class="bi bi-send-fill me-2"></i>Gửi yêu cầu tạo tài khoản
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <script>
+                    (function () {
+                        let emailTimer = null, sdtTimer = null;
+                        let emailOk = true, sdtOk = true;
+
+                        function setFieldState(inputEl, iconEl, feedbackEl, state, msg) {
+                            inputEl.classList.remove('is-invalid', 'is-valid');
+                            feedbackEl.style.display = 'none';
+                            iconEl.innerHTML = '';
+
+                            if (state === 'loading') {
+                                iconEl.innerHTML = '<span class="spinner-border spinner-border-sm text-secondary" style="width:14px;height:14px;"></span>';
+                            } else if (state === 'ok') {
+                                inputEl.classList.add('is-valid');
+                                iconEl.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size:16px;"></i>';
+                            } else if (state === 'error') {
+                                inputEl.classList.add('is-invalid');
+                                iconEl.innerHTML = '<i class="bi bi-x-circle-fill text-danger" style="font-size:16px;"></i>';
+                                feedbackEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i><span class="text-danger fw-semibold">' + msg + '</span>';
+                                feedbackEl.style.display = 'block';
+                            }
+                        }
+
+                        function updateSubmitBtn() {
+                            var btn = document.getElementById('btnGuiYeuCau');
+                            if (!emailOk || !sdtOk) {
+                                btn.disabled = true;
+                                btn.classList.replace('btn-primary', 'btn-secondary');
+                                btn.innerHTML = '<i class="bi bi-shield-x me-2"></i>Vui lòng kiểm tra lại thông tin';
+                            } else {
+                                btn.disabled = false;
+                                btn.classList.replace('btn-secondary', 'btn-primary');
+                                btn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Gửi yêu cầu tạo tài khoản';
+                            }
+                        }
+
+                        var emailInput = document.getElementById('inputEmail');
+                        var emailIcon  = document.getElementById('emailStatusIcon');
+                        var emailFeed  = document.getElementById('emailFeedback');
+
+                        emailInput.addEventListener('input', function () {
+                            clearTimeout(emailTimer);
+                            var val = this.value.trim();
+                            if (!val || !val.includes('@@')) {
+                                setFieldState(this, emailIcon, emailFeed, 'idle', '');
+                                emailOk = true; updateSubmitBtn(); return;
+                            }
+                            setFieldState(this, emailIcon, emailFeed, 'loading', '');
+                            var self = this;
+                            emailTimer = setTimeout(function () {
+                                fetch('/Landing/KiemTraEmail?email=' + encodeURIComponent(val))
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.trung) {
+                                            emailOk = false;
+                                            setFieldState(self, emailIcon, emailFeed, 'error', data.thongBao);
+                                        } else {
+                                            emailOk = true;
+                                            setFieldState(self, emailIcon, emailFeed, 'ok', '');
+                                        }
+                                        updateSubmitBtn();
+                                    })
+                                    .catch(() => { emailOk = true; setFieldState(self, emailIcon, emailFeed, 'idle', ''); updateSubmitBtn(); });
+                            }, 600);
+                        });
+
+                        var sdtInput = document.getElementById('inputSDT');
+                        var sdtIcon  = document.getElementById('sdtStatusIcon');
+                        var sdtFeed  = document.getElementById('sdtFeedback');
+
+                        sdtInput.addEventListener('input', function () {
+                            clearTimeout(sdtTimer);
+                            var val = this.value.replace(/\s/g, '').trim();
+                            if (!val || val.length < 9) {
+                                setFieldState(this, sdtIcon, sdtFeed, 'idle', '');
+                                sdtOk = true; updateSubmitBtn(); return;
+                            }
+                            setFieldState(this, sdtIcon, sdtFeed, 'loading', '');
+                            var self = this;
+                            sdtTimer = setTimeout(function () {
+                                fetch('/Landing/KiemTraSDT?soDienThoai=' + encodeURIComponent(val))
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.trung) {
+                                            sdtOk = false;
+                                            setFieldState(self, sdtIcon, sdtFeed, 'error', data.thongBao);
+                                        } else {
+                                            sdtOk = true;
+                                            setFieldState(self, sdtIcon, sdtFeed, 'ok', '');
+                                        }
+                                        updateSubmitBtn();
+                                    })
+                                    .catch(() => { sdtOk = true; setFieldState(self, sdtIcon, sdtFeed, 'idle', ''); updateSubmitBtn(); });
+                            }, 600);
+                        });
+
+                        document.getElementById('formDangKy').addEventListener('submit', function (e) {
+                            if (!emailOk || !sdtOk) {
+                                e.preventDefault();
+                                return false;
+                            }
+                        });
+                    })();
+                    </script>
+
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <span class="text-muted small">Đã có tài khoản?</span>
+                        <a href="/TaiKhoan/Login" class="text-primary fw-bold ms-2">Đăng nhập ngay →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     12. FOOTER
+     ========================================================================= -->
+<footer class="lp-footer py-5">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="lp-logo mb-3" style="font-size:22px;color:#fff;">📚 LanguageBook</div>
+                <p class="small text-white-50">Trung tâm đào tạo ngoại ngữ chuẩn quốc tế và nền tảng thi thử online chất lượng cao. Cam kết đầu ra bằng văn bản pháp lý, đồng hành cùng tương lai của bạn.</p>
+                <div class="d-flex gap-3 text-white-50 fs-5 mt-3">
+                    <a href="#" class="text-white-50"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-white-50"><i class="bi bi-youtube"></i></a>
+                    <a href="#" class="text-white-50"><i class="bi bi-tiktok"></i></a>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-white fw-bold mb-3">Chương trình</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><a href="#courses">Luyện thi IELTS</a></li>
+                    <li class="mb-2"><a href="#courses">Luyện thi TOEIC</a></li>
+                    <li class="mb-2"><a href="#courses">Tiếng Nhật JLPT</a></li>
+                    <li class="mb-2"><a href="#courses">Tiếng Hàn TOPIK</a></li>
+                    <li class="mb-2"><a href="#courses">Tiếng Trung HSK</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-white fw-bold mb-3">Học tập & Luyện thi</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><a href="/LuyenThi" class="text-warning fw-bold"><i class="bi bi-journal-check me-1"></i>Thư viện đề thi</a></li>
+                    <li class="mb-2"><a href="#register">Đăng ký học thử</a></li>
+                    <li class="mb-2"><a href="/TaiKhoan/Login">Cổng học viên</a></li>
+                    <li class="mb-2"><a href="#faq">Chính sách bảo lưu</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6 class="text-white fw-bold mb-3">Liên hệ trung tâm</h6>
+                <p class="small mb-2"><i class="bi bi-geo-alt me-2 text-primary"></i>123 Đường Nguyễn Văn Linh, Q.7, TP.HCM</p>
+                <p class="small mb-2"><i class="bi bi-telephone me-2 text-primary"></i>0901 234 567 (Hotline tư vấn 24/7)</p>
+                <p class="small mb-2"><i class="bi bi-envelope me-2 text-primary"></i>admin@languagebook.edu.vn</p>
+                <p class="small mb-0"><i class="bi bi-clock me-2 text-primary"></i>Thứ 2 - Chủ Nhật: 08:00 - 21:30</p>
+            </div>
+        </div>
+        <div class="border-top pt-4 text-center text-white-50 small" style="border-color:rgba(255,255,255,0.1)!important;">
+            © 2026 LanguageBook Education System. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

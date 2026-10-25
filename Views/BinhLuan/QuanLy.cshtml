@@ -1,0 +1,309 @@
+@model TrungTamNgoaiNgu.ViewModels.QuanLyBinhLuanViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Bình Luận & % Tương Tác · Meta Business Suite";
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-chat-heart-fill text-primary"></i> Quản Lý Bình Luận & % Tương Tác
+        </h3>
+        <p class="text-muted mb-0 small">Theo dõi mức độ tương tác của các tài khoản học viên dưới quyền Admin và kiểm duyệt xóa bình luận</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="#danh-sach-binh-luan" class="fb-btn fb-btn-secondary fb-btn-sm">
+            <i class="bi bi-chat-left-text me-1"></i> Xem tất cả bình luận (@Model.TongBinhLuan)
+        </a>
+    </div>
+</div>
+
+<!-- =========================================================================
+     4 KPI CARDS: TƯƠNG TÁC TÀI KHOẢN DƯỚI QUYỀN ADMIN
+     ========================================================================= -->
+<div class="row g-3 mb-4">
+    <!-- Card 1: Tổng số bình luận -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Tổng số bình luận</span>
+                <div class="fb-sidebar-icon" style="background:#e7f3ff; color:#0866ff;">
+                    <i class="bi bi-chat-dots-fill"></i>
+                </div>
+            </div>
+            <div class="fs-2 fw-bold text-dark mb-1">@Model.TongBinhLuan</div>
+            <span class="fb-badge fb-badge-blue">Tương tác thảo luận</span>
+        </div>
+    </div>
+
+    <!-- Card 2: Tài khoản đã tương tác -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Học viên tham gia</span>
+                <div class="fb-sidebar-icon" style="background:#e7f8ec; color:#31a24c;">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+            </div>
+            <div class="fs-2 fw-bold text-success mb-1">@Model.HocVienDaTuongTac / @Model.TongTaiKhoanHocVien</div>
+            <span class="fb-badge fb-badge-green">Tài khoản có bình luận</span>
+        </div>
+    </div>
+
+    <!-- Card 3: % Tương tác toàn hệ thống -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">% Học viên tương tác</span>
+                <div class="fb-sidebar-icon" style="background:#fef7e0; color:#f7b125;">
+                    <i class="bi bi-pie-chart-fill"></i>
+                </div>
+            </div>
+            <div class="fs-2 fw-bold text-primary mb-1">@Model.TyLeHocVienTuongTac%</div>
+            <div class="progress mt-1" style="height: 6px; background-color: #dddfe2;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: @Model.TyLeHocVienTuongTac%;"></div>
+            </div>
+            <span class="text-muted small mt-1 d-block">Tỷ lệ học viên hoạt động</span>
+        </div>
+    </div>
+
+    <!-- Card 4: Học viên tương tác nhiều nhất -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Top tương tác</span>
+                <div class="fb-sidebar-icon" style="background:#f0e6ff; color:#9360f7;">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
+            </div>
+            <div class="fs-5 fw-bold text-dark text-truncate mb-1" title="@Model.TopHocVienTuongTac">@Model.TopHocVienTuongTac</div>
+            <span class="fb-badge fb-badge-purple">@Model.SoLuongTop bình luận đã gửi</span>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     BẢNG 1: THỐNG KÊ % TƯƠNG TÁC TỪNG TÀI KHOẢN DƯỚI QUYỀN ADMIN
+     ========================================================================= -->
+<div class="fb-card mb-4">
+    <div class="fb-card-header">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow text-primary"></i> 
+            Bảng Thống Kê % Tương Tác Của Các Tài Khoản Dưới Quyền Admin (@Model.DanhSachTaiKhoan.Count tài khoản)
+        </div>
+        <div class="text-muted small">
+            Được sắp xếp theo số lượng bình luận và mức độ tương tác
+        </div>
+    </div>
+
+    @if (!Model.DanhSachTaiKhoan.Any())
+    {
+        <div class="p-4 text-center text-muted">
+            <p class="mb-0">Chưa có tài khoản học viên nào trong hệ thống.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0" style="font-size: 0.9rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Học viên / Tài khoản</th>
+                        <th>Thông tin liên hệ</th>
+                        <th class="text-center">Số bình luận</th>
+                        <th style="min-width: 180px;">% Tương tác hệ thống</th>
+                        <th>Lần tương tác cuối</th>
+                        <th class="pe-3">Mức độ tương tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var acc in Model.DanhSachTaiKhoan)
+                    {
+                        <tr>
+                            <!-- Học viên -->
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="fb-avatar fb-avatar-sm" style="background: #e7f3ff; color: #0866ff;">
+                                        @(acc.HoTen.Length > 0 ? acc.HoTen.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@acc.HoTen</div>
+                                        <span class="text-muted small font-monospace">@@@acc.TenDangNhap</span>
+                                        @if (acc.MaHocVien.HasValue)
+                                        {
+                                            <span class="badge bg-light text-dark border ms-1" style="font-size: 10px;">#HV-@acc.MaHocVien.Value.ToString("D4")</span>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Liên hệ -->
+                            <td>
+                                <div><i class="bi bi-envelope me-1 text-muted"></i>@acc.Email</div>
+                                @if (!string.IsNullOrEmpty(acc.SoDienThoai))
+                                {
+                                    <div class="font-monospace small text-muted"><i class="bi bi-telephone me-1"></i>@acc.SoDienThoai</div>
+                                }
+                            </td>
+
+                            <!-- Số comment -->
+                            <td class="text-center">
+                                <span class="fs-6 fw-bold @(acc.SoBinhLuan > 0 ? "text-primary" : "text-muted")">
+                                    @acc.SoBinhLuan
+                                </span>
+                            </td>
+
+                            <!-- % Đóng góp tương tác + Progress bar -->
+                            <td>
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <strong class="text-primary font-monospace">@acc.PhanTramDongGop%</strong>
+                                    <span class="text-muted small" style="font-size: 11px;">@acc.SoBinhLuan/@Model.TongBinhLuan BL</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: #dddfe2;">
+                                    <div class="progress-bar @(acc.PhanTramDongGop >= 20 ? "bg-success" : (acc.PhanTramDongGop > 0 ? "bg-primary" : "bg-secondary"))" 
+                                         role="progressbar" 
+                                         style="width: @(acc.PhanTramDongGop > 0 ? acc.PhanTramDongGop : 0)%;"></div>
+                                </div>
+                            </td>
+
+                            <!-- Lần tương tác cuối -->
+                            <td class="text-muted small">
+                                @if (acc.LanTuongTacCuoi.HasValue)
+                                {
+                                    <span><i class="bi bi-clock-history me-1"></i>@acc.LanTuongTacCuoi.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                }
+                                else
+                                {
+                                    <span class="fst-italic text-muted">Chưa có hoạt động</span>
+                                }
+                            </td>
+
+                            <!-- Mức độ tương tác -->
+                            <td class="pe-3">
+                                @if (acc.SoBinhLuan >= 4)
+                                {
+                                    <span class="fb-badge fb-badge-purple"><i class="bi bi-fire me-1"></i>Rất tích cực (Top)</span>
+                                }
+                                else if (acc.SoBinhLuan >= 2)
+                                {
+                                    <span class="fb-badge fb-badge-green"><i class="bi bi-check-circle-fill me-1"></i>Tích cực</span>
+                                }
+                                else if (acc.SoBinhLuan == 1)
+                                {
+                                    <span class="fb-badge fb-badge-blue"><i class="bi bi-chat-text me-1"></i>Thỉnh thoảng</span>
+                                }
+                                else
+                                {
+                                    <span class="fb-badge" style="background: #e4e6eb; color: #65676b;"><i class="bi bi-dash-circle me-1"></i>Chưa tương tác</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- =========================================================================
+     BẢNG 2: QUẢN LÝ TOÀN BỘ BÌNH LUẬN & CHỨC NĂNG XÓA COMMENT
+     ========================================================================= -->
+<div class="fb-card" id="danh-sach-binh-luan">
+    <div class="fb-card-header">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-chat-square-dots-fill text-primary"></i> 
+            Danh Sách Toàn Bộ Bình Luận Trên Hệ Thống (@Model.DanhSachBinhLuan.Count bình luận)
+        </div>
+        <div class="text-muted small">
+            Quản trị viên có toàn quyền kiểm duyệt và xóa bình luận vi phạm
+        </div>
+    </div>
+
+    @if (!Model.DanhSachBinhLuan.Any())
+    {
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-chat-dots fs-1 text-muted d-block mb-2"></i>
+            <h6 class="fw-bold">Chưa có bình luận nào trên hệ thống</h6>
+            <p class="small text-muted">Bình luận của học viên và quản trị viên sẽ xuất hiện tại đây.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0" style="font-size: 0.9rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3" style="width: 70px;">ID</th>
+                        <th style="min-width: 170px;">Người bình luận</th>
+                        <th style="min-width: 150px;">Khóa học</th>
+                        <th>Nội dung bình luận</th>
+                        <th style="width: 150px;">Thời gian</th>
+                        <th class="pe-3 text-end" style="width: 120px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var bl in Model.DanhSachBinhLuan)
+                    {
+                        <tr>
+                            <td class="ps-3 font-monospace text-muted">#@bl.MaBinhLuan</td>
+                            
+                            <!-- Người bình luận -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="fb-avatar fb-avatar-sm" style="background: @(bl.TaiKhoan?.VaiTro == "Admin" ? "#0866ff" : "#42b72a"); color: #fff;">
+                                        @(bl.TaiKhoan?.HoTen != null && bl.TaiKhoan.HoTen.Length > 0 ? bl.TaiKhoan.HoTen.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+                                    <div>
+                                        <strong class="d-block text-dark">@(bl.TaiKhoan?.HoTen ?? "Người dùng")</strong>
+                                        <span class="fb-badge @(bl.TaiKhoan?.VaiTro == "Admin" ? "fb-badge-blue" : "fb-badge-green")" style="font-size: 10px; padding: 1px 6px;">
+                                            @(bl.TaiKhoan?.VaiTro == "Admin" ? "Quản trị viên" : "Học viên")
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Khóa học -->
+                            <td>
+                                @if (bl.KhoaHoc != null)
+                                {
+                                    <a asp-controller="KhoaHoc" asp-action="Details" asp-route-id="@bl.KhoaHoc.MaKhoaHoc" class="text-decoration-none fw-semibold small text-primary">
+                                        <i class="bi bi-journal-bookmark me-1"></i>@bl.KhoaHoc.TenKhoaHoc
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small fst-italic">Bình luận chung</span>
+                                }
+                            </td>
+
+                            <!-- Nội dung -->
+                            <td>
+                                <div class="p-2 rounded bg-light border small text-dark" style="max-width: 500px; word-break: break-word;">
+                                    @bl.NoiDung
+                                </div>
+                            </td>
+
+                            <!-- Thời gian -->
+                            <td class="text-muted small">
+                                <div>@bl.NgayBinhLuan.ToString("dd/MM/yyyy")</div>
+                                <div class="font-monospace" style="font-size: 11px;">@bl.NgayBinhLuan.ToString("HH:mm:ss")</div>
+                            </td>
+
+                            <!-- Nút Xóa Comment dành cho Admin -->
+                            <td class="pe-3 text-end">
+                                <form asp-controller="BinhLuan" asp-action="Delete" asp-route-id="@bl.MaBinhLuan" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận #@bl.MaBinhLuan này không?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="/BinhLuan/QuanLy" />
+                                    <button type="submit" class="fb-btn fb-btn-outline fb-btn-sm text-danger" title="Xóa bình luận này">
+                                        <i class="bi bi-trash3-fill me-1"></i> Xóa
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

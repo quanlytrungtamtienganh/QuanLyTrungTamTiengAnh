@@ -1,0 +1,163 @@
+@model IEnumerable<TrungTamNgoaiNgu.Models.KhoaHoc>
+@{
+    Layout = "_StudentLayout";
+    ViewData["Title"] = "Kho Khóa Học & Video Đào Tạo · LanguageBook";
+    var currentLang = ViewBag.CurrentNgoaiNgu as string;
+    var searchStr = ViewBag.SearchString as string;
+}
+
+<div class="container-fluid px-lg-4 py-3">
+    <div class="row g-3">
+        <!-- =========================================================================
+             1. LEFT COLUMN: FACEBOOK MARKETPLACE / WATCH FILTERS
+             ========================================================================= -->
+        <div class="col-lg-3 col-md-4">
+            <div class="fb-card p-3" style="position: sticky; top: 72px;">
+                <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-shop text-primary"></i> Khóa học & Đào tạo
+                </h4>
+
+                <!-- Search form -->
+                <form method="get" asp-action="Catalog" class="mb-3">
+                    <input type="hidden" name="ngoaiNgu" value="@currentLang" />
+                    <div class="fb-search-box w-100 mb-2">
+                        <i class="bi bi-search fb-search-icon"></i>
+                        <input type="text" name="searchString" value="@searchStr" class="fb-search-input" placeholder="Tìm khóa học, IELTS, JLPT..." />
+                    </div>
+                    <button type="submit" class="fb-btn fb-btn-primary fb-btn-sm w-100">
+                        Tìm kiếm
+                    </button>
+                </form>
+
+                <hr class="my-3" style="border-color: #e4e6eb;" />
+
+                <!-- Categories / Language Filter -->
+                <div class="fb-sidebar-title px-0 pt-0">Ngôn ngữ đào tạo</div>
+                <div class="d-flex flex-column gap-1">
+                    <a href="/KhoaHoc/Catalog?searchString=@searchStr" class="fb-sidebar-item @(string.IsNullOrEmpty(currentLang) ? "active" : "")">
+                        <div class="fb-sidebar-icon"><i class="bi bi-globe"></i></div>
+                        <span>Tất cả ngôn ngữ</span>
+                    </a>
+                    <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Anh&searchString=@searchStr" class="fb-sidebar-item @(currentLang == "Tiếng Anh" ? "active" : "")">
+                        <div class="fb-sidebar-icon">🇬🇧</div>
+                        <span>Tiếng Anh (IELTS, TOEIC)</span>
+                    </a>
+                    <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Nhật&searchString=@searchStr" class="fb-sidebar-item @(currentLang == "Tiếng Nhật" ? "active" : "")">
+                        <div class="fb-sidebar-icon">🇯🇵</div>
+                        <span>Tiếng Nhật (JLPT N5-N1)</span>
+                    </a>
+                    <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Trung&searchString=@searchStr" class="fb-sidebar-item @(currentLang == "Tiếng Trung" ? "active" : "")">
+                        <div class="fb-sidebar-icon">🇨🇳</div>
+                        <span>Tiếng Trung (HSK, Giao tiếp)</span>
+                    </a>
+                    <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Hàn&searchString=@searchStr" class="fb-sidebar-item @(currentLang == "Tiếng Hàn" ? "active" : "")">
+                        <div class="fb-sidebar-icon">🇰🇷</div>
+                        <span>Tiếng Hàn (TOPIK)</span>
+                    </a>
+                </div>
+
+                <hr class="my-3" style="border-color: #e4e6eb;" />
+
+                <!-- Quick links -->
+                <div class="fb-sidebar-title px-0 pt-0">Xem nhanh</div>
+                <a href="/LopHoc" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon text-success"><i class="bi bi-calendar-event"></i></div>
+                    <span>Lịch khai giảng các lớp</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- =========================================================================
+             2. RIGHT COLUMN: FACEBOOK MARKETPLACE PRODUCT GRID
+             ========================================================================= -->
+        <div class="col-lg-9 col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0">Hôm nay đề xuất cho bạn</h5>
+                    <span class="text-muted small">Hiển thị @Model.Count() chương trình đào tạo</span>
+                </div>
+                <div>
+                    <a href="/LopHoc" class="fb-btn fb-btn-secondary fb-btn-sm">
+                        <i class="bi bi-people me-1"></i> Xem danh sách lớp
+                    </a>
+                </div>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="fb-card p-5 text-center text-muted">
+                    <i class="bi bi-search fs-1 d-block mb-3 text-secondary"></i>
+                    <h5>Không tìm thấy khóa học nào phù hợp</h5>
+                    <p class="small">Hãy thử tìm với từ khóa khác hoặc xóa bộ lọc ngôn ngữ hiện tại.</p>
+                    <a href="/KhoaHoc/Catalog" class="fb-btn fb-btn-primary">Xem tất cả khóa học</a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var course in Model)
+                    {
+                        <div class="col-xl-4 col-md-6 col-12">
+                            <div class="fb-card h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <!-- Card Image Banner -->
+                                    @{
+                                        string catBanner = ImageHelper.GetCourseImage(course.NgoaiNgu, course.TenKhoaHoc, course.MaKhoaHoc);
+                                    }
+                                    <div class="position-relative overflow-hidden" style="height: 160px; background: #000;">
+                                        <img src="@catBanner" alt="@course.TenKhoaHoc" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-between p-3 text-white"
+                                             style="background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 50%, rgba(0,0,0,0.7) 100%);">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="badge bg-primary px-2 py-1"><i class="bi bi-patch-check-fill me-1"></i>@course.NgoaiNgu</span>
+                                                <span class="badge bg-light text-dark">@course.CapDo</span>
+                                            </div>
+                                            <div>
+                                                <h5 class="fw-bold text-white mb-0 text-truncate" title="@course.TenKhoaHoc">@course.TenKhoaHoc</h5>
+                                                <span class="small opacity-75"><i class="bi bi-clock-history me-1"></i>@course.SoBuoi buổi học</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card Content Body -->
+                                    <div class="p-3">
+                                        <!-- Price Marketplace Style -->
+                                        <div class="fw-bold text-primary fs-4 mb-1">
+                                            @course.HocPhi.ToString("N0") ₫
+                                        </div>
+
+                                        <h6 class="fw-bold text-dark mb-2 text-truncate" title="@course.TenKhoaHoc">
+                                            @course.TenKhoaHoc
+                                        </h6>
+
+                                        <p class="text-secondary small mb-2 text-truncate-2" style="font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            @(string.IsNullOrEmpty(course.MoTa) ? "Khóa học bài bản, giáo trình quốc tế, giảng viên giàu kinh nghiệm đồng hành cam kết đầu ra." : course.MoTa)
+                                        </p>
+
+                                        <div class="text-muted small mb-2" style="font-size: 12px;">
+                                            <i class="bi bi-geo-alt me-1"></i>Cơ sở Cầu Giấy & Trực tuyến
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fb-badge fb-badge-green">@course.LopHocs.Count lớp mở</span>
+                                            <span class="fb-badge fb-badge-blue">@course.TrangThai</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card Actions Footer -->
+                                <div class="p-3 pt-0 border-top mt-2">
+                                    <div class="d-flex gap-2 pt-2">
+                                        <a asp-action="Details" asp-route-id="@course.MaKhoaHoc" class="fb-btn fb-btn-primary fb-btn-sm w-100">
+                                            <i class="bi bi-eye me-1"></i> Xem chi tiết & Đăng ký
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

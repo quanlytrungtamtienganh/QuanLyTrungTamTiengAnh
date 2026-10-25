@@ -1,0 +1,188 @@
+@model IEnumerable<TrungTamNgoaiNgu.Models.LopHoc>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Phân Lịch Giảng Dạy · Meta Business Suite";
+    var teachers = ViewBag.Teachers as List<TrungTamNgoaiNgu.Models.GiaoVien> ?? new List<TrungTamNgoaiNgu.Models.GiaoVien>();
+    var courses = ViewBag.Courses as List<TrungTamNgoaiNgu.Models.KhoaHoc> ?? new List<TrungTamNgoaiNgu.Models.KhoaHoc>();
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-range text-primary"></i> Phân Lịch & Phân Công Giảng Dạy
+        </h3>
+        <p class="text-muted mb-0 small">Điều phối giáo viên phụ trách các lớp học, thời khóa biểu và kiểm soát phòng học</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="fb-btn fb-btn-secondary">
+            <i class="bi bi-people me-1"></i> Danh sách giáo viên
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <div>@TempData["Success"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <div>@TempData["Error"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Filter Bar -->
+<div class="fb-card p-3 mb-3">
+    <form method="get" asp-action="PhanLich" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <label class="form-label small text-muted mb-1">Lọc theo Khóa học</label>
+            <select name="maKhoaHoc" class="form-select">
+                <option value="">-- Tất cả khóa học --</option>
+                @foreach (var c in courses)
+                {
+                    <option value="@c.MaKhoaHoc" selected="@(ViewBag.SelectedKhoaHoc == c.MaKhoaHoc)">@c.TenKhoaHoc (@c.NgoaiNgu)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label small text-muted mb-1">Lọc theo Giáo viên phụ trách</label>
+            <select name="maGiaoVien" class="form-select">
+                <option value="">-- Tất cả giáo viên --</option>
+                <option value="0" selected="@(ViewBag.SelectedGiaoVien == 0)">-- Chưa phân công giáo viên --</option>
+                @foreach (var gv in teachers)
+                {
+                    <option value="@gv.MaGiaoVien" selected="@(ViewBag.SelectedGiaoVien == gv.MaGiaoVien)">@gv.HoTen (@gv.ChuyenMon)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="fb-btn fb-btn-primary w-100" style="margin-top: 23px;">
+                <i class="bi bi-funnel me-1"></i> Lọc dữ liệu
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Class List with Teacher Assignment -->
+<div class="fb-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;">Mã</th>
+                    <th>Lớp học & Khóa đào tạo</th>
+                    <th>Thời khóa biểu & Phòng</th>
+                    <th>Sĩ số</th>
+                    <th style="min-width: 250px;">Giáo viên giảng dạy</th>
+                    <th class="text-end" style="width: 140px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var lop in Model)
+                    {
+                        var studentCount = lop.DangKyHocs?.Count ?? 0;
+                        <tr>
+                            <td class="text-muted fw-bold">#@lop.MaLop</td>
+                            <td>
+                                <div class="fw-bold text-dark fs-6">@lop.TenLop</div>
+                                <div class="small text-muted">
+                                    <span class="badge bg-light text-dark border me-1">@(lop.KhoaHoc?.NgoaiNgu ?? "Ngoại ngữ")</span>
+                                    @(lop.KhoaHoc?.TenKhoaHoc ?? "Chưa rõ khóa học")
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-primary"><i class="bi bi-clock me-1"></i>@lop.LichHoc</div>
+                                <div class="small text-muted">
+                                    <i class="bi bi-geo-alt me-1"></i>@lop.PhongHoc &bull; <i class="bi bi-calendar-event me-1"></i>KG: @lop.NgayKhaiGiang.ToString("dd/MM/yyyy")
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small fw-semibold">@studentCount / @lop.SoLuongToiDa học viên</div>
+                                <div class="progress" style="height: 6px; width: 100px;">
+                                    @{
+                                        var pct = lop.SoLuongToiDa > 0 ? (studentCount * 100 / lop.SoLuongToiDa) : 0;
+                                    }
+                                    <div class="progress-bar @(pct >= 100 ? "bg-danger" : pct >= 70 ? "bg-warning" : "bg-primary")" style="width: @pct%"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <form asp-action="GanLop" method="post" class="d-flex align-items-center gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="maLop" value="@lop.MaLop" />
+                                    <select name="maGiaoVien" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="">-- Chưa phân công --</option>
+                                        @foreach (var gv in teachers)
+                                        {
+                                            <option value="@gv.MaGiaoVien" selected="@(lop.MaGiaoVien == gv.MaGiaoVien)">
+                                                @gv.HoTen - @gv.ChuyenMon
+                                            </option>
+                                        }
+                                    </select>
+                                    @if (lop.GiaoVien != null)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-1" title="Đã có giáo viên">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1" title="Chưa có giáo viên">
+                                            <i class="bi bi-exclamation-circle-fill"></i>
+                                        </span>
+                                    }
+                                </form>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="fb-btn fb-btn-secondary fb-btn-sm" onclick="showStudentList(@lop.MaLop)">
+                                    <i class="bi bi-person-lines-fill me-1"></i>Học viên
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2 text-secondary"></i>
+                            Không có lớp học nào phù hợp với bộ lọc hiện tại.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal xem danh sách học viên trong lớp -->
+<div class="modal fade" id="studentListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0" id="studentListModalBody">
+            <!-- Content loaded via Ajax -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function showStudentList(maLop) {
+        fetch('/GiaoVien/DanhSachHocVien?maLop=' + maLop)
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('studentListModalBody').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('studentListModal'));
+                modal.show();
+            })
+            .catch(err => alert('Không thể tải danh sách học viên!'));
+    }
+</script>
+}

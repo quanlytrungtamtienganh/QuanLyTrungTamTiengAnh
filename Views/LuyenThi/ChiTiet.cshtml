@@ -1,0 +1,514 @@
+@model TrungTamNgoaiNgu.ViewModels.ChiTietDeThiViewModel
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = Model.DeThi.TieuDe + " · Chi tiết đề thi";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    var userName = HttpContextAccessor.HttpContext?.Session?.GetString("HoTen") ?? "Học viên";
+    var userLogin = HttpContextAccessor.HttpContext?.Session?.GetString("TenDangNhap") ?? "user";
+    var isLoggedIn = !string.IsNullOrEmpty(HttpContextAccessor.HttpContext?.Session?.GetString("HoTen"));
+}
+
+<style>
+    .study4-tag-badge {
+        display: inline-block;
+        background-color: #f1f3f5;
+        color: #495057;
+        font-size: 11.5px;
+        line-height: 1.45;
+        padding: 3px 8px;
+        border-radius: 6px;
+        margin-right: 4px;
+        margin-bottom: 4px;
+        font-weight: 400;
+        border: 1px solid #e9ecef;
+        transition: background-color 0.15s;
+    }
+    .study4-tag-badge:hover {
+        background-color: #e9ecef;
+    }
+    .part-item-group {
+        padding: 4px 6px;
+        border-radius: 8px;
+        transition: background-color 0.15s ease-in-out;
+    }
+    .part-item-group:hover {
+        background-color: #f8fafc;
+    }
+</style>
+
+<div class="container-fluid px-lg-4 py-3">
+    <div class="row g-3">
+        <!-- =========================================================================
+             1. LEFT COLUMN: FACEBOOK SHORTCUTS (ĐỒNG BỘ 100% MENU CHÍNH)
+             ========================================================================= -->
+        <div class="col-lg-3 col-xl-3 d-none d-lg-block">
+            <div class="fb-sidebar">
+                <a href="/LuyenThi" class="fb-sidebar-item mb-2 fw-bold text-primary">
+                    <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                        <i class="bi bi-arrow-left"></i>
+                    </div>
+                    <span>Quay lại thư viện đề thi</span>
+                </a>
+
+                <div class="fb-sidebar-title text-uppercase" style="font-size:11px; letter-spacing:0.5px;">Phòng luyện thi</div>
+
+                <a href="#practice-pane" class="fb-sidebar-item active">
+                    <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <span>Chế độ Luyện tập từng phần</span>
+                </a>
+
+                <a href="#fulltest-tab" class="fb-sidebar-item" onclick="switchToFullTestTab()">
+                    <div class="fb-sidebar-icon" style="background: #e7f8ec; color: #31a24c;">
+                        <i class="bi bi-play-circle-fill"></i>
+                    </div>
+                    <span>Chế độ Thi thử Full Test</span>
+                </a>
+
+                <a href="#commentSection" class="fb-sidebar-item" onclick="scrollToComments()">
+                    <div class="fb-sidebar-icon" style="background: #fef7e0; color: #f7b125;">
+                        <i class="bi bi-chat-dots-fill"></i>
+                    </div>
+                    <span>Thảo luận (<span id="sidebarCommentCount">@Model.TongSoBinhLuan</span>)</span>
+                </a>
+
+                <hr class="my-2" style="border-color: #e4e6eb;" />
+
+                <div class="fb-sidebar-title text-uppercase" style="font-size:11px; letter-spacing:0.5px;">Tiện ích ôn tập</div>
+
+                <a href="/LuyenThi/LichSu" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #f0e6ff; color: #9360f7;">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <span>Lịch sử luyện thi của bạn</span>
+                </a>
+
+                <a href="/KhoaHoc/Catalog" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                        <i class="bi bi-mortarboard"></i>
+                    </div>
+                    <span>Khoá học bồi dưỡng liên quan</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- =========================================================================
+             2. CENTER COLUMN: EXAM DETAILS & FACEBOOK COMMENTS
+             ========================================================================= -->
+        <div class="col-lg-6 col-xl-6">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show rounded-3 shadow-sm mb-3 d-flex align-items-center" role="alert">
+                    <i class="bi bi-shield-exclamation text-warning fs-4 me-2"></i>
+                    <div class="small fw-semibold">@TempData["ErrorMessage"]</div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Exam Details Card (FB Card Style) -->
+            <div class="fb-card mb-3 shadow-sm">
+                <div class="fb-card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fb-badge fb-badge-blue">@Model.DeThi.TheLoai</span>
+                        <span class="fb-badge fb-badge-green">@Model.DeThi.KyNang</span>
+                    </div>
+                    <span class="text-muted small"><i class="bi bi-people me-1"></i>@Model.DeThi.SoLuotLam.ToString("N0") lượt thi</span>
+                </div>
+
+                <div class="fb-card-body p-3">
+                    <h1 class="fw-bold text-dark mb-2" style="font-size:20px; line-height:1.4;">@Model.DeThi.TieuDe</h1>
+
+                    @if (!string.IsNullOrEmpty(Model.DeThi.MoTa))
+                    {
+                        <p class="text-muted small mb-3" style="font-size:13.5px; line-height:1.6;">@Model.DeThi.MoTa</p>
+                    }
+
+                    <!-- Meta information pills -->
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            <i class="bi bi-clock text-primary me-1"></i>Thời gian: @Model.DeThi.ThoiGianPhut phút
+                        </span>
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            <i class="bi bi-layers text-success me-1"></i>@Model.PhanThis.Count phần thi
+                        </span>
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            <i class="bi bi-question-circle text-warning me-1"></i>@Model.TongSoCauHoi câu hỏi
+                        </span>
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            <i class="bi bi-chat-dots text-info me-1"></i>@Model.TongSoBinhLuan thảo luận
+                        </span>
+                        @if (!string.IsNullOrEmpty(Model.DeThi.FileAudio) || Model.PhanThis.Any(p => !string.IsNullOrEmpty(p.FileAudio)) || (Model.DeThi.KyNang != null && Model.DeThi.KyNang.Contains("Listening")))
+                        {
+                            <span class="badge bg-primary text-white border px-3 py-2 fw-semibold">
+                                <i class="bi bi-headphones me-1"></i>Có bài nghe Audio
+                            </span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.DeThi.FileAudio) || Model.PhanThis.Any(p => !string.IsNullOrEmpty(p.FileAudio)))
+                    {
+                        <div class="p-2 px-3 mb-3 bg-light rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2 text-start">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-headphones text-primary fs-5"></i>
+                                <span class="small fw-semibold text-dark">Kiểm tra tai nghe / âm lượng trước khi bắt đầu:</span>
+                            </div>
+                            <audio controls style="height:30px; max-width:240px;">
+                                <source src="@(!string.IsNullOrEmpty(Model.DeThi.FileAudio) ? Model.DeThi.FileAudio : "/audio/ielts-listening-part1.wav")" type="audio/wav">
+                            </audio>
+                        </div>
+                    }
+
+                    <div class="alert alert-warning border-0 small py-2 px-3 mb-3 text-start" style="background:#fffbeb; color:#92400e; font-size:12.5px;">
+                        <i class="bi bi-info-circle-fill me-1 text-warning"></i>
+                        <strong>Chú ý:</strong> Để được hệ thống quy đổi sang scaled score chuẩn quốc tế (thang điểm 9.0 cho IELTS hoặc 990 cho TOEIC), vui lòng chọn chế độ làm <strong>FULL TEST</strong>.
+                    </div>
+
+                    <!-- Navigation Pills Tabs (FB Style) -->
+                    <ul class="nav nav-pills mb-3 gap-2 border-bottom pb-3" id="examDetailTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="btn btn-sm rounded-pill px-4 fw-bold active" id="practice-tab" data-bs-toggle="pill" data-bs-target="#practice-pane" type="button" style="background:#0866ff; color:#fff;">
+                                <i class="bi bi-pencil-square me-1"></i>Luyện tập từng phần
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="btn btn-sm btn-light rounded-pill px-4 fw-bold text-dark border" id="fulltest-tab" data-bs-toggle="pill" data-bs-target="#fulltest-pane" type="button">
+                                <i class="bi bi-play-circle-fill text-success me-1"></i>Thi Full Test
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="btn btn-sm btn-light rounded-pill px-4 fw-bold text-dark border" id="discuss-tab" data-bs-toggle="pill" data-bs-target="#discuss-pane" type="button">
+                                <i class="bi bi-chat-dots text-primary me-1"></i>Thảo luận (<span id="tabCommentCount">@Model.TongSoBinhLuan</span>)
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="examDetailTabContent">
+                        <!-- 1. TAB LUYỆN TẬP -->
+                        <div class="tab-pane fade show active" id="practice-pane" role="tabpanel">
+                            <div class="alert alert-success border-0 small py-2 px-3 mb-3" style="background:#ecfdf5; color:#065f46; font-size:12.5px;">
+                                <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+                                <strong>Pro Tips:</strong> Luyện tập từng phần giúp bạn tập trung đào sâu vào từng dạng câu hỏi và làm chủ bẫy đề thi thay vì chịu áp lực thời gian.
+                            </div>
+
+                            <form method="post" action="/LuyenThi/BatDauThi" id="formLuyenTap">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="MaDeThi" value="@Model.DeThi.MaDeThi" />
+                                <input type="hidden" name="CheDo" value="LuyenTap" />
+                                <input type="hidden" name="PhanThiIds" id="inputPhanThiIds" value="" />
+
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="fw-bold text-dark" style="font-size:15px;">Chọn phần thi bạn muốn làm</div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none text-primary fw-semibold" style="font-size:12.5px;" onclick="toggleSelectAllParts(true)">Chọn tất cả</button>
+                                            <span class="text-muted" style="font-size:12px;">|</span>
+                                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none text-muted fw-semibold" style="font-size:12.5px;" onclick="toggleSelectAllParts(false)">Bỏ chọn</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3 mb-3">
+                                        @foreach (var p in Model.PhanThis)
+                                        {
+                                            var rawTags = (p.TagDangBai ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                                            <div class="part-item-group">
+                                                <div class="form-check d-flex align-items-center mb-1">
+                                                    <input class="form-check-input part-chk me-2 mt-0" type="checkbox" value="@p.MaPhanThi" id="chkPart_@p.MaPhanThi" style="width: 17px; height: 17px; cursor: pointer;">
+                                                    <label class="form-check-label fw-bold text-dark" for="chkPart_@p.MaPhanThi" style="font-size: 14.5px; cursor: pointer;">
+                                                        @p.TenPhanThi
+                                                        @if (!string.IsNullOrEmpty(p.FileAudio))
+                                                        {
+                                                            <span class="badge bg-primary-subtle text-primary border ms-2" style="font-size: 10px; font-weight: 500;">
+                                                                <i class="bi bi-headphones me-1"></i>Audio
+                                                            </span>
+                                                        }
+                                                    </label>
+                                                </div>
+                                                @if (rawTags.Length > 0)
+                                                {
+                                                    <div class="d-flex flex-wrap gap-1 ps-4 pt-1">
+                                                        @foreach (var tag in rawTags)
+                                                        {
+                                                            <span class="study4-tag-badge">@tag</span>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold text-dark small">Giới hạn thời gian</label>
+                                        <select name="ThoiGianPhut" class="form-select form-select-sm rounded-pill">
+                                            <option value="0">Không giới hạn thời gian</option>
+                                            <option value="10">10 phút</option>
+                                            <option value="15">15 phút</option>
+                                            <option value="20">20 phút</option>
+                                            <option value="30">30 phút</option>
+                                            <option value="40" selected>40 phút (Chuẩn)</option>
+                                            <option value="60">60 phút</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold text-dark small">Giao diện phòng thi</label>
+                                        <select class="form-select form-select-sm rounded-pill" disabled>
+                                            <option>Chuẩn đề thi thật (Full test)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-bold w-100 shadow-sm" style="background:#0866ff; border-color:#0866ff;" onclick="startPractice()">
+                                    <i class="bi bi-play-fill me-1"></i> BẮT ĐẦU LUYỆN TẬP
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- 2. TAB LÀM FULL TEST -->
+                        <div class="tab-pane fade" id="fulltest-pane" role="tabpanel">
+                            <div class="p-4 rounded-3 border bg-light text-center">
+                                <i class="bi bi-file-earmark-check-fill text-primary fs-1 mb-2 d-block"></i>
+                                <h5 class="fw-bold text-dark mb-1">Chế độ thi thử Full Test</h5>
+                                <p class="text-muted small mb-3">
+                                    Làm toàn bộ <strong>@Model.TongSoCauHoi câu hỏi</strong> trong vòng <strong>@Model.DeThi.ThoiGianPhut phút</strong>.
+                                    Hệ thống tự động chấm điểm và quy đổi scaled score sau khi nộp bài.
+                                </p>
+                                <form method="post" action="/LuyenThi/BatDauThi" id="formFullTest" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="MaDeThi" value="@Model.DeThi.MaDeThi" />
+                                    <input type="hidden" name="CheDo" value="FullTest" />
+                                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm" style="background:#0866ff; border-color:#0866ff;">
+                                        BẮT ĐẦU THI FULL TEST
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- 3. TAB THẢO LUẬN -->
+                        <div class="tab-pane fade" id="discuss-pane" role="tabpanel">
+                            <p class="text-muted small mb-2">Thảo luận kinh nghiệm, phân tích câu hỏi khó và trao đổi cùng giảng viên tại khu vực bình luận phía dưới.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facebook Style Comments Card (FB Card Style 100%) -->
+            <div class="fb-card mb-4 shadow-sm" id="commentSection">
+                <div class="fb-card-header d-flex justify-content-between align-items-center">
+                    <div class="fb-card-title" style="font-size:16px;">
+                        <i class="bi bi-chat-fill text-primary"></i>
+                        <span>Bình luận & Thảo luận (<span id="badgeMainCommentCount">@Model.TongSoBinhLuan</span>)</span>
+                    </div>
+                    <span class="text-muted small">Cộng đồng học viên</span>
+                </div>
+
+                <div class="fb-card-body p-3">
+                    <!-- Facebook Input Comment Box -->
+                    <div class="d-flex gap-2 align-items-center mb-3">
+                        <div class="fb-avatar fb-avatar-sm" style="background:#0866ff; color:#fff;">
+                            @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="inputCommentContent" class="form-control rounded-pill bg-light border-0 px-3" 
+                                   placeholder="Viết bình luận của bạn về đề thi này..." style="font-size:13.5px;" />
+                            <button type="button" class="btn btn-primary rounded-pill px-3 ms-2 fw-bold" style="background:#0866ff; border-color:#0866ff;" onclick="submitComment()">
+                                Gửi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments List (Facebook Bubble Style) -->
+                    <div id="commentListContainer" class="d-flex flex-column gap-3">
+                        @if (!Model.BinhLuans.Any())
+                        {
+                            <div class="text-center py-4 text-muted small" id="noCommentNotice">
+                                <i class="bi bi-chat-square-dots fs-3 d-block mb-1 text-muted"></i>
+                                Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nghĩ về đề thi này!
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var c in Model.BinhLuans)
+                            {
+                                var userDisplay = c.TaiKhoan?.HoTen ?? c.TaiKhoan?.TenDangNhap ?? "Thành viên";
+                                var avatarLetter = userDisplay.Substring(0, 1).ToUpper();
+                                var isAdminUser = c.TaiKhoan?.VaiTro == "Admin";
+
+                                <div class="d-flex gap-2 align-items-start">
+                                    <div class="fb-avatar fb-avatar-sm" style="@(isAdminUser ? "background:#0f172a; color:#fff;" : "background:#e4e6eb; color:#050505;")">
+                                        @(isAdminUser ? "★" : avatarLetter)
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <!-- Facebook Comment Bubble -->
+                                        <div class="p-2 px-3 rounded-4" style="background: var(--fb-secondary-bg); display: inline-block; max-width: 95%;">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <strong class="text-dark" style="font-size:13px;">@userDisplay</strong>
+                                                @if (isAdminUser)
+                                                {
+                                                    <span class="badge bg-primary text-white" style="font-size:9px;">Admin</span>
+                                                }
+                                            </div>
+                                            <div class="text-dark" style="font-size:13px; line-height:1.4;">@Html.Raw(c.NoiDung)</div>
+                                        </div>
+                                        <!-- Action buttons under comment -->
+                                        <div class="d-flex gap-3 align-items-center mt-1 ps-2" style="font-size:11.5px;">
+                                            <span class="text-muted">@c.NgayBinhLuan.ToString("dd/MM/yyyy HH:mm")</span>
+                                            <button type="button" class="btn btn-link p-0 text-decoration-none fw-bold text-secondary" style="font-size:11.5px;" onclick="replyComment('@userDisplay')">
+                                                Trả lời
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================================
+             3. RIGHT COLUMN: EXAM TIPS & COMMUNITY
+             ========================================================================= -->
+        <div class="col-lg-3 col-xl-3 d-none d-lg-block">
+            <!-- Exam Rules & Tips Card -->
+            <div class="fb-card mb-3 shadow-sm">
+                <div class="fb-card-header">
+                    <div class="fb-card-title" style="font-size:15px;">
+                        <i class="bi bi-lightbulb-fill text-warning"></i> Lưu ý khi làm bài
+                    </div>
+                </div>
+                <div class="fb-card-body p-3 small text-muted">
+                    <div class="d-flex gap-2 mb-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Đọc kỹ hướng dẫn số từ cần điền (VD: NO MORE THAN TWO WORDS).</span>
+                    </div>
+                    <div class="d-flex gap-2 mb-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Viết hoa danh từ riêng (tên người, tên đường, tên địa danh).</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Sau khi nộp bài, đọc kỹ <strong>lý do giải thích</strong> để rút kinh nghiệm cho bài thi thật.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Invitation -->
+            <div class="fb-card p-3 text-center shadow-sm">
+                <div class="fb-avatar fb-avatar-lg mx-auto mb-2" style="background:#e7f3ff; color:#0866ff; font-size:24px;">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <h6 class="fw-bold text-dark small mb-1">Cộng đồng Luyện Thi LanguageBook</h6>
+                <p class="text-muted small mb-3" style="font-size:12px;">Nhận tài liệu giải đề forecast độc quyền và mẹo né bẫy phòng thi từ các thủ khoa.</p>
+                <a href="/LopHoc" class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-semibold">
+                    Tham gia nhóm học tập
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function scrollToComments() {
+        document.getElementById('commentSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function switchToFullTestTab() {
+        var triggerEl = document.getElementById('fulltest-tab');
+        var tab = new bootstrap.Tab(triggerEl);
+        tab.show();
+    }
+
+    function toggleSelectAllParts(checked) {
+        document.querySelectorAll('.part-chk').forEach(function(chk) {
+            chk.checked = checked;
+        });
+    }
+
+    function startPractice() {
+        var selected = [];
+        document.querySelectorAll('.part-chk:checked').forEach(function(chk) {
+            selected.push(chk.value);
+        });
+
+        if (selected.length === 0) {
+            // Tự động chọn tất cả phần thi nếu học viên chưa chọn riêng phần nào
+            document.querySelectorAll('.part-chk').forEach(function(chk) {
+                chk.checked = true;
+                selected.push(chk.value);
+            });
+        }
+
+        document.getElementById('inputPhanThiIds').value = selected.join(',');
+        document.getElementById('formLuyenTap').submit();
+    }
+
+    function replyComment(userName) {
+        var input = document.getElementById('inputCommentContent');
+        input.value = '@@' + userName + ' ';
+        input.focus();
+    }
+
+    function submitComment() {
+        var input = document.getElementById('inputCommentContent');
+        var content = input.value.trim();
+        if (!content) {
+            alert('Vui lòng nhập nội dung bình luận!');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('maDeThi', '@Model.DeThi.MaDeThi');
+        formData.append('noiDung', content);
+
+        var csrfToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        formData.append('__RequestVerificationToken', csrfToken);
+
+        fetch('/LuyenThi/ThemBinhLuan', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                input.value = '';
+                var noNotice = document.getElementById('noCommentNotice');
+                if (noNotice) noNotice.remove();
+
+                var newCommentHtml = `
+                    <div class="d-flex gap-2 align-items-start">
+                        <div class="fb-avatar fb-avatar-sm" style="background:#0866ff; color:#fff;">
+                            ${data.binhLuan.tenNguoiDung.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="p-2 px-3 rounded-4" style="background: var(--fb-secondary-bg); display: inline-block; max-width: 95%;">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <strong class="text-dark" style="font-size:13px;">${data.binhLuan.tenNguoiDung}</strong>
+                                </div>
+                                <div class="text-dark" style="font-size:13px; line-height:1.4;">${data.binhLuan.noiDung}</div>
+                            </div>
+                            <div class="d-flex gap-3 align-items-center mt-1 ps-2" style="font-size:11.5px;">
+                                <span class="text-muted">${data.binhLuan.thoiGian}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                var container = document.getElementById('commentListContainer');
+                container.insertAdjacentHTML('afterbegin', newCommentHtml);
+
+                var countEls = [document.getElementById('badgeMainCommentCount'), document.getElementById('tabCommentCount'), document.getElementById('sidebarCommentCount')];
+                countEls.forEach(function(el) {
+                    if (el) el.innerText = parseInt(el.innerText || '0') + 1;
+                });
+            } else {
+                alert(data.message || 'Lỗi khi gửi bình luận');
+            }
+        })
+        .catch(function() {
+            alert('Không thể gửi bình luận. Vui lòng kiểm tra lại kết nối!');
+        });
+    }
+</script>

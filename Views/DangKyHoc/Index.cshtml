@@ -1,0 +1,204 @@
+@model TrungTamNgoaiNgu.ViewModels.DangKyFilterViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Đăng Ký Học · Meta Business Suite";
+    int stt = 1;
+    var totalDangKy = Model.Items.Count;
+    var choXacNhan = Model.Items.Count(d => d.TrangThai == "Chờ xác nhận");
+    var daXacNhan = Model.Items.Count(d => d.TrangThai == "Đã xác nhận");
+    var daHuy = Model.Items.Count(d => d.TrangThai == "Đã hủy");
+    var tongHocPhi = Model.Items.Where(d => d.TrangThai == "Đã xác nhận").Sum(d => d.HocPhi);
+}
+
+<!-- Page Header (4.18. Giao diện quản lý đăng ký) -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-check-fill text-primary"></i> Quản Lý Đăng Ký Khóa Học
+        </h3>
+        <p class="text-muted mb-0 small">Theo dõi hồ sơ tuyển sinh, xét duyệt và quản lý thông tin ghi danh lớp học</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="fb-badge fb-badge-blue">Tổng: <strong>@totalDangKy</strong> đơn</span>
+        <span class="fb-badge fb-badge-yellow">Chờ duyệt: <strong>@choXacNhan</strong></span>
+        <span class="fb-badge fb-badge-green">Đã duyệt: <strong>@daXacNhan</strong></span>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="fb-card p-3 mb-3">
+    <form method="get" asp-action="Index" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" asp-for="SearchHocVien" class="form-control border-start-0" placeholder="Tìm tên học viên hoặc số điện thoại..." />
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <select asp-for="MaLop" asp-items="Model.LopHocList" class="form-select">
+                <option value="">-- Tất cả lớp học --</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select asp-for="TrangThai" asp-items="Model.TrangThaiList" class="form-select">
+                <option value="">-- Tất cả trạng thái --</option>
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="fb-btn fb-btn-primary w-100">
+                <i class="bi bi-funnel me-1"></i> Lọc
+            </button>
+            <a asp-action="Index" class="fb-btn fb-btn-secondary" title="Đặt lại bộ lọc">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- 4.18: Admissions Registrations Data Table -->
+<div class="fb-card">
+    <div class="fb-card-header d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-table text-primary"></i> Danh Sách Hồ Sơ Đăng Ký
+        </div>
+        <div class="text-muted small">
+            Đã thu: <strong class="text-success">@tongHocPhi.ToString("N0") VNĐ</strong>
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+            <h6 class="fw-bold">Không tìm thấy yêu cầu đăng ký nào phù hợp</h6>
+            <a asp-action="Index" class="fb-btn fb-btn-secondary mt-2">Xem tất cả hồ sơ</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 50px;">STT</th>
+                        <th style="width: 120px;">Mã đăng ký</th>
+                        <th>Học viên</th>
+                        <th>Khóa học</th>
+                        <th>Lớp học</th>
+                        <th style="width: 140px;">Học phí</th>
+                        <th style="width: 140px;">Trạng thái</th>
+                        <th style="width: 130px;">Ngày đăng ký</th>
+                        <th class="text-end" style="width: 180px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <!-- STT -->
+                            <td class="text-center fw-semibold text-muted">@(stt++)</td>
+
+                            <!-- 1. Mã đăng ký -->
+                            <td>
+                                <span class="badge bg-light text-primary border font-monospace px-2 py-1">
+                                    #DK-@item.MaDangKy.ToString("D4")
+                                </span>
+                            </td>
+
+                            <!-- Học viên -->
+                            <td>
+                                <div class="fw-bold text-dark">@(item.HocVien?.HoTen ?? "—")</div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-telephone me-1"></i>@(item.HocVien?.SoDienThoai ?? "—")
+                                </div>
+                            </td>
+
+                            <!-- 2. Khóa học -->
+                            <td>
+                                <div class="fw-semibold text-dark">
+                                    @(item.LopHoc?.KhoaHoc?.TenKhoaHoc ?? "—")
+                                </div>
+                                <span class="badge bg-light text-muted border" style="font-size: 11px;">
+                                    @(item.LopHoc?.KhoaHoc?.NgoaiNgu ?? "Ngoại ngữ") &bull; @(item.LopHoc?.KhoaHoc?.CapDo ?? "All")
+                                </span>
+                            </td>
+
+                            <!-- 3. Lớp học -->
+                            <td>
+                                <div class="fw-bold text-primary">
+                                    @(item.LopHoc?.TenLop ?? "—")
+                                </div>
+                                <div class="text-muted small" style="font-size: 11px;">
+                                    <i class="bi bi-clock me-1"></i>@(item.LopHoc?.LichHoc ?? "—")
+                                </div>
+                            </td>
+
+                            <!-- 5. Học phí -->
+                            <td>
+                                <span class="fw-bold text-success fs-6">
+                                    @((item.HocPhi > 0 ? item.HocPhi : (item.LopHoc?.HocPhi ?? 0)).ToString("N0")) đ
+                                </span>
+                            </td>
+
+                            <!-- 4. Trạng thái -->
+                            <td>
+                                @if (item.TrangThai == "Đã xác nhận")
+                                {
+                                    <span class="fb-badge fb-badge-green">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Đã xác nhận
+                                    </span>
+                                }
+                                else if (item.TrangThai == "Chờ xác nhận")
+                                {
+                                    <span class="fb-badge fb-badge-yellow">
+                                        <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="fb-badge fb-badge-red">
+                                        <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                    </span>
+                                }
+                            </td>
+
+                            <!-- Ngày gửi -->
+                            <td class="text-muted small">
+                                @item.NgayDangKy.ToString("dd/MM/yyyy")
+                                <div style="font-size: 11px;">@item.NgayDangKy.ToString("HH:mm")</div>
+                            </td>
+
+                            <!-- Thao tác: Duyệt / Hủy / Chi tiết -->
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a asp-action="Details" asp-route-id="@item.MaDangKy" class="fb-btn fb-btn-secondary fb-btn-sm" title="Xem chi tiết đơn">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    @if (item.TrangThai == "Chờ xác nhận")
+                                    {
+                                        <form asp-action="XacNhan" asp-route-id="@item.MaDangKy" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="fb-btn fb-btn-green fb-btn-sm" title="Duyệt đơn đăng ký">
+                                                <i class="bi bi-check-lg me-1"></i> Duyệt
+                                            </button>
+                                        </form>
+                                        <form asp-action="HuyDangKy" asp-route-id="@item.MaDangKy" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn từ chối/hủy đăng ký này?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="fb-btn fb-btn-outline fb-btn-sm text-danger border-danger-subtle" title="Từ chối/Hủy">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

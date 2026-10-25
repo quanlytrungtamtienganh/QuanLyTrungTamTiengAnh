@@ -1,0 +1,247 @@
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var session = HttpContextAccessor.HttpContext?.Session;
+    var adminName = session?.GetString("HoTen") ?? "Quản trị viên";
+    var adminRole = session?.GetString("VaiTro") ?? "Admin";
+    var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · Meta Business Suite · LanguageBook Admin</title>
+    <!-- Google Fonts: Be Vietnam Pro (Chuẩn hiển thị Tiếng Việt sắc nét) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 & Icons -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Facebook Design System CSS -->
+    <link rel="stylesheet" href="~/css/facebook-style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
+    <style>
+        body, button, input, select, textarea {
+            font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body style="background-color: var(--fb-bg);">
+    <!-- =========================================================================
+         1. META BUSINESS SUITE ADMIN TOPBAR (56px)
+         ========================================================================= -->
+    <header class="fb-topbar">
+        <div class="fb-topbar-left">
+            <a href="/ThongKe" class="fb-logo-btn" title="Trang Quản Trị">
+                <img src="~/images/logo.png" alt="Logo" class="fb-topbar-logo-img" />
+            </a>
+            <div class="d-flex flex-column ms-1">
+                <span class="fb-logo-text" style="font-size: 1.05rem; line-height: 1.1;">Admin Console</span>
+            </div>
+        </div>
+
+        <!-- Center: Quick Switcher / Status -->
+        <div class="d-none d-md-flex align-items-center gap-2">
+            <span class="fb-badge fb-badge-green"><i class="bi bi-check-circle-fill me-1"></i>Hệ thống đang hoạt động</span>
+            <span class="text-muted small">&bull; Năm học 2026 - Học kỳ Thu</span>
+        </div>
+
+        <!-- Right: Admin User Actions -->
+        <div class="fb-topbar-right">
+            <a href="/" target="_blank" class="fb-btn fb-btn-secondary fb-btn-sm d-none d-sm-inline-flex" title="Xem trang học viên công khai">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Xem trang Web
+            </a>
+
+            <!-- Messenger button (Chỉ hiển thị giáo viên của trung tâm) -->
+            <button type="button" class="fb-circle-btn" id="btnAdminTopbarMessenger" title="Messenger tư vấn giảng viên" onclick="toggleMessengerDropdown(event)">
+                <i class="bi bi-chat-dots-fill"></i>
+                <span class="fb-badge-count" style="display: none;">0</span>
+            </button>
+
+            <!-- Admin Dropdown -->
+            <div class="dropdown">
+                <button class="border-0 bg-transparent p-0 dropdown-toggle no-arrow" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="fb-avatar" style="background: #0866ff; color: #fff;">
+                        @(!string.IsNullOrEmpty(adminName) ? adminName.Substring(0, 1).ToUpper() : "A")
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="min-width: 260px; border-radius: 10px; border: 1px solid #e4e6eb;">
+                    <li class="p-2 border-bottom mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="fb-avatar" style="background: #0866ff; color: #fff;">
+                                @(!string.IsNullOrEmpty(adminName) ? adminName.Substring(0, 1).ToUpper() : "A")
+                            </div>
+                            <div>
+                                <div class="fw-bold">@adminName</div>
+                                <span class="fb-badge fb-badge-blue">@adminRole - Toàn quyền</span>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="dropdown-item py-2 rounded" href="/TaiKhoan/Profile"><i class="bi bi-person me-2"></i>Hồ sơ cá nhân</a></li>
+                    <li><a class="dropdown-item py-2 rounded" href="/ThongKe"><i class="bi bi-bar-chart-line me-2"></i>Báo cáo phân tích</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2 rounded text-danger fw-semibold" href="/TaiKhoan/Logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Body with Sidebar -->
+    <div class="container-fluid px-3 py-3">
+        <div class="row g-3">
+            <!-- Left Navigation Menu (Meta Business Suite Sidebar) -->
+            <div class="col-lg-2 col-md-3">
+                <div class="fb-card p-2" style="position: sticky; top: 72px;">
+                    <div class="d-flex flex-column gap-1">
+                        <div class="fb-sidebar-title text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">Công cụ quản trị</div>
+
+                        <a href="/ThongKe" class="fb-sidebar-item @(currentPath.Contains("/thongke") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/thongke") ? "text-primary" : "")">
+                                <i class="bi bi-speedometer2"></i>
+                            </div>
+                            <span>Tổng quan & Insights</span>
+                        </a>
+
+                        <a href="/KhoaHoc" class="fb-sidebar-item @(currentPath.Contains("/khoahoc") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/khoahoc") ? "text-primary" : "")">
+                                <i class="bi bi-journal-album"></i>
+                            </div>
+                            <span>Quản lý Khóa học</span>
+                        </a>
+
+                        <a href="/LopHoc" class="fb-sidebar-item @(currentPath.Contains("/lophoc") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/lophoc") ? "text-primary" : "")">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <span>Quản lý Lớp học</span>
+                        </a>
+
+                        <a href="/GiaoVien" class="fb-sidebar-item @(currentPath == "/giaovien" || currentPath.StartsWith("/giaovien/index") || currentPath.StartsWith("/giaovien/create") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/giaovien") && !currentPath.Contains("phanlich") && !currentPath.Contains("lichday") ? "text-primary" : "")">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+                            <span>Quản lý Giáo viên</span>
+                        </a>
+
+                        <a href="/GiaoVien/PhanLich" class="fb-sidebar-item @(currentPath.Contains("/giaovien/phanlich") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/giaovien/phanlich") ? "text-primary" : "")">
+                                <i class="bi bi-calendar-range"></i>
+                            </div>
+                            <span>Phân lịch Giảng dạy</span>
+                        </a>
+
+                        <a href="/GiaoVien/LichDay" class="fb-sidebar-item @(currentPath.Contains("/giaovien/lichday") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/giaovien/lichday") ? "text-primary" : "")">
+                                <i class="bi bi-calendar3"></i>
+                            </div>
+                            <span>Lịch dạy Giáo viên</span>
+                        </a>
+
+                        <a href="/HocVien" class="fb-sidebar-item @(currentPath.Contains("/hocvien") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/hocvien") ? "text-primary" : "")">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </div>
+                            <span>Quản lý Học viên</span>
+                        </a>
+
+                        <a href="/DangKyHoc" class="fb-sidebar-item @(currentPath.Contains("/dangkyhoc") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/dangkyhoc") ? "text-primary" : "")">
+                                <i class="bi bi-envelope-paper"></i>
+                            </div>
+                            <span>Duyệt Tuyển sinh</span>
+                        </a>
+
+                        <a href="/YeuCauDangKy" class="fb-sidebar-item @(currentPath.Contains("/yeucaudangky") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/yeucaudangky") ? "text-primary" : "")">
+                                <i class="bi bi-person-plus-fill"></i>
+                            </div>
+                            <span>Yêu cầu đăng ký <span class="badge bg-danger ms-1" id="badgeYeuCau" style="font-size:10px;"></span></span>
+                        </a>
+
+                        <a href="/BinhLuan/QuanLy" class="fb-sidebar-item @(currentPath.Contains("/binhluan") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/binhluan") ? "text-primary" : "")">
+                                <i class="bi bi-chat-heart"></i>
+                            </div>
+                            <span>Bình luận & Tương tác</span>
+                        </a>
+
+                        <a href="/LuyenThi" class="fb-sidebar-item @(currentPath.Contains("/luyenthi") ? "active" : "")" target="_blank">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/luyenthi") ? "text-primary" : "")">
+                                <i class="bi bi-journal-check"></i>
+                            </div>
+                            <span>Luyện đề thi Online</span>
+                        </a>
+
+                        <div class="border-top my-2"></div>
+                        <div class="fb-sidebar-title text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">Cài đặt chung</div>
+
+                        <a href="/TaiKhoan" class="fb-sidebar-item @(currentPath == "/taikhoan" || currentPath.StartsWith("/taikhoan/index") || currentPath.StartsWith("/taikhoan/edit") ? "active" : "")">
+                            <div class="fb-sidebar-icon @(currentPath.Contains("/taikhoan") && !currentPath.Contains("profile") ? "text-primary" : "")">
+                                <i class="bi bi-shield-lock"></i>
+                            </div>
+                            <span>Quản lý Tài khoản</span>
+                        </a>
+
+                        <a href="/TaiKhoan/Profile" class="fb-sidebar-item @(currentPath.Contains("/taikhoan/profile") ? "active" : "")">
+                            <div class="fb-sidebar-icon">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <span>Hồ sơ Admin</span>
+                        </a>
+
+                        <a href="/TaiKhoan/Logout" class="fb-sidebar-item text-danger">
+                            <div class="fb-sidebar-icon text-danger">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </div>
+                            <span>Đăng xuất</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Admin Content Area -->
+            <div class="col-lg-10 col-md-9">
+                <partial name="_Notification" />
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Facebook Messenger Component (Chỉ hiện các giáo viên trung tâm) -->
+    @await Html.PartialAsync("_FacebookMessenger")
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Badge Yeu Cau Dang Ky -->
+    <script>
+        function loadYeuCauBadge() {
+            fetch('/Landing/GetPendingCount')
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var badge = document.getElementById('badgeYeuCau');
+                    if (badge) {
+                        if (d.count > 0) {
+                            badge.style.display = '';
+                            badge.innerText = d.count;
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }).catch(function() {});
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            loadYeuCauBadge();
+            setInterval(loadYeuCauBadge, 30000);
+        });
+    </script>
+</body>
+</html>

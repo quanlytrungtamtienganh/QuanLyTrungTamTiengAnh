@@ -1,0 +1,43 @@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success d-flex align-items-center edu-alert-auto-dismiss mb-4 shadow-sm" role="alert" style="border-radius: var(--radius-md); border-left: 4px solid var(--success);">
+        <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
+        <div>
+            @TempData["Success"]
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm" role="alert" style="border-radius: var(--radius-md); border-left: 4px solid var(--danger);">
+        <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-danger"></i>
+        <div>
+            @TempData["Error"]
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning d-flex align-items-center mb-4 shadow-sm" role="alert" style="border-radius: var(--radius-md); border-left: 4px solid var(--warning);">
+        <i class="bi bi-exclamation-circle-fill fs-5 me-2 text-warning"></i>
+        <div>
+            @TempData["Warning"]
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Info"] != null)
+{
+    <div class="alert alert-info d-flex align-items-center mb-4 shadow-sm" role="alert" style="border-radius: var(--radius-md); border-left: 4px solid var(--info);">
+        <i class="bi bi-info-circle-fill fs-5 me-2 text-info"></i>
+        <div>
+            @TempData["Info"]
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

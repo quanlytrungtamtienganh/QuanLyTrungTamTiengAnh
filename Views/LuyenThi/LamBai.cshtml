@@ -1,0 +1,665 @@
+@model TrungTamNgoaiNgu.ViewModels.LamBaiViewModel
+@{
+    ViewData["Title"] = "Đang làm bài: " + Model.DeThi.TieuDe;
+    Layout = null; // Giao diện làm bài thi toàn màn hình chuyên biệt (Study4 Exam Mode)
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.DeThi.TieuDe - Phòng thi trực tuyến</title>
+    <!-- Fonts & Bootstrap 5 -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            user-select: text;
+        }
+        /* Top Navigation Header */
+        .exam-topbar {
+            height: 56px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .exam-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        /* Audio Player Bar */
+        .exam-audio-toolbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        /* Part Tabs */
+        .exam-part-tab-btn {
+            background: #e2e8f0;
+            color: #475569;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .exam-part-tab-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+        }
+        /* Question layout */
+        .question-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        .question-card.active-review {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .question-number-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            border: 1px solid #cbd5e1;
+        }
+        .question-input-blank {
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 320px;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .question-input-blank:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+        }
+        /* Choice Radio Item */
+        .choice-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .choice-item:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+        .choice-item.selected {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+        .choice-item input[type="radio"] {
+            margin-top: 3px;
+        }
+        /* Right Sticky Review Panel (Study4 Style) */
+        .exam-sidebar-panel {
+            position: sticky;
+            top: 72px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .exam-timer-display {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .exam-btn-submit {
+            display: block;
+            width: 100%;
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 10px 0;
+            border-radius: 6px;
+            border: none;
+            transition: background 0.2s;
+            margin-bottom: 12px;
+        }
+        .exam-btn-submit:hover {
+            background: #1d4ed8;
+        }
+        .exam-question-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        .exam-grid-cell {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+        .exam-grid-cell:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .exam-grid-cell.answered {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #3b82f6;
+            font-weight: 700;
+        }
+        .reading-passage-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            line-height: 1.7;
+            font-size: 14.5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 1. Topbar Header -->
+    <header class="exam-topbar">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary me-2">EXAM ROOM</span>
+            <span class="exam-title">@Model.DeThi.TieuDe</span>
+        </div>
+        <div>
+            <a href="/LuyenThi/ChiTiet/@Model.DeThi.MaDeThi" class="btn btn-outline-secondary btn-sm px-3 rounded-2 fw-semibold"
+               onclick="return confirm('Bạn có chắc chắn muốn thoát khỏi phòng thi? Mọi câu trả lời chưa nộp sẽ bị mất.')">
+                Thoát
+            </a>
+        </div>
+    </header>
+
+    <!-- 2. Audio & Toolbar -->
+    <div class="exam-audio-toolbar">
+        <div class="d-flex align-items-center gap-2 me-3">
+            <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="toggleHighlight">
+                <label class="form-check-label small fw-semibold text-muted" for="toggleHighlight">Highlight nội dung</label>
+            </div>
+        </div>
+
+        <!-- Part Selector Buttons -->
+        <div class="d-flex gap-2 align-items-center me-auto flex-wrap" id="partTabBtns">
+            @for (int i = 0; i < Model.PhanThis.Count; i++)
+            {
+                var p = Model.PhanThis[i];
+                <button type="button" class="exam-part-tab-btn @(i == 0 ? "active" : "")" onclick="switchPartTab(@p.MaPhanThi, this)">
+                    @p.TenPhanThi
+                </button>
+            }
+        </div>
+
+        <!-- Audio Player thông minh cho bài thi có phần Nghe -->
+        @{
+            var hasExamAudio = !string.IsNullOrEmpty(Model.DeThi.FileAudio) || 
+                               Model.PhanThis.Any(p => !string.IsNullOrEmpty(p.FileAudio)) || 
+                               (Model.DeThi.KyNang != null && Model.DeThi.KyNang.Contains("Listening"));
+            var initialAudio = Model.PhanThis.FirstOrDefault(p => !string.IsNullOrEmpty(p.FileAudio))?.FileAudio 
+                               ?? (!string.IsNullOrEmpty(Model.DeThi.FileAudio) ? Model.DeThi.FileAudio : "/audio/ielts-listening-part1.wav");
+        }
+        @if (hasExamAudio)
+        {
+            <div class="d-flex align-items-center gap-2 bg-light px-3 py-1 rounded-pill border shadow-sm">
+                <i class="bi bi-headphones text-primary fs-5"></i>
+                <audio id="examAudioPlayer" controls style="height: 32px; width: 260px;" preload="auto">
+                    <source id="examAudioSource" src="@initialAudio" type="audio/wav">
+                    Trình duyệt của bạn không hỗ trợ phát audio.
+                </audio>
+
+                <!-- Tua nhanh/chậm 5 giây -->
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary px-2 py-0" title="Tua lùi 5s" onclick="seekAudio(-5)">
+                        <i class="bi bi-arrow-counterclockwise" style="font-size:11px;"></i> 5s
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary px-2 py-0" title="Tua tới 5s" onclick="seekAudio(5)">
+                        5s <i class="bi bi-arrow-clockwise" style="font-size:11px;"></i>
+                    </button>
+                </div>
+
+                <!-- Tốc độ nghe chuẩn Study4 (0.8x, 1.0x, 1.25x, 1.5x) -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle px-2 py-0 fw-bold" style="font-size:11px;" type="button" data-bs-toggle="dropdown" id="btnAudioSpeed">
+                        1.0x
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size:12px; min-width:90px;">
+                        <li><a class="dropdown-item py-1" href="javascript:void(0)" onclick="setAudioSpeed(0.8)">0.8x (Chậm)</a></li>
+                        <li><a class="dropdown-item py-1 active fw-bold" href="javascript:void(0)" onclick="setAudioSpeed(1.0)">1.0x (Chuẩn)</a></li>
+                        <li><a class="dropdown-item py-1" href="javascript:void(0)" onclick="setAudioSpeed(1.25)">1.25x (Nhanh)</a></li>
+                        <li><a class="dropdown-item py-1" href="javascript:void(0)" onclick="setAudioSpeed(1.5)">1.5x (Rất nhanh)</a></li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- 3. Exam Body -->
+    <div class="container-fluid px-lg-5 py-4">
+        <div class="row g-4">
+            <!-- Left: Questions Area -->
+            <div class="col-lg-8 col-xl-9">
+                <form id="formExamAnswers">
+                    @for (int pIdx = 0; pIdx < Model.PhanThis.Count; pIdx++)
+                    {
+                        var part = Model.PhanThis[pIdx];
+                        <div class="part-container-section" id="partSection_@part.MaPhanThi" style="@(pIdx == 0 ? "" : "display:none;")" data-part-audio="@part.FileAudio">
+                            <!-- Section Title -->
+                            <div class="bg-white p-3 rounded-3 border mb-3 shadow-sm">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-2 mb-2">
+                                    <div class="flex-shrink-0">
+                                        <h5 class="fw-bold text-primary mb-0 text-nowrap">@part.TenPhanThi</h5>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(part.TagDangBai))
+                                    {
+                                        var pTags = part.TagDangBai.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                                        <div class="d-flex flex-wrap gap-1 justify-content-md-end">
+                                            @foreach (var tag in pTags)
+                                            {
+                                                <span class="badge bg-light text-secondary border fw-normal py-1 px-2" style="font-size: 11px;">@tag</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(part.TieuDePhan))
+                                {
+                                    <div class="text-secondary small border-top pt-2 mt-1 d-flex align-items-start gap-2" style="font-size: 13.5px; line-height: 1.6;">
+                                        <i class="bi bi-info-circle-fill text-primary flex-shrink-0 mt-1"></i>
+                                        <span>@part.TieuDePhan</span>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Audio bài nghe riêng cho từng Phần (nếu có) -->
+                            @if (!string.IsNullOrEmpty(part.FileAudio))
+                            {
+                                <div class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 py-2 px-3 mb-3 d-flex align-items-center justify-content-between rounded-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-volume-up-fill text-primary fs-4"></i>
+                                        <div>
+                                            <strong class="text-primary small d-block">🎧 Audio bài nghe @part.TenPhanThi</strong>
+                                            <span class="text-muted" style="font-size:11.5px;">Phát trực tiếp hoặc dùng thanh điều khiển ở đầu trang</span>
+                                        </div>
+                                    </div>
+                                    <audio controls style="height:32px; max-width:240px;">
+                                        <source src="@part.FileAudio" type="audio/wav">
+                                    </audio>
+                                </div>
+                            }
+
+                            <!-- Reading Passage (nếu có) -->
+                            @if (!string.IsNullOrEmpty(part.DoanVanDoc))
+                            {
+                                <div class="reading-passage-box shadow-sm mb-3">
+                                    @Html.Raw(part.DoanVanDoc)
+                                </div>
+                            }
+
+                            <!-- Questions list in this part -->
+                            @foreach (var q in part.CauHois.OrderBy(x => x.SoThuTu))
+                            {
+                                <div class="question-card shadow-sm" id="questionBox_@q.MaCauHoi" data-qid="@q.MaCauHoi" data-num="@q.SoThuTu">
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="question-number-badge flex-shrink-0">@q.SoThuTu</div>
+                                        <div class="fw-bold text-dark flex-grow-1" style="font-size:15px; line-height: 1.5;">
+                                            @Html.Raw(q.NoiDung)
+                                        </div>
+                                    </div>
+
+                                    @if (q.LoaiCauHoi == "DienTu")
+                                    {
+                                        <!-- Fill in the blanks -->
+                                        <div class="ms-md-5 ps-md-1">
+                                            <input type="text" 
+                                                   class="question-input-blank" 
+                                                   id="inputAns_@q.MaCauHoi" 
+                                                   name="ans_@q.MaCauHoi" 
+                                                   placeholder="Nhập câu trả lời..." 
+                                                   oninput="handleAnswerInput(@q.MaCauHoi, @q.SoThuTu, this.value)" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <!-- Multiple Choices A, B, C, D -->
+                                        <div class="ms-md-5 ps-md-1 d-flex flex-column gap-1">
+                                            @if (!string.IsNullOrEmpty(q.DapAnA))
+                                            {
+                                                <label class="choice-item" for="opt_@(q.MaCauHoi)_A">
+                                                    <input type="radio" id="opt_@(q.MaCauHoi)_A" name="ans_@q.MaCauHoi" value="A" onchange="handleAnswerChoice(@q.MaCauHoi, @q.SoThuTu, 'A')">
+                                                    <div><strong>A.</strong> @q.DapAnA</div>
+                                                </label>
+                                            }
+                                            @if (!string.IsNullOrEmpty(q.DapAnB))
+                                            {
+                                                <label class="choice-item" for="opt_@(q.MaCauHoi)_B">
+                                                    <input type="radio" id="opt_@(q.MaCauHoi)_B" name="ans_@q.MaCauHoi" value="B" onchange="handleAnswerChoice(@q.MaCauHoi, @q.SoThuTu, 'B')">
+                                                    <div><strong>B.</strong> @q.DapAnB</div>
+                                                </label>
+                                            }
+                                            @if (!string.IsNullOrEmpty(q.DapAnC))
+                                            {
+                                                <label class="choice-item" for="opt_@(q.MaCauHoi)_C">
+                                                    <input type="radio" id="opt_@(q.MaCauHoi)_C" name="ans_@q.MaCauHoi" value="C" onchange="handleAnswerChoice(@q.MaCauHoi, @q.SoThuTu, 'C')">
+                                                    <div><strong>C.</strong> @q.DapAnC</div>
+                                                </label>
+                                            }
+                                            @if (!string.IsNullOrEmpty(q.DapAnD))
+                                            {
+                                                <label class="choice-item" for="opt_@(q.MaCauHoi)_D">
+                                                    <input type="radio" id="opt_@(q.MaCauHoi)_D" name="ans_@q.MaCauHoi" value="D" onchange="handleAnswerChoice(@q.MaCauHoi, @q.SoThuTu, 'D')">
+                                                    <div><strong>D.</strong> @q.DapAnD</div>
+                                                </label>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </form>
+            </div>
+
+            <!-- Right: Sticky Review Panel (Study4 Style) -->
+            <div class="col-lg-4 col-xl-3">
+                <div class="exam-sidebar-panel">
+                    <div class="text-center text-muted small fw-semibold mb-1">Thời gian làm bài:</div>
+                    <div class="exam-timer-display" id="examTimer">00:00</div>
+
+                    <button type="button" class="exam-btn-submit" onclick="confirmSubmitExam()">
+                        NỘP BÀI
+                    </button>
+
+                    <div class="small mb-3" style="font-size:12px; color:#d97706; line-height:1.4;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Chú ý: bạn có thể click vào số thứ tự câu hỏi trong bảng để di chuyển nhanh đến câu hỏi.
+                    </div>
+
+                    <!-- Question Grid -->
+                    @foreach (var part in Model.PhanThis)
+                    {
+                        <div class="mb-3">
+                            <div class="fw-bold small text-dark mb-2 border-bottom pb-1">@part.TenPhanThi</div>
+                            <div class="exam-question-grid">
+                                @foreach (var q in part.CauHois.OrderBy(x => x.SoThuTu))
+                                {
+                                    <div class="exam-grid-cell" id="gridCell_@q.MaCauHoi" onclick="scrollToQuestion(@q.MaCauHoi, @part.MaPhanThi)">
+                                        @q.SoThuTu
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xác nhận nộp bài -->
+    <div class="modal fade" id="modalConfirmSubmit" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-send-check text-primary"></i> Xác nhận nộp bài thi
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="fs-1 text-primary mb-2"><i class="bi bi-patch-question-fill"></i></div>
+                    <h5 class="fw-bold text-dark mb-2">Bạn có chắc chắn muốn nộp bài?</h5>
+                    <p class="text-muted small mb-3" id="submitStatsSummary">
+                        Đang tính toán số câu đã hoàn thành...
+                    </p>
+                    <div class="alert alert-light border small text-muted text-start mb-0">
+                        Sau khi nộp, hệ thống sẽ <strong>tự động chấm điểm ngay lập tức</strong> và hiển thị chi tiết câu đúng, câu sai cùng <strong>lý do giải thích chi tiết</strong> cho từng câu hỏi.
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Làm tiếp</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btnConfirmSubmitNow" onclick="doSubmitExam()">
+                        Nộp bài ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ── BẢO VỆ THANH ĐỊA CHỈ: Làm sạch URL, ẩn token và loại bỏ toàn bộ query param ───
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, document.title, '/LuyenThi/PhongThi');
+        }
+
+        // ── Quản lý Trạng thái bài thi ──────────────────────────────────────────
+        const ticketId = '@Model.TicketId';
+        const maDeThi = @Model.DeThi.MaDeThi;
+        const cheDo = '@Model.CheDo';
+        const cacPhanDaLam = '@string.Join(", ", Model.PhanThis.Select(p => p.TenPhanThi))';
+        const thoiGianPhut = @Model.ThoiGianPhut;
+        const tongSoCau = @Model.TongSoCau;
+
+        let answers = {}; // { [maCauHoi]: value }
+        let totalElapsedSeconds = 0;
+        let timerInterval = null;
+
+        // ── Timer Logic (Đồng bộ chuẩn xác theo Server Time) ─────────────────────
+        function startTimer() {
+            const timerEl = document.getElementById('examTimer');
+            if (thoiGianPhut > 0) {
+                // Đếm ngược từ số giây còn lại được Server xác thực
+                let remaining = @(Model.RemainingSeconds > 0 ? Model.RemainingSeconds : (Model.ThoiGianPhut * 60));
+                timerInterval = setInterval(() => {
+                    remaining--;
+                    totalElapsedSeconds++;
+                    if (remaining <= 0) {
+                        clearInterval(timerInterval);
+                        alert('Đã hết thời gian làm bài! Hệ thống sẽ tự động nộp bài của bạn.');
+                        doSubmitExam();
+                        return;
+                    }
+                    const m = Math.floor(remaining / 60);
+                    const s = remaining % 60;
+                    timerEl.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+                }, 1000);
+            } else {
+                // Đếm xuôi
+                timerInterval = setInterval(() => {
+                    totalElapsedSeconds++;
+                    const m = Math.floor(totalElapsedSeconds / 60);
+                    const s = totalElapsedSeconds % 60;
+                    timerEl.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+                }, 1000);
+            }
+        }
+        startTimer();
+
+        // ── Chuyển Tab các Phần thi ─────────────────────────────────────────────
+        function switchPartTab(partId, btn) {
+            document.querySelectorAll('.part-container-section').forEach(s => s.style.display = 'none');
+            const targetSection = document.getElementById('partSection_' + partId);
+            if (targetSection) targetSection.style.display = 'block';
+
+            document.querySelectorAll('.exam-part-tab-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            // Tự động nạp audio cho phần được chọn
+            if (targetSection) {
+                const partAudio = targetSection.getAttribute('data-part-audio');
+                const mainPlayer = document.getElementById('examAudioPlayer');
+                if (partAudio && mainPlayer) {
+                    if (!mainPlayer.src.endsWith(partAudio)) {
+                        const wasPlaying = !mainPlayer.paused;
+                        mainPlayer.src = partAudio;
+                        mainPlayer.load();
+                        if (wasPlaying) {
+                            mainPlayer.play().catch(() => {});
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── Điều khiển Audio Nghe thông minh (Study4 Style) ────────────────────────
+        function setAudioSpeed(speed) {
+            const player = document.getElementById('examAudioPlayer');
+            if (player) {
+                player.playbackRate = speed;
+                const btn = document.getElementById('btnAudioSpeed');
+                if (btn) btn.innerText = speed + 'x';
+            }
+        }
+
+        function seekAudio(seconds) {
+            const player = document.getElementById('examAudioPlayer');
+            if (player) {
+                player.currentTime = Math.max(0, player.currentTime + seconds);
+            }
+        }
+
+        // ── Xử lý người dùng trả lời ───────────────────────────────────────────
+        function handleAnswerInput(qid, num, val) {
+            val = val.trim();
+            const cell = document.getElementById('gridCell_' + qid);
+            if (val) {
+                answers[qid] = val;
+                if (cell) cell.classList.add('answered');
+            } else {
+                delete answers[qid];
+                if (cell) cell.classList.remove('answered');
+            }
+        }
+
+        function handleAnswerChoice(qid, num, val) {
+            answers[qid] = val;
+            const cell = document.getElementById('gridCell_' + qid);
+            if (cell) cell.classList.add('answered');
+
+            // Highlight choice item
+            const box = document.getElementById('questionBox_' + qid);
+            if (box) {
+                box.querySelectorAll('.choice-item').forEach(c => c.classList.remove('selected'));
+                const checkedRadio = box.querySelector(`input[value="${val}"]:checked`);
+                if (checkedRadio && checkedRadio.closest('.choice-item')) {
+                    checkedRadio.closest('.choice-item').classList.add('selected');
+                }
+            }
+        }
+
+        // ── Scroll tới câu hỏi khi bấm vào ô số ──────────────────────────────────
+        function scrollToQuestion(qid, partId) {
+            // Mở part chứa câu hỏi đó
+            switchPartTab(partId);
+            // Highlight tab button tương ứng
+            const partBtn = Array.from(document.querySelectorAll('.exam-part-tab-btn'))
+                                 .find(b => b.getAttribute('onclick').includes(partId.toString()));
+            if (partBtn) {
+                document.querySelectorAll('.exam-part-tab-btn').forEach(b => b.classList.remove('active'));
+                partBtn.classList.add('active');
+            }
+
+            const qBox = document.getElementById('questionBox_' + qid);
+            if (qBox) {
+                qBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                qBox.classList.add('active-review');
+                setTimeout(() => qBox.classList.remove('active-review'), 1500);
+            }
+        }
+
+        // ── Xác nhận & Nộp bài ──────────────────────────────────────────────────
+        function confirmSubmitExam() {
+            const answeredCount = Object.keys(answers).length;
+            const summaryEl = document.getElementById('submitStatsSummary');
+            summaryEl.innerHTML = `Bạn đã hoàn thành <strong>${answeredCount}/${tongSoCau} câu hỏi</strong>.`;
+
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmSubmit'));
+            modal.show();
+        }
+
+        function doSubmitExam() {
+            clearInterval(timerInterval);
+            const btn = document.getElementById('btnConfirmSubmitNow');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Đang chấm điểm...';
+            }
+
+            const payload = {
+                ticketId: ticketId,
+                maDeThi: maDeThi,
+                cheDo: cheDo,
+                cacPhanDaLam: cacPhanDaLam,
+                thoiGianLamGiay: totalElapsedSeconds,
+                answers: answers
+            };
+
+            fetch('/LuyenThi/NopBai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.ketQuaId) {
+                    window.location.href = '/LuyenThi/KetQua/' + data.ketQuaId;
+                } else {
+                    alert('Lỗi nộp bài: ' + (data.message || 'Không thể lưu kết quả.'));
+                    if (btn) btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                alert('Lỗi kết nối khi nộp bài. Vui lòng thử lại!');
+                if (btn) btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>

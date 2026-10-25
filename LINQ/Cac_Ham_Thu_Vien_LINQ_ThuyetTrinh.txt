@@ -1,0 +1,185 @@
+================================================================================
+  DANH SÁCH CÁC HÀM, PHƯƠNG THỨC LINQ & THƯ VIỆN ENTITY FRAMEWORK CORE
+  (DÙNG CHO BÀI BÁO CÁO & THUYẾT TRÌNH BẢO VỆ ĐỒ ÁN - TẤT CẢ CÁC MODULE)
+================================================================================
+
+* Thư viện / Namespace sử dụng:
+  - using System.Linq;                    (Thư viện LINQ tiêu chuẩn của .NET)
+  - using Microsoft.EntityFrameworkCore;  (Thư viện Entity Framework Core hỗ trợ bất đồng bộ Async và Eager Loading)
+
+--------------------------------------------------------------------------------
+1. NHÓM TỐI ƯU HIỆU NĂNG & THỰC THI TRUY VẤN (EXECUTION & PERFORMANCE)
+--------------------------------------------------------------------------------
+
+1. AsNoTracking()
+   - Thư viện: Microsoft.EntityFrameworkCore
+   - Công dụng: Tắt cơ chế theo dõi thay đổi (Change Tracker) của Entity Framework Core. Áp dụng cho các truy vấn chỉ đọc (Read-only), giúp tăng tốc độ truy vấn từ 20% - 40% và giảm đáng kể dung lượng bộ nhớ RAM của máy chủ.
+
+2. ToListAsync() / ToList()
+   - Thư viện: Microsoft.EntityFrameworkCore / System.Linq
+   - Công dụng: Thực thi truy vấn LINQ xuống cơ sở dữ liệu SQL Server (Immediate Execution) và chuyển đổi kết quả trả về thành một danh sách (List<T>) theo cơ chế bất đồng bộ (Async), giúp luồng xử lý không bị block/treo khi có nhiều người cùng truy cập.
+
+3. AsQueryable()
+   - Thư viện: System.Linq
+   - Công dụng: Chuyển đổi tập hợp sang dạng IQueryable để xây dựng các câu truy vấn động (Dynamic Query Chaining). Cho phép ghép nối thêm các điều kiện Where, OrderBy trước khi thực sự truy vấn xuống CSDL.
+
+--------------------------------------------------------------------------------
+2. NHÓM LIÊN KẾT BẢNG & TẢI DỮ LIỆU LIÊN QUAN (EAGER LOADING)
+--------------------------------------------------------------------------------
+
+4. Include()
+   - Thư viện: Microsoft.EntityFrameworkCore
+   - Công dụng: Kỹ thuật Eager Loading - Nạp trước dữ liệu từ bảng liên kết (Foreign Key / Navigation Property) ngay trong 1 câu truy vấn (sinh ra lệnh JOIN trong SQL). Giải quyết triệt để vấn đề N+1 Query, tăng hiệu năng hệ thống.
+   - Ví dụ: Include(l => l.KhoaHoc), Include(t => t.HocVien).
+
+5. ThenInclude()
+   - Thư viện: Microsoft.EntityFrameworkCore
+   - Công dụng: Tải dữ liệu lồng nhau ở cấp thứ hai hoặc sâu hơn sau khi đã dùng Include().
+   - Ví dụ: Include(d => d.LopHoc).ThenInclude(l => l.KhoaHoc) (Từ Đăng ký -> Lớp học -> Khóa học).
+
+--------------------------------------------------------------------------------
+3. NHÓM LỌC VÀ TÌM KIẾM DỮ LIỆU (FILTERING & SEARCHING)
+--------------------------------------------------------------------------------
+
+6. Where()
+   - Thư viện: System.Linq
+   - Công dụng: Lọc các phần tử trong tập dữ liệu thỏa mãn biểu thức điều kiện (Predicate Boolean). Tương đương mệnh đề WHERE trong SQL.
+   - Ví dụ: Where(k => k.TrangThai == "Đang mở" && k.HocPhi <= 5000000).
+
+7. Contains()
+   - Thư viện: System.Linq
+   - Công dụng: 
+     + Khi áp dụng trên chuỗi (String): Kiểm tra chuỗi con, tương đương toán tử LIKE '%keyword%' trong SQL để tìm kiếm từ khóa.
+     + Khi áp dụng trên danh sách: Kiểm tra phần tử có nằm trong mảng hay không, tương đương toán tử IN / NOT IN trong SQL.
+   - Ví dụ: l.TenLop.Contains(tuKhoa) hoặc !cacLopDaHocIds.Contains(l.MaLop).
+
+--------------------------------------------------------------------------------
+4. NHÓM LẤY PHẦN TỬ ĐƠN LẺ (ELEMENT OPERATORS)
+--------------------------------------------------------------------------------
+
+8. FirstOrDefaultAsync() / FirstOrDefault()
+   - Thư viện: Microsoft.EntityFrameworkCore / System.Linq
+   - Công dụng: Trả về phần tử đầu tiên thỏa mãn điều kiện tìm kiếm. Nếu không tìm thấy bất kỳ phần tử nào, trả về giá trị mặc định (null đối với kiểu đối tượng / Reference Type), không gây văng lỗi chương trình (Exception).
+   - Ví dụ: FirstOrDefaultAsync(t => t.TenDangNhap == username && t.MatKhau == password).
+
+9. SingleOrDefaultAsync() / SingleOrDefault()
+   - Thư viện: Microsoft.EntityFrameworkCore / System.Linq
+   - Công dụng: Trả về phần tử duy nhất thỏa mãn điều kiện. Nếu không có trả về null; nhưng nếu tìm thấy nhiều hơn 1 bản ghi sẽ ném ra ngoại lệ. Dùng để kiểm tra tính duy nhất tuyệt đối (như khóa chính, email duy nhất).
+
+--------------------------------------------------------------------------------
+5. NHÓM KIỂM TRA SỰ TỒN TẠI & ĐIỀU KIỆN (QUANTIFIER OPERATORS)
+--------------------------------------------------------------------------------
+
+10. AnyAsync() / Any()
+    - Thư viện: Microsoft.EntityFrameworkCore / System.Linq
+    - Công dụng: Kiểm tra xem có ít nhất một phần tử thỏa mãn điều kiện hay không. Trả về kiểu bool (true/false). Trong SQL được dịch thành mệnh đề EXISTS (SELECT 1 FROM ...), dừng quét ngay khi tìm thấy bản ghi đầu tiên nên tối ưu tốc độ tối đa khi kiểm tra đăng ký trùng lặp hoặc tài khoản đã tồn tại.
+    - Ví dụ: AnyAsync(t => t.TenDangNhap == "admin").
+
+11. AllAsync() / All()
+    - Thư viện: Microsoft.EntityFrameworkCore / System.Linq
+    - Công dụng: Kiểm tra xem TẤT CẢ các phần tử trong tập hợp có đều thỏa mãn điều kiện hay không. Trả về true nếu 100% phần tử đều thỏa mãn.
+
+--------------------------------------------------------------------------------
+6. NHÓM SẮP XẾP THỨ TỰ (ORDERING OPERATORS)
+--------------------------------------------------------------------------------
+
+12. OrderBy()
+    - Thư viện: System.Linq
+    - Công dụng: Sắp xếp các phần tử theo thứ tự TĂNG DẦN (Ascending: số từ nhỏ đến lớn, chữ cái từ A đến Z, ngày từ cũ đến mới). Tương đương ORDER BY ... ASC trong SQL.
+    - Ví dụ: OrderBy(k => k.HocPhi).
+
+13. OrderByDescending()
+    - Thư viện: System.Linq
+    - Công dụng: Sắp xếp các phần tử theo thứ tự GIẢM DẦN (Descending: số từ lớn đến nhỏ, chữ cái từ Z đến A, ngày từ mới nhất đến cũ nhất). Tương đương ORDER BY ... DESC trong SQL.
+    - Ví dụ: OrderByDescending(d => d.NgayDangKy).
+
+14. ThenBy() / ThenByDescending()
+    - Thư viện: System.Linq
+    - Công dụng: Dùng để sắp xếp theo tiêu chí phụ thứ 2, thứ 3 sau khi đã gọi OrderBy hoặc OrderByDescending ban đầu.
+
+--------------------------------------------------------------------------------
+7. NHÓM PHÂN TRANG VÀ GIỚI HẠN (PAGING & PARTITIONING)
+--------------------------------------------------------------------------------
+
+15. Skip()
+    - Thư viện: System.Linq
+    - Công dụng: Bỏ qua N bản ghi đầu tiên trong danh sách. Khi phân trang được tính bằng công thức: (pageIndex - 1) * pageSize. Dịch sang SQL Server là OFFSET N ROWS.
+
+16. Take()
+    - Thư viện: System.Linq
+    - Công dụng: Chỉ lấy ra đúng N bản ghi tiếp theo kể từ vị trí hiện tại. Dùng kết hợp với Skip() để phân trang hoặc lấy Top bản ghi (Top 5 mới nhất, Top 10 học phí cao nhất). Dịch sang SQL Server là FETCH NEXT N ROWS ONLY hoặc SELECT TOP(N).
+    - Ví dụ: query.Skip((pageIndex - 1) * pageSize).Take(pageSize).
+
+--------------------------------------------------------------------------------
+8. NHÓM CHỌN DỮ LIỆU & CHIẾU ĐỐI TƯỢNG (PROJECTION OPERATORS)
+--------------------------------------------------------------------------------
+
+17. Select()
+    - Thư viện: System.Linq
+    - Công dụng: Phép chiếu (Projection) - Biến đổi từng phần tử thành một dạng cấu trúc mới (Anonymous Type hoặc DTO / ViewModel). Giúp ứng dụng chỉ lấy đúng các cột cần thiết thay vì SELECT * toàn bộ bảng, tiết kiệm băng thông mạng và RAM.
+    - Ví dụ: Select(t => new { t.MaTaiKhoan, t.HoTen, t.VaiTro }).
+
+18. SelectMany()
+    - Thư viện: System.Linq
+    - Công dụng: Làm phẳng (Flatten) các danh sách con lồng nhau thành một danh sách phẳng duy nhất (One-to-Many Flattening).
+    - Ví dụ: gv.LopHocs.SelectMany(l => l.DangKyHocs) (Từ danh sách các lớp của giáo viên lấy ra tất cả các đơn đăng ký của các lớp đó).
+
+19. Distinct()
+    - Thư viện: System.Linq
+    - Công dụng: Loại bỏ toàn bộ các bản ghi hoặc giá trị bị trùng lặp, chỉ giữ lại các giá trị duy nhất. Tương đương mệnh đề SELECT DISTINCT trong SQL.
+    - Ví dụ: Select(d => d.LopHoc.KhoaHoc.TenKhoaHoc).Distinct().
+
+--------------------------------------------------------------------------------
+9. NHÓM GOM NHÓM & HÀM THỐNG KÊ (GROUPING & AGGREGATE FUNCTIONS)
+--------------------------------------------------------------------------------
+
+20. GroupBy()
+    - Thư viện: System.Linq
+    - Công dụng: Gom nhóm các phần tử có chung một thuộc tính hoặc một tập thuộc tính lại với nhau. Tương đương mệnh đề GROUP BY trong SQL. Mỗi nhóm có g.Key là khóa gom nhóm và g là tập các phần tử thuộc nhóm đó.
+    - Ví dụ: GroupBy(k => k.NgoaiNgu) hoặc GroupBy(d => d.NgayDangKy.Month).
+
+21. CountAsync() / Count()
+    - Thư viện: Microsoft.EntityFrameworkCore / System.Linq
+    - Công dụng: Đếm tổng số lượng phần tử trong tập hợp hoặc số lượng phần tử thỏa mãn một điều kiện cho trước. Dịch thành hàm COUNT() trong SQL.
+    - Ví dụ: CountAsync() hoặc Count(d => d.TrangThai == "Đã xác nhận").
+
+22. SumAsync() / Sum()
+    - Thư viện: Microsoft.EntityFrameworkCore / System.Linq
+    - Công dụng: Tính tổng giá trị của một trường số (học phí, tiền lương, doanh thu). Dịch thành hàm SUM() trong SQL.
+    - Ví dụ: SumAsync(d => d.HocPhi).
+
+23. Average() / AverageAsync()
+    - Thư viện: System.Linq / Microsoft.EntityFrameworkCore
+    - Công dụng: Tính giá trị trung bình cộng của một cột số liệu. Dịch thành hàm AVG() trong SQL.
+    - Ví dụ: Average(k => k.HocPhi) (Học phí trung bình).
+
+24. Min() / Max()
+    - Thư viện: System.Linq
+    - Công dụng: Tìm giá trị nhỏ nhất (Min) hoặc lớn nhất (Max) trong tập dữ liệu. Dịch thành hàm MIN(), MAX() trong SQL.
+    - Ví dụ: Min(k => k.HocPhi), Max(k => k.HocPhi).
+
+================================================================================
+  BẢNG TỔNG HỢP CÔNG DỤNG NHANH ĐỂ NÓI KHI THUYẾT TRÌNH (CHEAT SHEET)
+================================================================================
+
+- AsNoTracking()        -> Tắt tracking, tăng tốc đọc dữ liệu 30%, tiết kiệm RAM.
+- ToListAsync()         -> Thực thi câu lệnh xuống SQL Server bất đồng bộ (non-blocking).
+- Include()             -> Nạp dữ liệu bảng quan hệ (Eager Loading), chống lỗi N+1 Query.
+- ThenInclude()         -> Nạp dữ liệu bảng quan hệ đa cấp lồng nhau.
+- Where()               -> Lọc dữ liệu theo điều kiện (tương đương WHERE trong SQL).
+- Contains()            -> Tìm kiếm gần đúng (LIKE '%...%') hoặc lọc tập hợp (IN/NOT IN).
+- FirstOrDefaultAsync() -> Lấy 1 bản ghi đầu tiên, không có trả về null, an toàn không văng lỗi.
+- AnyAsync()            -> Kiểm tra có tồn tại không (true/false), tối ưu cực nhanh với EXISTS.
+- OrderBy()             -> Sắp xếp tăng dần A-Z, 0-9.
+- OrderByDescending()   -> Sắp xếp giảm dần Z-A, 9-0 (thường dùng cho ngày mới nhất).
+- Skip()                -> Bỏ qua N bản ghi (OFFSET trong phân trang).
+- Take()                -> Lấy N bản ghi tiếp theo (LIMIT / TOP trong phân trang hoặc Top N).
+- Select()              -> Chiếu dữ liệu, chỉ lấy đúng các cột cần thiết để tối ưu đường truyền.
+- Distinct()            -> Lọc trùng lặp dữ liệu (DISTINCT trong SQL).
+- GroupBy()             -> Gom nhóm dữ liệu theo tiêu chí (phân tích báo cáo theo tháng/khóa học).
+- CountAsync()          -> Đếm tổng số bản ghi (COUNT trong SQL).
+- SumAsync()            -> Tính tổng tiền/doanh thu (SUM trong SQL).
+- Average()             -> Tính giá trị trung bình (AVG trong SQL).
+- Min() / Max()         -> Tìm giá trị nhỏ nhất / lớn nhất trong tập hợp.
+
+================================================================================

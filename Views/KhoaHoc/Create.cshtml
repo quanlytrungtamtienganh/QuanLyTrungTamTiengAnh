@@ -1,0 +1,99 @@
+@model TrungTamNgoaiNgu.Models.KhoaHoc
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Thêm mới khóa học";
+}
+
+<div class="edu-page-header">
+    <div>
+        <h2 class="edu-page-title"><i class="bi bi-plus-circle text-primary me-2"></i>Thêm mới khóa học</h2>
+        <p class="edu-page-subtitle">Tạo chương trình đào tạo mới phục vụ tuyển sinh</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn-edu btn-edu-outline">
+            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="edu-card">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-12 form-group">
+                        <label asp-for="TenKhoaHoc" class="form-label form-label-required"></label>
+                        <input asp-for="TenKhoaHoc" class="form-control" placeholder="Ví dụ: IELTS Intensive Mục Tiêu 6.5 - 7.5+" autofocus />
+                        <span asp-validation-for="TenKhoaHoc" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="col-md-6 form-group">
+                        <label asp-for="NgoaiNgu" class="form-label form-label-required"></label>
+                        <select asp-for="NgoaiNgu" class="form-select">
+                            <option value="Tiếng Anh">Tiếng Anh</option>
+                            <option value="Tiếng Hàn">Tiếng Hàn</option>
+                            <option value="Tiếng Nhật">Tiếng Nhật</option>
+                            <option value="Tiếng Trung">Tiếng Trung</option>
+                        </select>
+                        <span asp-validation-for="NgoaiNgu" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="col-md-6 form-group">
+                        <label asp-for="CapDo" class="form-label form-label-required"></label>
+                        <select asp-for="CapDo" class="form-select">
+                            <option value="Sơ cấp (A1/A2)">Sơ cấp (A1/A2)</option>
+                            <option value="Trung cấp (B1/B2)">Trung cấp (B1/B2)</option>
+                            <option value="Cao cấp (C1/C2)">Cao cấp (C1/C2)</option>
+                            <option value="Luyện thi Chứng chỉ (IELTS/JLPT/TOPIK/HSK)">Luyện thi Chứng chỉ</option>
+                        </select>
+                        <span asp-validation-for="CapDo" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="col-md-4 form-group">
+                        <label asp-for="HocPhi" class="form-label form-label-required"></label>
+                        <div class="input-group">
+                            <input asp-for="HocPhi" type="number" step="50000" class="form-control" placeholder="3000000" />
+                            <span class="input-group-text bg-light">VNĐ</span>
+                        </div>
+                        <span asp-validation-for="HocPhi" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="col-md-4 form-group">
+                        <label asp-for="SoBuoi" class="form-label form-label-required"></label>
+                        <input asp-for="SoBuoi" type="number" class="form-control" placeholder="24" />
+                        <span asp-validation-for="SoBuoi" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="col-md-4 form-group">
+                        <label asp-for="TrangThai" class="form-label form-label-required"></label>
+                        <select asp-for="TrangThai" class="form-select">
+                            <option value="Đang mở">Đang mở</option>
+                            <option value="Tạm ngưng">Tạm ngưng</option>
+                        </select>
+                        <span asp-validation-for="TrangThai" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="col-12 form-group">
+                        <label asp-for="MoTa" class="form-label"></label>
+                        <textarea asp-for="MoTa" class="form-control" rows="4" placeholder="Mô tả mục tiêu khóa học, phương pháp giảng dạy, đối tượng phù hợp..."></textarea>
+                        <span asp-validation-for="MoTa" class="field-validation-error"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn-edu btn-edu-outline">Hủy bỏ</a>
+                    <button type="submit" class="btn-edu btn-edu-primary">
+                        <i class="bi bi-check-circle me-1"></i> Lưu khóa học
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

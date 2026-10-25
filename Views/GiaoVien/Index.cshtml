@@ -1,0 +1,171 @@
+@model IEnumerable<TrungTamNgoaiNgu.Models.GiaoVien>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản Lý Đội Ngũ Giáo Viên · Trung Tâm";
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-person-badge text-primary"></i> Quản Lý Đội Ngũ Giáo Viên
+        </h3>
+        <p class="text-muted mb-0 small">Hồ sơ giảng viên, học vị, chuyên môn và phân công lịch giảng dạy</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="PhanLich" class="fb-btn fb-btn-secondary">
+            <i class="bi bi-calendar-range me-1"></i> Phân lịch giảng dạy
+        </a>
+        <a asp-action="Create" class="fb-btn fb-btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Tạo tài khoản giáo viên mới
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <div>@TempData["Success"]</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- 4.8. Giao diện lọc dữ liệu: Bộ lọc tìm kiếm giáo viên -->
+<div class="fb-card p-3 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-funnel-fill text-primary"></i> Bộ Lọc Tìm Kiếm Giáo Viên
+        </div>
+        <div class="d-flex gap-2">
+            <span class="fb-badge fb-badge-blue">Tìm thấy: <strong>@ViewBag.TotalCount</strong> / @ViewBag.AllTeachersCount giáo viên</span>
+            <span class="fb-badge fb-badge-green">Có lớp: <strong>@ViewBag.WithClassesCount</strong></span>
+            <span class="fb-badge fb-badge-yellow">Chưa có lớp: <strong>@ViewBag.NoClassesCount</strong></span>
+        </div>
+    </div>
+
+    <form method="get" asp-action="Index" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="search" class="form-control border-start-0" placeholder="Tên GV, email, SĐT, tài khoản..." value="@ViewBag.Search" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="chuyenMon" class="form-select">
+                <option value="">-- Chuyên môn ngôn ngữ --</option>
+                <option value="Tiếng Anh" selected="@(ViewBag.ChuyenMon == "Tiếng Anh")">Tiếng Anh (IELTS / TOEIC / Giao tiếp)</option>
+                <option value="Tiếng Nhật" selected="@(ViewBag.ChuyenMon == "Tiếng Nhật")">Tiếng Nhật (JLPT N5-N1)</option>
+                <option value="Tiếng Trung" selected="@(ViewBag.ChuyenMon == "Tiếng Trung")">Tiếng Trung (HSK 1-6)</option>
+                <option value="Tiếng Hàn" selected="@(ViewBag.ChuyenMon == "Tiếng Hàn")">Tiếng Hàn (TOPIK I-II)</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="hocVi" class="form-select">
+                <option value="">-- Học vị / Trình độ --</option>
+                <option value="Cử nhân" selected="@(ViewBag.HocVi == "Cử nhân")">Cử nhân Sư phạm</option>
+                <option value="Thạc sĩ" selected="@(ViewBag.HocVi == "Thạc sĩ")">Thạc sĩ Ngôn ngữ</option>
+                <option value="Tiến sĩ" selected="@(ViewBag.HocVi == "Tiến sĩ")">Tiến sĩ / Chuyên gia</option>
+                <option value="Bản xứ" selected="@(ViewBag.HocVi == "Bản xứ")">Giáo viên Bản xứ</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="trangThaiDay" class="form-select">
+                <option value="">-- Trạng thái giảng dạy --</option>
+                <option value="CoLop" selected="@(ViewBag.TrangThaiDay == "CoLop")">Đang phụ trách lớp</option>
+                <option value="ChuaCoLop" selected="@(ViewBag.TrangThaiDay == "ChuaCoLop")">Chưa có lớp phụ trách</option>
+            </select>
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            <button type="submit" class="fb-btn fb-btn-primary w-100" title="Tìm kiếm">
+                <i class="bi bi-search"></i>
+            </button>
+            <a asp-action="Index" class="fb-btn fb-btn-secondary" title="Đặt lại bộ lọc">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Teachers List -->
+<div class="fb-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 60px;">Mã</th>
+                    <th>Giáo viên</th>
+                    <th>Chuyên môn & Học vị</th>
+                    <th>Liên hệ</th>
+                    <th>Số lớp phụ trách</th>
+                    <th class="text-end" style="width: 220px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var gv in Model)
+                    {
+                        var classCount = gv.LopHocs?.Count ?? 0;
+                        <tr>
+                            <td class="text-muted fw-bold">#@gv.MaGiaoVien</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@(string.IsNullOrEmpty(gv.AnhDaiDien) ? "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" : gv.AnhDaiDien)" 
+                                         alt="@gv.HoTen" class="rounded-circle object-fit-cover shadow-sm" style="width: 48px; height: 48px;" />
+                                    <div>
+                                        <div class="fw-bold text-dark fs-6">@gv.HoTen</div>
+                                        <div class="small text-muted">
+                                            <i class="bi bi-person-fill-lock text-primary me-1"></i>Tài khoản: <code>@(gv.TaiKhoan?.TenDangNhap ?? "Chưa liên kết")</code>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1 d-inline-block">
+                                    <i class="bi bi-mortarboard me-1"></i>@gv.ChuyenMon
+                                </span>
+                                <div class="small text-muted">@(gv.HocVi ?? "Cử nhân Sư phạm")</div>
+                            </td>
+                            <td>
+                                <div class="small"><i class="bi bi-envelope text-muted me-1"></i>@(gv.Email ?? gv.TaiKhoan?.Email)</div>
+                                <div class="small text-muted"><i class="bi bi-telephone text-muted me-1"></i>@(gv.SoDienThoai ?? "098.xxx.xxxx")</div>
+                            </td>
+                            <td>
+                                @if (classCount > 0)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="bi bi-easel-fill me-1"></i>@classCount lớp học
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                        Chưa phân lớp
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="LichDay" asp-route-maGiaoVien="@gv.MaGiaoVien" class="fb-btn fb-btn-secondary fb-btn-sm me-1" title="Xem thời khóa biểu">
+                                    <i class="bi bi-calendar3 me-1"></i>Lịch dạy
+                                </a>
+                                <a asp-action="PhanLich" asp-route-maGiaoVien="@gv.MaGiaoVien" class="fb-btn fb-btn-primary fb-btn-sm" title="Phân công lớp">
+                                    <i class="bi bi-plus-slash-minus me-1"></i>Gán lớp
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                            Không tìm thấy giáo viên nào phù hợp với điều kiện tìm kiếm.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

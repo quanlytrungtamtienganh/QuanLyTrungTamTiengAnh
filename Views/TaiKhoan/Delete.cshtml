@@ -1,0 +1,111 @@
+@model TrungTamNgoaiNgu.Models.TaiKhoan
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Xác nhận xóa tài khoản #" + Model.MaTaiKhoan;
+    var hasHocVienDk = Model.HocVien != null && Model.HocVien.DangKyHocs.Any();
+    var hasGiaoVienLop = Model.GiaoVien != null && Model.GiaoVien.LopHocs.Any();
+    var cannotDelete = hasHocVienDk || hasGiaoVienLop;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2 text-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i> Xác Nhận Xóa Tài Khoản
+        </h3>
+        <p class="text-muted mb-0 small">Hành động này sẽ xóa vĩnh viễn tài khoản người dùng khỏi hệ thống cơ sở dữ liệu</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="fb-btn fb-btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="fb-card p-4 border border-danger">
+            @if (cannotDelete)
+            {
+                <div class="alert alert-danger d-flex align-items-center gap-3 mb-4" role="alert">
+                    <i class="bi bi-shield-x fs-2"></i>
+                    <div>
+                        <strong class="d-block mb-1">Không thể xóa tài khoản này!</strong>
+                        @if (hasHocVienDk)
+                        {
+                            <div>Học viên liên kết với tài khoản này đã có <strong>@Model.HocVien?.DangKyHocs.Count</strong> lượt đăng ký lớp học. Vui lòng chuyển trạng thái sang "Khoa" thay vì xóa.</div>
+                        }
+                        @if (hasGiaoVienLop)
+                        {
+                            <div>Giảng viên liên kết đang được phân công giảng dạy <strong>@Model.GiaoVien?.LopHocs.Count</strong> lớp học trong trung tâm.</div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" role="alert">
+                    <i class="bi bi-exclamation-circle-fill fs-2 text-warning"></i>
+                    <div>
+                        <strong>Bạn có chắc chắn muốn xóa tài khoản này?</strong>
+                        <div>Dữ liệu tài khoản <strong>@Model.TenDangNhap</strong> sẽ bị loại bỏ hoàn toàn và không thể khôi phục.</div>
+                    </div>
+                </div>
+            }
+
+            <div class="p-3 bg-light rounded-3 mb-4">
+                <div class="row g-3">
+                    <div class="col-sm-4 text-muted">Mã tài khoản:</div>
+                    <div class="col-sm-8 fw-bold font-monospace">#TK-@Model.MaTaiKhoan.ToString("D4")</div>
+
+                    <div class="col-sm-4 text-muted">Tên đăng nhập:</div>
+                    <div class="col-sm-8 fw-bold text-dark">@Model.TenDangNhap</div>
+
+                    <div class="col-sm-4 text-muted">Họ và tên:</div>
+                    <div class="col-sm-8 fw-semibold">@Model.HoTen</div>
+
+                    <div class="col-sm-4 text-muted">Email liên hệ:</div>
+                    <div class="col-sm-8 text-muted">@Model.Email</div>
+
+                    <div class="col-sm-4 text-muted">Vai trò hiện tại:</div>
+                    <div class="col-sm-8">
+                        @if (Model.VaiTro == "Admin")
+                        {
+                            <span class="badge bg-danger">Quản trị viên (Admin)</span>
+                        }
+                        else if (Model.VaiTro == "GiaoVien")
+                        {
+                            <span class="badge bg-purple" style="background:#9360f7; color:#fff;">Giáo viên</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-primary">Học viên</span>
+                        }
+                    </div>
+
+                    <div class="col-sm-4 text-muted">Trạng thái:</div>
+                    <div class="col-sm-8">
+                        @if (Model.TrangThai == "HoatDong")
+                        {
+                            <span class="fb-badge fb-badge-green">Hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="fb-badge fb-badge-red">Tạm khóa</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MaTaiKhoan" />
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="fb-btn fb-btn-secondary">Hủy bỏ</a>
+                    <button type="submit" class="fb-btn fb-btn-sm text-white" style="background-color: #dc3545;" @(cannotDelete ? "disabled" : "")>
+                        <i class="bi bi-trash-fill me-1"></i> Xác nhận xóa tài khoản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

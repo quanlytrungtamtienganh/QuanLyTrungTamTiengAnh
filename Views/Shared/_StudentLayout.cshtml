@@ -1,0 +1,232 @@
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var session = HttpContextAccessor.HttpContext?.Session;
+    var userName = session?.GetString("HoTen");
+    var userRole = session?.GetString("VaiTro");
+    var isLoggedIn = !string.IsNullOrEmpty(userName);
+    var currentPath = HttpContextAccessor.HttpContext?.Request.Path.Value?.ToLower() ?? "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · LanguageBook (Trung Tâm Ngoại Ngữ)</title>
+    
+    <!-- Bootstrap 5 & Bootstrap Icons -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Facebook Design System CSS -->
+    <link rel="stylesheet" href="~/css/facebook-style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- =========================================================================
+         1. FACEBOOK GLOBAL STICKY TOPBAR (56px)
+         ========================================================================= -->
+    <header class="fb-topbar">
+        <!-- Left: Logo Image (No text) & Search Box -->
+        <div class="fb-topbar-left">
+            <a href="/" class="fb-logo-btn" title="Trang chủ">
+                <img src="~/images/logo.png" alt="Logo" class="fb-topbar-logo-img" />
+            </a>
+
+            <div class="fb-search-box ms-1">
+                <i class="bi bi-search fb-search-icon"></i>
+                <form method="get" action="/KhoaHoc/Catalog" class="m-0 p-0 w-100">
+                    <input type="text" name="searchTerm" class="fb-search-input" placeholder="Tìm kiếm trên LanguageBook" />
+                </form>
+            </div>
+        </div>
+
+        <!-- Center: Facebook Primary Navigation Tabs -->
+        <nav class="fb-topbar-center">
+            <a href="/" class="fb-tab-item @(currentPath == "/" ? "active" : "")" title="Bảng tin (Trang chủ)">
+                <i class="bi @(currentPath == "/" ? "bi-house-door-fill" : "bi-house-door")"></i>
+            </a>
+            <a href="/KhoaHoc/Catalog" class="fb-tab-item @(currentPath.Contains("/khoahoc") ? "active" : "")" title="Khóa học (Video & Đào tạo)">
+                <i class="bi @(currentPath.Contains("/khoahoc") ? "bi-collection-play-fill" : "bi-collection-play")"></i>
+            </a>
+            <a href="/LopHoc" class="fb-tab-item @(currentPath.Contains("/lophoc") ? "active" : "")" title="Nhóm & Lịch lớp học">
+                <i class="bi @(currentPath.Contains("/lophoc") ? "bi-people-fill" : "bi-people")"></i>
+            </a>
+            <a href="/LuyenThi" class="fb-tab-item @(currentPath.Contains("/luyenthi") ? "active" : "")" title="Luyện thi Online">
+                <i class="bi @(currentPath.Contains("/luyenthi") ? "bi-journal-check" : "bi-journal-text")"></i>
+            </a>
+            @if (isLoggedIn && userRole == "HocVien")
+            {
+                <a href="/DangKyHoc/History" class="fb-tab-item @(currentPath.Contains("/dangkyhoc") ? "active" : "")" title="Đã lưu & Đơn đăng ký">
+                    <i class="bi @(currentPath.Contains("/dangkyhoc") ? "bi-bookmark-check-fill" : "bi-bookmark-check")"></i>
+                </a>
+            }
+            @if (isLoggedIn && userRole == "GiaoVien")
+            {
+                <a href="/GiaoVien/LichDay" class="fb-tab-item @(currentPath.Contains("/giaovien") ? "active" : "")" title="Lịch giảng dạy & Thời khóa biểu">
+                    <i class="bi @(currentPath.Contains("/giaovien") ? "bi-calendar-check-fill" : "bi-calendar-check")"></i>
+                </a>
+            }
+            @if (isLoggedIn && userRole == "Admin")
+            {
+                <a href="/ThongKe" class="fb-tab-item @(currentPath.Contains("/thongke") ? "active" : "")" title="Trang Quản trị Admin">
+                    <i class="bi @(currentPath.Contains("/thongke") ? "bi-speedometer2" : "bi-speedometer")"></i>
+                </a>
+            }
+        </nav>
+
+        <!-- Right: Action Buttons & User Menu -->
+        <div class="fb-topbar-right">
+            <!-- Menu button -->
+            <button class="fb-circle-btn d-none d-md-inline-flex" title="Menu ứng dụng" type="button">
+                <i class="bi bi-grid-3x3-gap-fill"></i>
+            </button>
+
+            <!-- Messenger button (Chỉ hiển thị giáo viên của trung tâm) -->
+            <button type="button" class="fb-circle-btn" id="btnTopbarMessenger" title="Messenger tư vấn giảng viên" onclick="toggleMessengerDropdown(event)">
+                <i class="bi bi-chat-dots-fill"></i>
+                <span class="fb-badge-count" style="display: none;">0</span>
+            </button>
+
+            <!-- Notifications button -->
+            <div class="dropdown">
+                <button class="fb-circle-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="fb-badge-count">3</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width: 320px; border-radius: 10px; border: 1px solid #e4e6eb;">
+                    <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2">
+                        <strong class="fs-6">Thông báo</strong>
+                        <span class="text-primary small fw-semibold" style="cursor: pointer;">Đánh dấu đã đọc</span>
+                    </div>
+                    <div class="d-flex gap-2 p-2 rounded hover-bg" style="cursor: pointer;">
+                        <div class="fb-avatar fb-avatar-sm" style="background:#0866ff; color:#fff;"><i class="bi bi-gift-fill"></i></div>
+                        <div class="small">
+                            <div><strong>Ưu đãi tháng 10:</strong> Giảm 20% học phí khi đăng ký khóa IELTS bất kỳ.</div>
+                            <span class="text-muted" style="font-size: 11px;">10 phút trước</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 p-2 rounded hover-bg" style="cursor: pointer;">
+                        <div class="fb-avatar fb-avatar-sm" style="background:#42b72a; color:#fff;"><i class="bi bi-calendar-check-fill"></i></div>
+                        <div class="small">
+                            <div><strong>Lịch khai giảng:</strong> 3 lớp học mới đã mở tuyển sinh tuần này.</div>
+                            <span class="text-muted" style="font-size: 11px;">1 giờ trước</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Avatar & Dropdown -->
+            @if (isLoggedIn)
+            {
+                <div class="dropdown">
+                    <button class="border-0 bg-transparent p-0 dropdown-toggle no-arrow" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="fb-avatar" title="@userName">
+                            @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                        </div>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="min-width: 260px; border-radius: 10px; border: 1px solid #e4e6eb;">
+                        <li class="p-2 border-bottom mb-2">
+                            <a href="/TaiKhoan/Profile" class="d-flex align-items-center gap-2 text-decoration-none text-dark">
+                                <div class="fb-avatar">@(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")</div>
+                                <div>
+                                    <div class="fw-bold">@userName</div>
+                                    <div class="text-muted small">Xem trang cá nhân của bạn</div>
+                                </div>
+                            </a>
+                        </li>
+                        @if (userRole == "Admin")
+                        {
+                            <li>
+                                <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2 fw-semibold text-primary" href="/ThongKe">
+                                    <i class="bi bi-speedometer2 fs-5"></i> Bảng điều khiển Quản trị (Admin)
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                        }
+                        else if (userRole == "GiaoVien")
+                        {
+                            <li>
+                                <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2 fw-semibold text-primary" href="/GiaoVien/LichDay">
+                                    <i class="bi bi-calendar-check fs-5"></i> Thời khóa biểu & Lịch dạy
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/TaiKhoan/Profile">
+                                    <i class="bi bi-gear fs-5 text-secondary"></i> Cài đặt & quyền riêng tư
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                        }
+                        else
+                        {
+                            <li>
+                                <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/DangKyHoc/History">
+                                    <i class="bi bi-bookmark-check fs-5 text-primary"></i> Đơn đăng ký của tôi
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/LuyenThi/LichSu">
+                                    <i class="bi bi-clock-history fs-5 text-warning"></i> Lịch sử luyện thi online
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2" href="/TaiKhoan/Profile">
+                                    <i class="bi bi-gear fs-5 text-secondary"></i> Cài đặt & quyền riêng tư
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                        }
+                        <li>
+                            <a class="dropdown-item py-2 rounded d-flex align-items-center gap-2 text-danger fw-semibold" href="/TaiKhoan/Logout">
+                                <i class="bi bi-box-arrow-right fs-5"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a href="/TaiKhoan/Login" class="fb-btn fb-btn-primary fb-btn-sm">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                </a>
+            }
+        </div>
+    </header>
+
+    <!-- Notification Toast / Alert -->
+    <div class="container-fluid px-3 pt-2">
+        <partial name="_Notification" />
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        @RenderBody()
+    </main>
+
+    <!-- Footer Facebook Style -->
+    <footer class="py-4 mt-5 text-center text-muted" style="border-top: 1px solid #e4e6eb; font-size: 13px;">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-center gap-3 mb-2">
+                <a href="/" class="text-muted text-decoration-none">Giới thiệu</a> &bull;
+                <a href="/KhoaHoc/Catalog" class="text-muted text-decoration-none">Khóa học</a> &bull;
+                <a href="/LopHoc" class="text-muted text-decoration-none">Lịch khai giảng</a> &bull;
+                <a href="/" class="text-muted text-decoration-none">Quyền riêng tư</a> &bull;
+                <a href="/" class="text-muted text-decoration-none">Điều khoản</a> &bull;
+                <a href="/ThongKe" class="text-muted text-decoration-none">Trung tâm trợ giúp</a>
+            </div>
+            <div>LanguageBook &copy; 2026 &bull; Nền tảng học tập ngoại ngữ kết nối cộng đồng</div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Facebook Messenger Component (Chỉ hiện các giáo viên trung tâm) -->
+    @await Html.PartialAsync("_FacebookMessenger")
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

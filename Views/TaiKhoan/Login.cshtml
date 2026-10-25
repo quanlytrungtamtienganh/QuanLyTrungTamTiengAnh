@@ -1,0 +1,279 @@
+@model TrungTamNgoaiNgu.ViewModels.LoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Đăng nhập LanguageBook";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · LanguageBook</title>
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Facebook Design System CSS -->
+    <link rel="stylesheet" href="~/css/facebook-style.css" asp-append-version="true" />
+
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .fb-login-container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 100px 20px 60px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .fb-brand-col {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .fb-brand-title {
+            color: #0866ff;
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+
+        .fb-brand-subtitle {
+            font-size: 1.65rem;
+            line-height: 1.35;
+            color: #1c1e21;
+            font-weight: 400;
+        }
+
+        .fb-form-col {
+            width: 396px;
+        }
+
+        .fb-auth-card {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .fb-auth-input {
+            width: 100%;
+            height: 50px;
+            padding: 14px 16px;
+            border: 1px solid #dddfe2;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            outline: none;
+            background-color: #ffffff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .fb-auth-input:focus {
+            border-color: #0866ff;
+            box-shadow: 0 0 0 2px #e7f3ff;
+        }
+
+        .fb-login-submit-btn {
+            width: 100%;
+            height: 48px;
+            background-color: #0866ff;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            margin-top: 4px;
+        }
+
+        .fb-login-submit-btn:hover {
+            background-color: #0055d6;
+        }
+
+        .fb-create-acc-btn {
+            background-color: #42b72a;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .fb-create-acc-btn:hover {
+            background-color: #36a420;
+            color: #ffffff;
+        }
+
+        .fb-footer {
+            background-color: #ffffff;
+            padding: 24px 0;
+            font-size: 12px;
+            color: #737373;
+            border-top: 1px solid #dddfe2;
+        }
+
+        @@media (max-width: 900px) {
+            .fb-login-container {
+                flex-direction: column;
+                padding-top: 40px;
+                text-align: center;
+            }
+            .fb-brand-title {
+                font-size: 2.8rem;
+            }
+            .fb-brand-subtitle {
+                font-size: 1.25rem;
+                margin-bottom: 24px;
+            }
+            .fb-form-col {
+                width: 100%;
+                max-width: 396px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Content -->
+    <div class="fb-login-container">
+        <!-- Left: Brand Logo & Tagline -->
+        <div class="fb-brand-col">
+            <div class="mb-3">
+                <img src="~/images/logo.png" alt="Logo" style="height: 110px; width: auto; object-fit: contain;" />
+            </div>
+            <p class="fb-brand-subtitle">
+                Nền tảng kết nối và đồng hành cùng hàng triệu học viên chinh phục các chứng chỉ ngoại ngữ quốc tế.
+            </p>
+        </div>
+
+        <!-- Right: Login Card -->
+        <div class="fb-form-col">
+            <partial name="_Notification" />
+
+            <div class="fb-auth-card">
+                <form asp-action="Login" asp-controller="TaiKhoan" method="post">
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3 text-start"></div>
+
+                    <div>
+                        <input asp-for="TenDangNhap" class="fb-auth-input" placeholder="Email hoặc số điện thoại hoặc Tên đăng nhập" autofocus />
+                        <span asp-validation-for="TenDangNhap" class="text-danger small d-block text-start mb-2"></span>
+                    </div>
+
+                    <div>
+                        <input asp-for="MatKhau" type="password" class="fb-auth-input" placeholder="Mật khẩu" />
+                        <span asp-validation-for="MatKhau" class="text-danger small d-block text-start mb-2"></span>
+                    </div>
+
+                    <button type="submit" class="fb-login-submit-btn">
+                        Đăng nhập
+                    </button>
+
+                    <div class="my-3">
+                        <a href="#" class="text-primary text-decoration-none small">Quên mật khẩu?</a>
+                    </div>
+
+                    <hr style="border-color: #dadde1; margin: 20px 0;" />
+
+                    <a href="/" class="fb-create-acc-btn">
+                        Khám phá khóa học ngay
+                    </a>
+                </form>
+            </div>
+
+            <!-- Demo Accounts Box -->
+            <div class="fb-card p-3 mt-3 text-start" style="font-size: 13px;">
+                <div class="fw-bold mb-2 text-primary d-flex align-items-center gap-1">
+                    <i class="bi bi-shield-lock-fill"></i> Tài khoản mẫu dùng thử:
+                </div>
+                <div class="d-flex justify-content-between py-1 border-bottom">
+                    <span class="text-muted">Quản trị viên (Admin):</span>
+                    <strong class="font-monospace text-dark">admin / admin123</strong>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Học viên (Student):</span>
+                    <strong class="font-monospace text-dark">hocvien01 / 123456</strong>
+                </div>
+            </div>
+
+            <div class="text-center mt-3 text-muted" style="font-size: 13px;">
+                <strong>Tạo Trang</strong> dành cho người nổi tiếng, thương hiệu hoặc doanh nghiệp.
+            </div>
+        </div>
+    </div>
+
+    <!-- Facebook Footer -->
+    <footer class="fb-footer">
+        <div class="container" style="max-width: 980px;">
+            <div class="d-flex flex-wrap gap-3 mb-2" style="font-size: 12px;">
+                <span>Tiếng Việt</span>
+                <span class="text-primary">English (UK)</span>
+                <span class="text-primary">日本語</span>
+                <span class="text-primary">中文(台灣)</span>
+                <span class="text-primary">한국어</span>
+                <span class="text-primary">Français (France)</span>
+                <span class="text-primary">Español</span>
+            </div>
+            <hr style="border-color: #dddfe2; margin: 8px 0;" />
+            <div class="d-flex flex-wrap gap-3" style="font-size: 12px; line-height: 1.8;">
+                <span>Đăng ký</span>
+                <span>Đăng nhập</span>
+                <span>Messenger</span>
+                <span>LanguageBook Lite</span>
+                <span>Video</span>
+                <span>Địa điểm</span>
+                <span>Trò chơi</span>
+                <span>Marketplace</span>
+                <span>Meta Pay</span>
+                <span>Cửa hàng trên Meta</span>
+                <span>Meta Quest</span>
+                <span>Instagram</span>
+                <span>Threads</span>
+                <span>Trung tâm thông tin bầu cử</span>
+                <span>Chính sách quyền riêng tư</span>
+                <span>Trung tâm bảo mật</span>
+                <span>Nhóm</span>
+                <span>Giới thiệu</span>
+                <span>Tạo quảng cáo</span>
+                <span>Tạo Trang</span>
+                <span>Nhà phát triển</span>
+                <span>Tuyển dụng</span>
+                <span>Cookie</span>
+                <span>Lựa chọn quảng cáo</span>
+                <span>Điều khoản</span>
+                <span>Trợ giúp</span>
+            </div>
+            <div class="mt-3">
+                Meta &copy; 2026 &bull; LanguageBook Education Management System
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

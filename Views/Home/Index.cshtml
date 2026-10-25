@@ -1,0 +1,1933 @@
+@model TrungTamNgoaiNgu.ViewModels.HomeViewModel
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    Layout = "_StudentLayout";
+    ViewData["Title"] = "Bảng tin · LanguageBook";
+    var userName = HttpContextAccessor.HttpContext?.Session.GetString("HoTen") ?? "Bạn";
+    var userRole = HttpContextAccessor.HttpContext?.Session.GetString("VaiTro");
+    var currentUserId = HttpContextAccessor.HttpContext?.Session.GetInt32("MaTaiKhoan");
+    var isLoggedIn = !string.IsNullOrEmpty(HttpContextAccessor.HttpContext?.Session.GetString("HoTen"));
+    var isAdmin = userRole == "Admin";
+}
+
+<div class="container-fluid px-lg-4 py-3">
+    <div class="row g-3">
+        <!-- =========================================================================
+             1. LEFT COLUMN: FACEBOOK SHORTCUTS SIDEBAR
+             ========================================================================= -->
+        <div class="col-lg-3 col-xl-3 d-none d-lg-block">
+            <div class="fb-sidebar">
+                <!-- User Profile Shortcut -->
+                <a href="@(isLoggedIn ? "/TaiKhoan/Profile" : "/TaiKhoan/Login")" class="fb-sidebar-item mb-1">
+                    <div class="fb-avatar">
+                        @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                    </div>
+                    <span class="text-truncate">@userName</span>
+                </a>
+
+                <a href="/KhoaHoc/Catalog" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                        <i class="bi bi-collection-play-fill"></i>
+                    </div>
+                    <span>Kho khóa học & Video</span>
+                </a>
+
+                <a href="/LopHoc" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #f0e6ff; color: #9360f7;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <span>Nhóm & Lịch lớp học</span>
+                </a>
+
+                <a href="/LuyenThi" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e0f2fe; color: #0284c7;">
+                        <i class="bi bi-journal-check"></i>
+                    </div>
+                    <span>Luyện thi online</span>
+                </a>
+
+                @if (isLoggedIn && userRole == "HocVien")
+                {
+                    <a href="/DangKyHoc/History" class="fb-sidebar-item">
+                        <div class="fb-sidebar-icon" style="background: #e7f8ec; color: #31a24c;">
+                            <i class="bi bi-bookmark-check-fill"></i>
+                        </div>
+                        <span>Đơn đã lưu & Đăng ký</span>
+                    </a>
+                }
+
+                @if (isLoggedIn && userRole == "GiaoVien")
+                {
+                    <a href="/GiaoVien/LichDay" class="fb-sidebar-item">
+                        <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                            <i class="bi bi-calendar-check-fill"></i>
+                        </div>
+                        <span>Lịch giảng dạy cá nhân</span>
+                    </a>
+                }
+
+                <a href="/HocVien" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #fef7e0; color: #f7b125;">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <span>Cộng đồng học viên (@Model.TotalStudents)</span>
+                </a>
+
+                @if (isLoggedIn && userRole == "Admin")
+                {
+                    <a href="/ThongKe" class="fb-sidebar-item">
+                        <div class="fb-sidebar-icon" style="background: #fde8e8; color: #e41e3f;">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <span>Bảng tin Quản trị viên</span>
+                    </a>
+                }
+
+                <hr class="my-2" style="border-color: #e4e6eb;" />
+
+                <!-- Trung tâm shortcuts -->
+                <div class="fb-sidebar-title">Lối tắt của bạn</div>
+
+                <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Anh" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e4e6eb;">
+                        🇬🇧
+                    </div>
+                    <span>CLB Tiếng Anh & IELTS</span>
+                </a>
+
+                <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Nhật" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e4e6eb;">
+                        🇯🇵
+                    </div>
+                    <span>Cộng đồng Tiếng Nhật JLPT</span>
+                </a>
+
+                <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Trung" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e4e6eb;">
+                        🇨🇳
+                    </div>
+                    <span>Hội luyện thi HSK Cấp tốc</span>
+                </a>
+
+                <div class="px-2 pt-3 text-muted" style="font-size: 11px; line-height: 1.6;">
+                    Quyền riêng tư &bull; Điều khoản &bull; Quảng cáo &bull; Lựa chọn quảng cáo &bull; Cookie &bull; Xem thêm &bull; Meta &copy; 2026
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================================
+             2. CENTER COLUMN: FACEBOOK NEWSFEED
+             ========================================================================= -->
+        <div class="col-lg-6 col-xl-6 col-12">
+            <!-- 2.1 Facebook Stories Carousel -->
+            <div class="fb-stories-container">
+                <!-- Story 1: Campus 5 Sao -->
+                <a href="/KhoaHoc/Catalog" class="fb-story-card" style="background-image: url('/images/anhtienganh/trung-tam-tieng-anh-wall-street-english.jpg');">
+                    <div class="fb-story-avatar" style="border-color: #fff; background: #0866ff; color: #fff;">
+                        <i class="bi bi-star-fill text-white fs-6"></i>
+                    </div>
+                    <div class="fb-story-name">Campus 5 Sao</div>
+                </a>
+
+                <!-- Story 2: IELTS -->
+                <a href="/KhoaHoc/Catalog?searchTerm=IELTS" class="fb-story-card" style="background-image: url('/images/anhtienganh/trung-tam-tieng-anh-idt-1342029.jpg');">
+                    <div class="fb-story-avatar" style="background: #e41e3f; color: #fff;">IE</div>
+                    <div class="fb-story-name">IELTS 7.5+ Học bổng</div>
+                </a>
+
+                <!-- Story 3: Tiếng Anh Giao Tiếp -->
+                <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Anh" class="fb-story-card" style="background-image: url('/images/anhtienganh/ttta-1.jpg');">
+                    <div class="fb-story-avatar" style="background: #11998e; color: #fff;">EN</div>
+                    <div class="fb-story-name">Lớp tương tác 1:1</div>
+                </a>
+
+                <!-- Story 4: Tiếng Trung -->
+                <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Trung" class="fb-story-card" style="background-image: url('/images/anhtienganh/tiengtrung1.jpg');">
+                    <div class="fb-story-avatar" style="background: #8e2de2; color: #fff;">CN</div>
+                    <div class="fb-story-name">Lớp Tiếng Trung HSK</div>
+                </a>
+
+                <!-- Story 5: Tiếng Hàn -->
+                <a href="/KhoaHoc/Catalog?ngoaiNgu=Tiếng Hàn" class="fb-story-card" style="background-image: url('/images/anhtienganh/tienghan.jpg');">
+                    <div class="fb-story-avatar" style="background: #f857a6; color: #fff;">KR</div>
+                    <div class="fb-story-name">CLB Tiếng Hàn TOPIK</div>
+                </a>
+            </div>
+
+            <!-- 2.2 Facebook "Tạo bài viết" Box (Đăng bài cho Học viên, Giáo viên, Quản lý) -->
+            <div class="fb-create-post-card">
+                <div class="fb-create-post-top">
+                    <div class="fb-avatar">
+                        @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                    </div>
+                    <div class="fb-create-post-input" onclick="openCreatePostModal()" role="button" tabindex="0">
+                        @userName ơi, bạn đang nghĩ gì thế? Chia sẻ bài viết ngay...
+                    </div>
+                </div>
+                <div class="fb-create-post-actions">
+                    <button type="button" class="fb-action-item btn border-0 bg-transparent text-secondary p-0" onclick="openCreatePostModal('photo')">
+                        <i class="bi bi-images text-success fs-5"></i>
+                        <span>Ảnh / Video</span>
+                    </button>
+                    <button type="button" class="fb-action-item btn border-0 bg-transparent text-secondary p-0" onclick="openCreatePostModal('background')">
+                        <i class="bi bi-palette-fill text-danger fs-5"></i>
+                        <span>Phông nền màu</span>
+                    </button>
+                    <button type="button" class="fb-action-item btn border-0 bg-transparent text-secondary p-0" onclick="openCreatePostModal('bold')">
+                        <i class="bi bi-type-bold text-primary fs-5"></i>
+                        <span>Tô đậm chữ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2.2.1 Thanh điều khiển Kiểm duyệt bài viết (Dành cho Quản trị viên / Admin) -->
+            @if (isAdmin)
+            {
+                <div class="fb-mod-card" id="adminModerationBar">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary px-2 py-1"><i class="bi bi-shield-check me-1"></i>QUẢN TRỊ VIÊN</span>
+                            <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="toggleApprovalSwitch" onchange="togglePostApproval(this.checked)" style="cursor: pointer; width: 2.2em; height: 1.2em;">
+                                <label class="form-check-label small fw-semibold" for="toggleApprovalSwitch" id="toggleApprovalLabel">Đang tải...</label>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-semibold py-1 px-3" onclick="openAdminReportsModal()">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>Báo cáo sai phạm
+                                <span class="badge bg-danger ms-1" id="topReportBadge">0</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 border-top pt-2">
+                        <button type="button" class="btn btn-sm btn-light active rounded-pill px-3 filter-feed-btn" data-filter="all" onclick="filterFeed('all', this)">
+                            Tất cả bài viết
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light rounded-pill px-3 filter-feed-btn position-relative" data-filter="pending" onclick="filterFeed('pending', this)">
+                            Bài chờ duyệt
+                            <span class="badge bg-warning text-dark ms-1" id="topPendingBadge">0</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light rounded-pill px-3 filter-feed-btn" data-filter="reported" onclick="filterFeed('reported', this)">
+                            Có báo cáo vi phạm
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- 2.2.2 Container Bài viết người dùng đăng tải -->
+            <div id="fbUserPostsContainer">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+                    <div class="small">Đang tải bài viết cộng đồng...</div>
+                </div>
+            </div>
+
+            <!-- 2.3 Post Feed: Khóa học nổi bật dạng bài viết Facebook -->
+            @foreach (var kh in Model.FeaturedCourses)
+            {
+                <article class="fb-post" id="post-@kh.MaKhoaHoc">
+                    <!-- Post Header -->
+                    <div class="fb-post-header">
+                        <div class="fb-post-author">
+                            <div class="fb-avatar" style="background: #ffffff; border: 1px solid #e4e6eb; padding: 2px;">
+                                <img src="~/images/logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+                            </div>
+                            <div>
+                                <div class="fb-author-name">
+                                    LanguageBook Academy
+                                    <i class="bi bi-patch-check-fill fb-verified-badge" title="Trang đào tạo đã xác minh"></i>
+                                </div>
+                                <div class="fb-post-meta">
+                                    <span>Được tài trợ</span> &bull;
+                                    <span>2 giờ trước</span> &bull;
+                                    <i class="bi bi-globe-americas"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-light border-0 rounded-circle text-muted" type="button" title="Tùy chọn bài viết">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Post Body / Content Text -->
+                    <div class="fb-post-body">
+                        <p class="mb-2">
+                            🔥 <strong>[@kh.NgoaiNgu.ToUpper()] KHÓA HỌC: @kh.TenKhoaHoc.ToUpper()</strong> 🔥
+                        </p>
+                        <p class="mb-2 text-secondary">
+                            @kh.MoTa
+                        </p>
+                        <div class="d-flex flex-wrap gap-2 my-2">
+                            <span class="fb-badge fb-badge-blue"><i class="bi bi-mortarboard-fill me-1"></i>Chuẩn CEFR: @kh.CapDo</span>
+                            <span class="fb-badge fb-badge-green"><i class="bi bi-clock-history me-1"></i>Thời lượng: @kh.SoBuoi buổi</span>
+                            <span class="fb-badge fb-badge-yellow"><i class="bi bi-translate me-1"></i>Ngôn ngữ: @kh.NgoaiNgu</span>
+                        </div>
+                        <div class="small text-primary fw-semibold mt-2">
+                            #LanguageBook #KhoaHocNgoaiNgu #@kh.NgoaiNgu.Replace(" ", "") #@kh.CapDo
+                        </div>
+                    </div>
+
+                    <!-- Post Media / Preview Card -->
+                    <div class="fb-post-media">
+                        @{
+                            string bannerImg = ImageHelper.GetCourseImage(kh.NgoaiNgu, kh.TenKhoaHoc, kh.MaKhoaHoc);
+                        }
+                        <div class="position-relative overflow-hidden" style="max-height: 380px; background: #000;">
+                            <img src="@bannerImg" alt="@kh.TenKhoaHoc" class="w-100" style="max-height: 360px; object-fit: cover; display: block;" />
+                            <div class="position-absolute top-0 start-0 w-100 p-3 d-flex justify-content-between align-items-start" style="background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, transparent 100%);">
+                                <span class="badge bg-danger px-3 py-2 fs-6 fw-bold shadow-sm"><i class="bi bi-fire me-1"></i>CHỈ CÒN VÀI SUẤT</span>
+                                <span class="badge bg-light text-dark px-2 py-1 shadow-sm"><i class="bi bi-award-fill text-warning me-1"></i>Khóa học tiêu biểu</span>
+                            </div>
+                            <div class="position-absolute bottom-0 start-0 w-100 p-3 text-white" style="background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);">
+                                <h4 class="fw-bold text-white mb-1">@kh.TenKhoaHoc</h4>
+                                <div class="text-light opacity-90 small"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Cơ sở 5★ hiện đại &bull; Trực tiếp hoặc Online tương tác 1:1</div>
+                            </div>
+                        </div>
+
+                        <!-- Call to Action Banner -->
+                        <div class="fb-post-media-content d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <div class="text-uppercase text-muted" style="font-size: 11px; font-weight: 700;">HỌC PHÍ NIÊM YẾT CHÍNH THỨC</div>
+                                <div class="fw-bold fs-5 text-primary">@kh.HocPhi.ToString("N0") VNĐ</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-controller="KhoaHoc" asp-action="Details" asp-route-id="@kh.MaKhoaHoc" class="fb-btn fb-btn-primary">
+                                    <i class="bi bi-send-check me-1"></i> Đăng ký học ngay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Post Stats (Reactions & Comments) -->
+                    <div class="fb-post-stats">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="fb-reactions-icons">
+                                <span class="fb-reaction-icon fb-reaction-like"><i class="bi bi-hand-thumbs-up-fill"></i></span>
+                                <span class="fb-reaction-icon fb-reaction-love"><i class="bi bi-heart-fill"></i></span>
+                            </div>
+                            <span>148 người khác</span>
+                        </div>
+                        <div class="d-flex gap-3 text-muted">
+                            <a href="#comments-@kh.MaKhoaHoc" class="text-muted text-decoration-none" data-bs-toggle="collapse" role="button">
+                                @(kh.BinhLuans?.Count ?? 0) bình luận
+                            </a>
+                            <span>15 lượt chia sẻ</span>
+                        </div>
+                    </div>
+
+                    <!-- Post Action Buttons (Like, Comment, Share, Register) -->
+                    <div class="fb-post-actions-bar">
+                        <button class="fb-post-action-btn active-liked" type="button">
+                            <i class="bi bi-hand-thumbs-up-fill"></i>
+                            <span>Thích</span>
+                        </button>
+                        <a href="#comments-@kh.MaKhoaHoc" class="fb-post-action-btn" data-bs-toggle="collapse" role="button">
+                            <i class="bi bi-chat-square"></i>
+                            <span>Bình luận (@(kh.BinhLuans?.Count ?? 0))</span>
+                        </a>
+                        <button class="fb-post-action-btn" type="button">
+                            <i class="bi bi-share"></i>
+                            <span>Chia sẻ</span>
+                        </button>
+                        <a asp-controller="KhoaHoc" asp-action="Details" asp-route-id="@kh.MaKhoaHoc" class="fb-post-action-btn text-primary fw-bold">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            <span>Xem lớp</span>
+                        </a>
+                    </div>
+
+                    <!-- Comments Section (Facebook Comment Bubbles & Input) -->
+                    <div class="collapse show p-3 pt-2 border-top bg-light-subtle" id="comments-@kh.MaKhoaHoc">
+                        <!-- Comments List -->
+                        @if (kh.BinhLuans != null && kh.BinhLuans.Any())
+                        {
+                            <div class="d-flex flex-column gap-2 mb-3">
+                                @foreach (var bl in kh.BinhLuans.OrderBy(b => b.NgayBinhLuan))
+                                {
+                                    var isCommentOwner = currentUserId.HasValue && bl.MaTaiKhoan == currentUserId.Value;
+                                    var canDelete = isAdmin || isCommentOwner;
+
+                                    <div class="d-flex align-items-start gap-2">
+                                        <!-- User Avatar -->
+                                        <div class="fb-avatar fb-avatar-sm flex-shrink-0" style="background: @(bl.TaiKhoan?.VaiTro == "Admin" ? "#0866ff" : "#42b72a"); color: #fff;">
+                                            @(bl.TaiKhoan?.HoTen != null && bl.TaiKhoan.HoTen.Length > 0 ? bl.TaiKhoan.HoTen.Substring(0, 1).ToUpper() : "U")
+                                        </div>
+
+                                        <div class="flex-grow-1">
+                                            <!-- Comment Bubble -->
+                                            <div class="p-2 px-3 rounded-4 d-inline-block position-relative" style="background-color: #f0f2f5; max-width: 95%;">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="fw-bold small text-dark">@(bl.TaiKhoan?.HoTen ?? "Người dùng")</span>
+                                                    @if (bl.TaiKhoan?.VaiTro == "Admin")
+                                                    {
+                                                        <span class="badge bg-primary" style="font-size: 9px; padding: 1px 5px;">Quản trị viên</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success" style="font-size: 9px; padding: 1px 5px;">Học viên</span>
+                                                    }
+                                                </div>
+                                                <div class="small text-dark" style="word-break: break-word;">
+                                                    @bl.NoiDung
+                                                </div>
+                                            </div>
+
+                                            <!-- Comment Actions (Time & Delete Button) -->
+                                            <div class="d-flex align-items-center gap-3 ms-2 mt-1 text-muted" style="font-size: 11px;">
+                                                <span>@bl.NgayBinhLuan.ToString("dd/MM HH:mm")</span>
+                                                <span class="fw-semibold text-secondary" style="cursor: pointer;">Thích</span>
+                                                
+                                                @if (canDelete)
+                                                {
+                                                    <form asp-controller="BinhLuan" asp-action="Delete" asp-route-id="@bl.MaBinhLuan" method="post" class="d-inline m-0 p-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận này?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="returnUrl" value="/#post-@kh.MaKhoaHoc" />
+                                                        <button type="submit" class="border-0 bg-transparent text-danger p-0 fw-semibold" style="font-size: 11px; cursor: pointer;">
+                                                            <i class="bi bi-trash3 me-1"></i>Xóa
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Add Comment Form -->
+                        @if (isLoggedIn)
+                        {
+                            <form asp-controller="BinhLuan" asp-action="Create" method="post" class="d-flex align-items-center gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="maKhoaHoc" value="@kh.MaKhoaHoc" />
+                                <input type="hidden" name="returnUrl" value="/#post-@kh.MaKhoaHoc" />
+
+                                <div class="fb-avatar fb-avatar-sm flex-shrink-0">
+                                    @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                                </div>
+
+                                <div class="position-relative flex-grow-1">
+                                    <input type="text" name="noiDung" class="fb-input py-1 px-3 pe-5 rounded-pill" style="font-size: 13px;" placeholder="Viết bình luận cho khóa học này..." required />
+                                    <button type="submit" class="position-absolute end-0 top-50 translate-middle-y me-2 border-0 bg-transparent text-primary" title="Gửi bình luận">
+                                        <i class="bi bi-send-fill fs-6"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="p-2 text-center text-muted small bg-white rounded border">
+                                <i class="bi bi-chat-quote me-1 text-primary"></i> 
+                                <a href="/TaiKhoan/Login?returnUrl=/#post-@kh.MaKhoaHoc" class="text-primary fw-bold text-decoration-none">Đăng nhập</a> để tham gia bình luận cùng học viên và quản trị viên.
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+
+            @if (!Model.FeaturedCourses.Any())
+            {
+                <div class="fb-card p-4 text-center text-muted">
+                    <i class="bi bi-journal-x fs-1 d-block mb-2 text-secondary"></i>
+                    <h5>Chưa có bài viết hoặc khóa học nào hiển thị</h5>
+                </div>
+            }
+        </div>
+
+        <!-- =========================================================================
+             3. RIGHT COLUMN: FACEBOOK SPONSORED & ONLINE CONTACTS
+             ========================================================================= -->
+        <div class="col-lg-3 col-xl-3 d-none d-lg-block">
+            <div class="fb-sidebar">
+                <!-- 3.1 Được tài trợ (Sponsored Ads) -->
+                <div class="fb-sidebar-title">Được tài trợ</div>
+                <div class="fb-card p-2 mb-3">
+                    <div class="d-flex gap-2 align-items-center mb-2">
+                        <div class="rounded overflow-hidden" style="width: 80px; height: 60px; flex-shrink: 0;">
+                            <img src="@ImageHelper.GetSponsoredAdImage()" alt="Học bổng Tiếng Anh" style="width:100%; height:100%; object-fit:cover;" />
+                        </div>
+                        <div style="font-size: 13px;">
+                            <strong class="d-block text-truncate">Học bổng Tiếng Anh 2026</strong>
+                            <span class="text-muted small">languagebook.edu.vn</span>
+                        </div>
+                    </div>
+                    <p class="small text-secondary mb-2" style="font-size: 12px;">
+                        Tặng ngay voucher 500.000 VNĐ khi đăng ký theo nhóm 2 người trở lên trong tháng này!
+                    </p>
+                    <a href="/KhoaHoc/Catalog" class="fb-btn fb-btn-secondary fb-btn-sm w-100">
+                        Nhận ưu đãi ngay
+                    </a>
+                </div>
+
+                <!-- 3.2 Lớp học sắp khai giảng (Upcoming Events) -->
+                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+                    <span class="fb-sidebar-title p-0">Lịch khai giảng mới</span>
+                    <a href="/LopHoc" class="small text-primary text-decoration-none fw-semibold">Xem tất cả</a>
+                </div>
+
+                <div class="fb-card p-2 mb-3">
+                    @foreach (var lop in Model.RecruitingClasses.Take(3))
+                    {
+                        <a asp-controller="LopHoc" asp-action="Details" asp-route-id="@lop.MaLop" class="d-block p-2 rounded text-decoration-none text-dark hover-bg border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-primary small">@lop.TenLop</strong>
+                                <span class="badge bg-success" style="font-size: 10px;">@lop.TrangThai</span>
+                            </div>
+                            <div class="text-muted small" style="font-size: 11px;">
+                                <i class="bi bi-calendar-event me-1"></i> Khai giảng: @lop.NgayKhaiGiang.ToString("dd/MM/yyyy")
+                            </div>
+                            <div class="text-muted small" style="font-size: 11px;">
+                                <i class="bi bi-clock me-1"></i> @lop.LichHoc &bull; Phòng: @lop.PhongHoc
+                            </div>
+                        </a>
+                    }
+                </div>
+
+                <hr class="my-2" style="border-color: #e4e6eb;" />
+
+                <!-- 3.3 Người liên hệ / Tư vấn viên trực tuyến (Active Online Contacts) -->
+                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+                    <span class="fb-sidebar-title p-0">Tư vấn viên trực tuyến</span>
+                    <div class="d-flex gap-2 text-muted">
+                        <i class="bi bi-camera-video"></i>
+                        <i class="bi bi-search"></i>
+                        <i class="bi bi-three-dots"></i>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-1">
+                    <div role="button" onclick="toggleMessengerDropdown()" class="fb-contact-item">
+                        <div class="fb-avatar fb-avatar-sm fb-online-badge" style="background: #1877f2; color: #fff;">
+                            MA
+                        </div>
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold small">Cô Mai Anh (IELTS 8.5)</span>
+                            <span class="text-muted" style="font-size: 11px;">Đang hoạt động &bull; Nhắn tin</span>
+                        </div>
+                    </div>
+
+                    <div role="button" onclick="toggleMessengerDropdown()" class="fb-contact-item">
+                        <div class="fb-avatar fb-avatar-sm fb-online-badge" style="background: #e41e3f; color: #fff;">
+                            KJ
+                        </div>
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold small">Thầy Kenji (JLPT N1)</span>
+                            <span class="text-muted" style="font-size: 11px;">Đang hoạt động &bull; Nhắn tin</span>
+                        </div>
+                    </div>
+
+                    <div role="button" onclick="toggleMessengerDropdown()" class="fb-contact-item">
+                        <div class="fb-avatar fb-avatar-sm fb-online-badge" style="background: #42b72a; color: #fff;">
+                            TT
+                        </div>
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold small">Cô Thu Trang (HSK 6)</span>
+                            <span class="text-muted" style="font-size: 11px;">Đang hoạt động &bull; Nhắn tin</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL 0: THÔNG BÁO YÊU CẦU ĐĂNG NHẬP ĐỂ ĐĂNG BÀI
+     ========================================================================= -->
+<div class="modal fade" id="fbRequireLoginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg text-center p-4" style="border-radius: 16px;">
+            <div class="modal-body p-0">
+                <div class="mb-3">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 72px; height: 72px;">
+                        <i class="bi bi-pencil-square fs-1"></i>
+                    </span>
+                </div>
+                <h4 class="fw-bold mb-2 text-dark">Bạn muốn chia sẻ bài viết?</h4>
+                <p class="text-secondary small mb-4">
+                    Vui lòng đăng nhập tài khoản Học viên hoặc Giáo viên để đăng bài viết, hình ảnh, video, phông nền và tương tác cùng cộng đồng trung tâm.
+                </p>
+
+                <div class="d-grid gap-2">
+                    <a href="/TaiKhoan/Login" class="btn btn-primary fw-bold py-2 rounded-pill shadow-sm">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập ngay
+                    </a>
+                    <a href="/TaiKhoan/Register" class="btn btn-outline-secondary fw-semibold py-2 rounded-pill">
+                        <i class="bi bi-person-plus me-1"></i>Đăng ký tài khoản học viên mới
+                    </a>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 mt-4 text-start small border">
+                    <div class="fw-bold text-dark mb-1"><i class="bi bi-key-fill text-warning me-1"></i>Tài khoản thử nghiệm:</div>
+                    <div class="text-secondary">&bull; <strong>Học viên:</strong> <code class="text-primary">hocvien1</code> / <code>123456</code></div>
+                    <div class="text-secondary">&bull; <strong>Giáo viên:</strong> <code class="text-primary">giaovien1</code> / <code>123456</code></div>
+                    <div class="text-secondary">&bull; <strong>Quản lý:</strong> <code class="text-danger">admin</code> / <code>admin123</code></div>
+                </div>
+
+                <button type="button" class="btn btn-link text-muted small mt-3 p-0 text-decoration-none" data-bs-dismiss="modal">
+                    Để sau, tiếp tục xem bài viết
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL 1: TẠO BÀI VIẾT FACEBOOK (ẢNH, VIDEO, PHÔNG NỀN, TÔ ĐẬM)
+     ========================================================================= -->
+<div class="modal fade" id="fbCreatePostModal" tabindex="-1" aria-labelledby="fbCreatePostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header border-bottom py-3 position-relative">
+                <h5 class="modal-title w-100 text-center fw-bold fs-5 m-0" id="fbCreatePostModalLabel">Tạo bài viết</h5>
+                <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-3">
+                <!-- User Meta -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="fb-avatar" style="width: 44px; height: 44px; font-size: 18px;">
+                        @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="font-size: 15px;">@userName</div>
+                        <span class="badge bg-light text-secondary border rounded-pill px-2 py-1 small">
+                            <i class="bi bi-globe-americas me-1"></i>Công khai &bull; @(userRole == "Admin" ? "Quản trị viên" : (userRole == "GiaoVien" ? "Giáo viên" : "Học viên"))
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Composer Box (Hỗ trợ phông nền đổi màu trực tiếp) -->
+                <div id="postComposerWrapper" class="rounded-3 transition-all mb-2" style="background: #ffffff; min-height: 140px; transition: all 0.3s ease;">
+                    <textarea id="postContentInput" class="form-control border-0 shadow-none p-3" 
+                              rows="4" 
+                              placeholder="@userName ơi, bạn đang nghĩ gì thế? Chia sẻ tiến độ học tập, mẹo làm bài thi hoặc câu hỏi nhé..." 
+                              style="font-size: 17px; background: transparent; resize: none;"></textarea>
+                </div>
+
+                <!-- Media Preview Box: Ảnh -->
+                <div id="postImagePreviewBox" class="position-relative mb-2 d-none rounded-3 overflow-hidden border">
+                    <img id="postImagePreview" src="" alt="Preview ảnh" class="w-100" style="max-height: 320px; object-fit: cover;" />
+                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-2" onclick="clearSelectedPostImage()" title="Xóa ảnh">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Media Preview Box: Video -->
+                <div id="postVideoPreviewBox" class="position-relative mb-2 d-none rounded-3 overflow-hidden border bg-dark">
+                    <video id="postVideoPreview" controls class="w-100" style="max-height: 320px;"></video>
+                    <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-2" onclick="clearSelectedVideo()" title="Xóa video">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Phông nền Palette Picker (Facebook Style Color Circles) -->
+                <div id="postBackgroundPicker" class="d-none border rounded-3 p-2 mb-3 bg-light">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="small fw-semibold text-secondary"><i class="bi bi-palette me-1"></i>Chọn phông nền bài viết:</span>
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" onclick="applyPostBackground('none')">Mặc định (Trắng)</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="fb-color-swatch active" style="background: #ffffff;" onclick="applyPostBackground('none')" title="Mặc định"></div>
+                        <div class="fb-color-swatch fb-bg-sunset" onclick="applyPostBackground('sunset')" title="Sunset (Hoàng hôn cam hồng)"></div>
+                        <div class="fb-color-swatch fb-bg-ocean" onclick="applyPostBackground('ocean')" title="Ocean (Đại dương xanh mát)"></div>
+                        <div class="fb-color-swatch fb-bg-fire" onclick="applyPostBackground('fire')" title="Fire (Lửa hồng neon)"></div>
+                        <div class="fb-color-swatch fb-bg-berry" onclick="applyPostBackground('berry')" title="Berry (Dâu tím mộng mơ)"></div>
+                        <div class="fb-color-swatch fb-bg-midnight" onclick="applyPostBackground('midnight')" title="Midnight (Đêm than chì)"></div>
+                        <div class="fb-color-swatch fb-bg-emerald" onclick="applyPostBackground('emerald')" title="Emerald (Ngọc lục bảo)"></div>
+                        <div class="fb-color-swatch fb-bg-purple" onclick="applyPostBackground('purple')" title="Purple (Tím pastel)"></div>
+                    </div>
+                </div>
+
+                <!-- Toolbar: Tô đậm chữ & Chọn tệp ảnh/video -->
+                <div class="d-flex align-items-center justify-content-between border rounded-3 p-2 bg-light">
+                    <span class="small fw-semibold text-secondary">Thêm vào bài viết:</span>
+                    <div class="d-flex align-items-center gap-1">
+                        <!-- Nút Tô đậm chữ -->
+                        <button type="button" class="btn btn-sm btn-white border shadow-sm rounded-pill px-3" onclick="insertBoldText()" title="Bôi đen chữ rồi bấm để in đậm">
+                            <i class="bi bi-type-bold text-primary fw-bold me-1"></i>Tô đậm
+                        </button>
+
+                        <!-- Nút Bật phông nền -->
+                        <button type="button" class="btn btn-sm btn-white border shadow-sm rounded-pill px-3" onclick="toggleBackgroundPalette()" title="Chọn phông nền màu rực rỡ">
+                            <i class="bi bi-palette-fill text-danger me-1"></i>Phông nền
+                        </button>
+
+                        <!-- Nút Tải ảnh -->
+                        <label class="btn btn-sm btn-white border shadow-sm rounded-pill px-3 m-0 cursor-pointer" title="Tải ảnh lên">
+                            <i class="bi bi-image text-success me-1"></i>Ảnh
+                            <input type="file" id="postImageFileInput" accept="image/*" class="d-none" onchange="handleImageSelected(this)" />
+                        </label>
+
+                        <!-- Nút Tải video -->
+                        <label class="btn btn-sm btn-white border shadow-sm rounded-pill px-3 m-0 cursor-pointer" title="Tải video lên">
+                            <i class="bi bi-camera-video-fill text-danger me-1"></i>Video
+                            <input type="file" id="postVideoFileInput" accept="video/*" class="d-none" onchange="handleVideoSelected(this)" />
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="button" class="btn btn-primary w-100 fw-bold py-2 mt-3 rounded-pill" id="btnSubmitPost" onclick="submitCreatePost()">
+                    Đăng bài viết
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL 2: BÁO CÁO BÀI VIẾT SAI PHẠM (HỌC VIÊN & GIÁO VIÊN BÁO CÁO CHO QUẢN LÝ)
+     ========================================================================= -->
+<div class="modal fade" id="fbReportPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 12px;">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold fs-6 m-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Báo cáo bài viết sai phạm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-3">
+                <input type="hidden" id="reportTargetPostId" value="0" />
+                <p class="small text-secondary mb-3">
+                    Nếu bạn nhận thấy bài viết này có dấu hiệu sai phạm, ngôn từ kích động hoặc thông tin sai lệch, hãy chọn lý do dưới đây để báo cáo đến Quản trị viên xử lý.
+                </p>
+
+                <div class="d-flex flex-column gap-2 mb-3">
+                    <label class="form-check p-2 border rounded-2 cursor-pointer hover-bg">
+                        <input class="form-check-input ms-1 me-2" type="radio" name="reportReasonRadio" value="Nội dung phản cảm hoặc kích động thù địch" checked>
+                        <span class="form-check-label small fw-semibold">Nội dung phản cảm hoặc kích động thù địch</span>
+                    </label>
+                    <label class="form-check p-2 border rounded-2 cursor-pointer hover-bg">
+                        <input class="form-check-input ms-1 me-2" type="radio" name="reportReasonRadio" value="Spam, quảng cáo trái phép hoặc lừa đảo">
+                        <span class="form-check-label small fw-semibold">Spam, quảng cáo trái phép hoặc lừa đảo</span>
+                    </label>
+                    <label class="form-check p-2 border rounded-2 cursor-pointer hover-bg">
+                        <input class="form-check-input ms-1 me-2" type="radio" name="reportReasonRadio" value="Thông tin sai lệch về khóa học hoặc trung tâm">
+                        <span class="form-check-label small fw-semibold">Thông tin sai lệch về khóa học hoặc trung tâm</span>
+                    </label>
+                    <label class="form-check p-2 border rounded-2 cursor-pointer hover-bg">
+                        <input class="form-check-input ms-1 me-2" type="radio" name="reportReasonRadio" value="Quấy rối, xúc phạm danh dự cá nhân khác">
+                        <span class="form-check-label small fw-semibold">Quấy rối, xúc phạm danh dự cá nhân khác</span>
+                    </label>
+                    <label class="form-check p-2 border rounded-2 cursor-pointer hover-bg">
+                        <input class="form-check-input ms-1 me-2" type="radio" name="reportReasonRadio" value="Lý do khác">
+                        <span class="form-check-label small fw-semibold">Lý do khác</span>
+                    </label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">Chi tiết thêm (tùy chọn):</label>
+                    <textarea id="reportDetailsInput" class="form-control" rows="2" placeholder="Mô tả cụ thể hành vi sai phạm..."></textarea>
+                </div>
+
+                <button type="button" class="btn btn-danger w-100 fw-bold py-2 rounded-pill" onclick="submitPostReport()">
+                    <i class="bi bi-send-fill me-1"></i>Gửi báo cáo vi phạm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL 3: TRUNG TÂM XỬ LÝ BÁO CÁO VI PHẠM (DÀNH CHO QUẢN TRỊ VIÊN)
+     ========================================================================= -->
+<div class="modal fade" id="fbAdminReportsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header border-bottom py-3 bg-danger text-white">
+                <h5 class="modal-title fw-bold fs-6 m-0"><i class="bi bi-shield-exclamation me-2"></i>Trung tâm Xử lý Báo cáo Sai phạm</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-3" style="max-height: 70vh; overflow-y: auto;">
+                <div id="adminReportsContainer">
+                    <div class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm text-danger mb-2"></div>
+                        <div>Đang tải danh sách báo cáo...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL 4: CHIA SẺ BÀI VIẾT (DÀNH CHO HỌC VIÊN, GIÁO VIÊN & ADMIN)
+     ========================================================================= -->
+<div class="modal fade" id="fbSharePostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+            <div class="modal-header border-bottom py-3 position-relative">
+                <h5 class="modal-title w-100 text-center fw-bold fs-6 m-0 text-dark"><i class="bi bi-share me-2 text-primary"></i>Chia sẻ bài viết</h5>
+                <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-3">
+                <input type="hidden" id="shareTargetPostId" value="0" />
+
+                <!-- User Meta -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="fb-avatar" style="width: 40px; height: 40px; font-size: 16px; background: #0866ff; color: #fff;">
+                        @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="font-size: 14px;">@userName</div>
+                        <span class="badge bg-light text-secondary border rounded-pill px-2 py-0 small">
+                            <i class="bi bi-globe-americas me-1"></i>Chia sẻ lên Bảng tin công khai
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Input Lời bình -->
+                <div class="mb-3">
+                    <textarea id="shareCaptionInput" class="form-control border-0 shadow-none p-2 bg-light rounded-3" 
+                              rows="3" 
+                              placeholder="Hãy nói gì đó về bài viết này..." 
+                              style="font-size: 14px; resize: none;"></textarea>
+                </div>
+
+                <!-- Preview bài viết gốc -->
+                <div class="border rounded-3 p-3 bg-white mb-3 shadow-sm" id="sharePostPreviewBox">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="fb-avatar" id="sharePreviewAvatar" style="width: 28px; height: 28px; font-size: 12px; background: #0866ff; color: #fff;">U</div>
+                        <div>
+                            <div class="fw-bold text-dark small" id="sharePreviewAuthor">Tác giả</div>
+                            <div class="text-muted" style="font-size: 10px;" id="sharePreviewTime">Thời gian</div>
+                        </div>
+                    </div>
+                    <div class="small text-secondary mb-2" id="sharePreviewContent" style="white-space: pre-line;">Nội dung bài viết...</div>
+                    <div id="sharePreviewMedia" class="rounded overflow-hidden"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex flex-column gap-2">
+                    <button type="button" class="btn btn-primary fw-bold py-2 rounded-pill shadow-sm" id="btnConfirmSharePost" onclick="submitSharePost()">
+                        <i class="bi bi-send-check me-1"></i>Chia sẻ ngay lên Bảng tin
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-2 rounded-pill" onclick="copyPostLinkFromShareModal()">
+                        <i class="bi bi-link-45deg me-1"></i>Sao chép liên kết bài viết
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // State variables
+    let post_currentFeedFilter = 'all';
+    let post_selectedBackground = null;
+    let post_selectedImageFile = null;
+    let post_selectedVideoFile = null;
+    let post_isUserLoggedIn = @(isLoggedIn ? "true" : "false");
+    let post_isUserAdmin = @(isAdmin ? "true" : "false");
+    let post_cachedPosts = {};
+
+    // Tự động tải bài viết ngay khi script sẵn sàng hoặc DOMContentLoaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            loadNewsFeed('all');
+        });
+    } else {
+        loadNewsFeed('all');
+    }
+
+    // =========================================================================
+    // 1. TẢI DANH SÁCH BÀI VIẾT (GET FEED)
+    // =========================================================================
+    function loadNewsFeed(filter = 'all') {
+        post_currentFeedFilter = filter;
+        const container = document.getElementById('fbUserPostsContainer');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+                <div class="small">Đang tải bài viết cộng đồng...</div>
+            </div>
+        `;
+
+        fetch('/BaiViet/GetFeed?filter=' + encodeURIComponent(filter))
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('HTTP ' + res.status);
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data || !data.success) {
+                    container.innerHTML = `
+                        <div class="alert alert-warning text-center small my-3 p-3">
+                            <div>${data?.message || 'Không thể tải danh sách bài viết.'}</div>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill mt-2 px-3" onclick="loadNewsFeed('${filter}')">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Thử lại
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Cập nhật thông tin quản trị nếu là Admin
+                if (data.isAdmin) {
+                    const switchElem = document.getElementById('toggleApprovalSwitch');
+                    const labelElem = document.getElementById('toggleApprovalLabel');
+                    const pendingBadge = document.getElementById('topPendingBadge');
+                    const reportBadge = document.getElementById('topReportBadge');
+
+                    if (switchElem) switchElem.checked = data.batXetDuyet;
+                    if (labelElem) {
+                        labelElem.innerHTML = data.batXetDuyet 
+                            ? '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Đang BẬT xét duyệt</span>'
+                            : '<span class="text-secondary"><i class="bi bi-dash-circle me-1"></i>Đang TẮT (Đăng ngay)</span>';
+                    }
+                    if (pendingBadge) pendingBadge.innerText = data.pendingCount;
+                    if (reportBadge) reportBadge.innerText = data.reportCount;
+                }
+
+                if (!data.posts || data.posts.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-5 bg-white rounded-3 border mb-3">
+                            <i class="bi bi-chat-square-quote fs-1 text-secondary mb-2 d-block"></i>
+                            <div class="fw-bold text-secondary">Chưa có bài viết nào trong mục này.</div>
+                            <div class="text-muted small mt-1">Hãy là người đầu tiên chia sẻ cảm nghĩ và tiến độ học tập hôm nay!</div>
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill mt-3 px-3" onclick="openCreatePostModal()">
+                                <i class="bi bi-pencil-square me-1"></i>Đăng bài ngay
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                post_cachedPosts = {};
+                data.posts.forEach(p => {
+                    post_cachedPosts[p.maBaiViet] = p;
+                    html += renderSinglePostHtml(p, data.currentUserId, data.isAdmin);
+                });
+                container.innerHTML = html;
+            })
+            .catch(err => {
+                console.error("Lỗi tải feed:", err);
+                container.innerHTML = `
+                    <div class="alert alert-light border shadow-sm text-center small my-3 p-3">
+                        <i class="bi bi-cloud-slash text-danger fs-3 d-block mb-1"></i>
+                        <div class="fw-bold text-dark">Chưa thể kết nối tới máy chủ để tải bài viết.</div>
+                        <div class="text-muted mt-1">Hệ thống đang đồng bộ dữ liệu hoặc máy chủ đang khởi động lại.</div>
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill mt-3 px-3 shadow-sm" onclick="loadNewsFeed(post_currentFeedFilter)">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Thử lại ngay
+                        </button>
+                    </div>
+                `;
+            });
+    }
+
+    // Render HTML cho từng bài viết
+    function renderSinglePostHtml(p, currentUserId, isAdmin) {
+        const formattedContent = formatPostContentText(p.noiDung);
+        const avatarLetter = (p.tacGiaTen && p.tacGiaTen.length > 0) ? p.tacGiaTen.substring(0, 1).toUpperCase() : 'U';
+        const roleBadge = p.tacGiaVaiTro === 'Admin' 
+            ? '<span class="badge bg-danger ms-1" style="font-size: 10px;">Quản trị</span>'
+            : (p.tacGiaVaiTro === 'GiaoVien' ? '<span class="badge bg-primary ms-1" style="font-size: 10px;">Giáo viên</span>' : '<span class="badge bg-success ms-1" style="font-size: 10px;">Học viên</span>');
+
+        // Trạng thái chờ duyệt
+        let statusBadge = '';
+        if (p.trangThai === 'ChoDuyet') {
+            statusBadge = `
+                <div class="alert alert-warning py-1 px-3 mb-2 small d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-hourglass-split me-1"></i><strong>Bài viết đang chờ Quản trị viên duyệt</strong> trước khi hiển thị công khai.</span>
+                    ${p.canApprove ? `
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-success btn-sm rounded-pill py-0 px-2 fw-bold" onclick="approvePost(${p.maBaiViet}, true)"><i class="bi bi-check-lg me-1"></i>Duyệt</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill py-0 px-2 fw-bold" onclick="approvePost(${p.maBaiViet}, false)"><i class="bi bi-x-lg me-1"></i>Từ chối</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Báo cáo vi phạm (Dành cho Admin)
+        let reportAlert = '';
+        if (isAdmin && p.soBaoCao > 0) {
+            reportAlert = `
+                <div class="alert alert-danger py-1 px-3 mb-2 small d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle-fill me-1"></i><strong>Cảnh báo:</strong> Bài viết này nhận được <strong>${p.soBaoCao}</strong> lượt báo cáo sai phạm!</span>
+                    <button type="button" class="btn btn-danger btn-sm rounded-pill py-0 px-2 fw-bold" onclick="openAdminReportsModal()">Xử lý ngay</button>
+                </div>
+            `;
+        }
+
+        // Thân bài viết: Phông nền màu hoặc chữ bình thường
+        let bodyHtml = '';
+        if (p.phongNen && p.phongNen !== 'none' && !p.hinhAnhUrl && !p.videoUrl) {
+            bodyHtml = `
+                <div class="fb-post-bg-canvas fb-bg-${p.phongNen}">
+                    <div>${formattedContent}</div>
+                </div>
+            `;
+        } else {
+            bodyHtml = `
+                <div class="fb-post-body">
+                    <p class="mb-2" style="white-space: pre-line;">${formattedContent}</p>
+                </div>
+            `;
+        }
+
+        // Ảnh đính kèm
+        let mediaHtml = '';
+        if (p.hinhAnhUrl) {
+            mediaHtml += `
+                <div class="fb-post-media">
+                    <img src="${p.hinhAnhUrl}" alt="Ảnh bài viết" loading="lazy" />
+                </div>
+            `;
+        }
+        // Video đính kèm
+        if (p.videoUrl) {
+            mediaHtml += `
+                <div class="fb-post-media bg-dark">
+                    <video controls class="w-100" style="max-height: 420px;" preload="metadata">
+                        <source src="${p.videoUrl}">
+                        Trình duyệt của bạn không hỗ trợ phát video này.
+                    </video>
+                </div>
+            `;
+        }
+
+        // Bài viết gốc lồng bên trong (Nếu đây là bài chia sẻ)
+        let sharedPostHtml = '';
+        if (p.baiVietGoc) {
+            const orig = p.baiVietGoc;
+            const origAvatarLetter = (orig.tacGiaTen && orig.tacGiaTen.length > 0) ? orig.tacGiaTen.substring(0, 1).toUpperCase() : 'U';
+            let origMedia = '';
+            if (orig.hinhAnhUrl) {
+                origMedia += `<div class="rounded overflow-hidden mb-2"><img src="${orig.hinhAnhUrl}" alt="Ảnh đính kèm" class="w-100" style="max-height: 280px; object-fit: cover;" /></div>`;
+            }
+            if (orig.videoUrl) {
+                origMedia += `<div class="rounded overflow-hidden mb-2 bg-dark"><video controls class="w-100" style="max-height: 280px;"><source src="${orig.videoUrl}"></video></div>`;
+            }
+            let origBody = '';
+            if (orig.phongNen && orig.phongNen !== 'none' && !orig.hinhAnhUrl && !orig.videoUrl) {
+                origBody = `<div class="fb-post-bg-canvas fb-bg-${orig.phongNen} rounded p-3 text-center my-2" style="font-size: 15px;">${formatPostContentText(orig.noiDung)}</div>`;
+            } else {
+                origBody = `<div class="small text-dark mb-2" style="white-space: pre-line;">${formatPostContentText(orig.noiDung)}</div>`;
+            }
+
+            sharedPostHtml = `
+                <div class="border rounded-3 p-3 bg-light mx-3 mb-3 shadow-xs">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="fb-avatar" style="width: 32px; height: 32px; font-size: 13px; ${orig.tacGiaAvatar ? `background-image: url('${orig.tacGiaAvatar}'); background-size: cover;` : 'background: #0866ff; color: #fff;'}">
+                            ${!orig.tacGiaAvatar ? origAvatarLetter : ''}
+                        </div>
+                        <div>
+                            <div class="fw-bold small text-dark">${orig.tacGiaTen}</div>
+                            <div class="text-muted" style="font-size: 11px;">${orig.ngayDangHienThi} &bull; <i class="bi bi-globe-americas"></i></div>
+                        </div>
+                    </div>
+                    ${origBody}
+                    ${origMedia}
+                </div>
+            `;
+        }
+
+        // Menu 3 chấm (Xóa bài hoặc Báo cáo)
+        let menuItems = '';
+        if (p.canDelete) {
+            menuItems += `<li><a class="dropdown-item text-danger py-1" href="javascript:void(0)" onclick="confirmDeletePost(${p.maBaiViet})"><i class="bi bi-trash3 me-2"></i>Xóa bài viết</a></li>`;
+        }
+        if (p.canReport) {
+            menuItems += `<li><a class="dropdown-item text-warning py-1" href="javascript:void(0)" onclick="openReportModal(${p.maBaiViet})"><i class="bi bi-flag me-2"></i>Báo cáo sai phạm</a></li>`;
+        }
+        menuItems += `<li><a class="dropdown-item py-1" href="javascript:void(0)" onclick="copyPostLink(${p.maBaiViet})"><i class="bi bi-link-45deg me-2"></i>Sao chép liên kết</a></li>`;
+
+        return `
+            <article class="fb-post" id="user-post-${p.maBaiViet}">
+                <!-- Header -->
+                <div class="fb-post-header">
+                    <div class="fb-post-author">
+                        <div class="fb-avatar" style="${p.tacGiaAvatar ? `background-image: url('${p.tacGiaAvatar}'); background-size: cover;` : 'background: #0866ff; color: #fff;'}">
+                            ${!p.tacGiaAvatar ? avatarLetter : ''}
+                        </div>
+                        <div>
+                            <div class="fb-author-name">
+                                ${p.tacGiaTen} ${roleBadge}
+                            </div>
+                            <div class="fb-post-meta">
+                                <span>${p.ngayDangHienThi}</span> &bull;
+                                <i class="bi bi-globe-americas" title="Công khai"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border-0 rounded-circle text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border">
+                            ${menuItems}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Cảnh báo trạng thái -->
+                <div class="px-3">
+                    ${statusBadge}
+                    ${reportAlert}
+                </div>
+
+                <!-- Thân bài viết -->
+                ${bodyHtml}
+
+                <!-- Ảnh / Video -->
+                ${mediaHtml}
+
+                <!-- Bài viết chia sẻ (lồng) -->
+                ${sharedPostHtml}
+
+                <!-- Stats Bar -->
+                <div class="fb-post-stats">
+                    <div class="d-flex align-items-center gap-1">
+                        <div class="fb-like-bubble" style="${(p.soThich > 0) ? '' : 'display: none;'}" id="like-bubble-${p.maBaiViet}"><i class="bi bi-hand-thumbs-up-fill"></i></div>
+                        <span class="text-muted small" id="like-count-${p.maBaiViet}">${p.soThich > 0 ? (p.soThich + ' người thích') : 'Hãy là người đầu tiên thích'}</span>
+                    </div>
+                    <div class="text-muted small d-flex gap-2">
+                        <span id="comment-count-label-${p.maBaiViet}" style="cursor: pointer;" onclick="togglePostCommentBox(${p.maBaiViet})">${p.soBinhLuan} bình luận</span> &bull;
+                        <span id="share-count-label-${p.maBaiViet}">${p.soChiaSe} chia sẻ</span>
+                    </div>
+                </div>
+
+                <!-- Actions Bar -->
+                <div class="fb-post-actions-bar">
+                    <button type="button" class="fb-post-action-btn ${p.daThich ? 'active-liked text-primary fw-bold' : ''}" id="like-btn-${p.maBaiViet}" onclick="togglePostLike(this, ${p.maBaiViet})">
+                        <i class="bi ${p.daThich ? 'bi-hand-thumbs-up-fill text-primary' : 'bi-hand-thumbs-up'} fs-5"></i>
+                        <span>Thích</span>
+                    </button>
+                    <button type="button" class="fb-post-action-btn" onclick="togglePostCommentBox(${p.maBaiViet})">
+                        <i class="bi bi-chat fs-5"></i>
+                        <span>Bình luận</span>
+                    </button>
+                    <button type="button" class="fb-post-action-btn" onclick="openSharePostModal(${p.maBaiViet})">
+                        <i class="bi bi-share fs-5"></i>
+                        <span>Chia sẻ</span>
+                    </button>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="fb-comments-section border-top px-3 py-2 bg-light-subtle d-none" id="comments-section-${p.maBaiViet}">
+                    <!-- Ô nhập bình luận mới -->
+                    <div class="d-flex align-items-start gap-2 mb-3 mt-2">
+                        <div class="fb-avatar fb-avatar-sm flex-shrink-0" style="background: #0866ff; color: #fff; width: 34px; height: 34px; font-size: 14px;">
+                            @(!string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "U")
+                        </div>
+                        <div class="flex-grow-1 position-relative">
+                            <textarea id="comment-input-${p.maBaiViet}" 
+                                      class="form-control form-control-sm rounded-4 pe-5" 
+                                      rows="1" 
+                                      placeholder="Viết bình luận công khai... (Nhấn Enter để gửi)" 
+                                      onkeydown="handleCommentKeyDown(event, ${p.maBaiViet})" 
+                                      style="font-size: 13px; resize: none; background: #f0f2f5;"></textarea>
+                            <button type="button" class="btn btn-sm btn-link text-primary position-absolute end-0 top-50 translate-middle-y me-1 p-1 text-decoration-none" onclick="submitComment(${p.maBaiViet})" title="Gửi bình luận">
+                                <i class="bi bi-send-fill fs-6"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách bình luận -->
+                    <div class="fb-comments-list d-flex flex-column gap-2" id="comments-list-${p.maBaiViet}">
+                        <!-- Danh sách bình luận được tải động ở đây -->
+                    </div>
+                </div>
+            </article>
+        `;
+    }
+
+    // Helper format text (hỗ trợ **in đậm**)
+    function formatPostContentText(text) {
+        if (!text) return '';
+        let escaped = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        // Convert **in đậm** thành <strong>in đậm</strong>
+        escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong class="fw-bold text-dark">$1</strong>');
+        return escaped;
+    }
+
+    // =========================================================================
+    // 2. TẠO BÀI VIẾT (MODAL, PHÔNG NỀN, TÔ ĐẬM, ẢNH, VIDEO)
+    // =========================================================================
+    function openCreatePostModal(mode = 'none') {
+        if (!post_isUserLoggedIn) {
+            const reqModal = document.getElementById('fbRequireLoginModal');
+            if (reqModal && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(reqModal).show();
+            } else {
+                window.location.href = '/TaiKhoan/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            }
+            return;
+        }
+
+        const modalElem = document.getElementById('fbCreatePostModal');
+        if (!modalElem) return;
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElem);
+        modal.show();
+
+        if (mode === 'photo') {
+            setTimeout(() => {
+                const input = document.getElementById('postImageFileInput');
+                if (input) input.click();
+            }, 300);
+        } else if (mode === 'background') {
+            toggleBackgroundPalette(true);
+        } else if (mode === 'bold') {
+            setTimeout(() => insertBoldText(), 300);
+        }
+    }
+
+    // Chèn cú pháp in đậm **chữ** vào vị trí con trỏ
+    function insertBoldText() {
+        const textarea = document.getElementById('postContentInput');
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+
+        if (start !== end) {
+            // Có bôi đen đoạn chữ -> Bọc đoạn đó trong **...**
+            const selected = text.substring(start, end);
+            textarea.value = text.substring(0, start) + '**' + selected + '**' + text.substring(end);
+            textarea.selectionStart = start;
+            textarea.selectionEnd = end + 4;
+        } else {
+            // Không bôi đen -> chèn mẫu **chữ in đậm**
+            textarea.value = text.substring(0, start) + '**chữ in đậm**' + text.substring(end);
+            textarea.selectionStart = start + 2;
+            textarea.selectionEnd = start + 13;
+        }
+        textarea.focus();
+    }
+
+    // Bật/tắt thanh chọn phông nền
+    function toggleBackgroundPalette(forceShow = false) {
+        const picker = document.getElementById('postBackgroundPicker');
+        if (!picker) return;
+        if (forceShow) {
+            picker.classList.remove('d-none');
+        } else {
+            picker.classList.toggle('d-none');
+        }
+    }
+
+    // Áp dụng phông nền màu / gradient
+    function applyPostBackground(bgName) {
+        post_selectedBackground = (bgName === 'none') ? null : bgName;
+        const wrapper = document.getElementById('postComposerWrapper');
+        const textarea = document.getElementById('postContentInput');
+
+        // Bỏ hết class gradient cũ
+        wrapper.className = 'rounded-3 transition-all mb-2';
+        textarea.classList.remove('text-white');
+
+        // Update active swatch
+        document.querySelectorAll('.fb-color-swatch').forEach(sw => sw.classList.remove('active'));
+
+        if (post_selectedBackground) {
+            wrapper.classList.add('fb-bg-' + post_selectedBackground);
+            wrapper.style.minHeight = '240px';
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.justifyContent = 'center';
+
+            textarea.classList.add('text-white');
+            textarea.style.textAlign = 'center';
+            textarea.style.fontSize = '22px';
+            textarea.style.fontWeight = 'bold';
+            textarea.style.textShadow = '0 1px 2px rgba(0,0,0,0.4)';
+
+            // Tự động gỡ bỏ ảnh/video nếu có vì phông nền ưu tiên hiển thị chữ to
+            clearSelectedPostImage();
+            clearSelectedVideo();
+        } else {
+            wrapper.style.minHeight = '140px';
+            wrapper.style.display = 'block';
+            textarea.style.textAlign = 'left';
+            textarea.style.fontSize = '17px';
+            textarea.style.fontWeight = 'normal';
+            textarea.style.textShadow = 'none';
+        }
+    }
+
+    // Chọn file ảnh
+    function handleImageSelected(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        post_selectedImageFile = file;
+
+        // Reset phông nền vì đã có ảnh
+        applyPostBackground('none');
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('postImagePreview').src = e.target.result;
+            document.getElementById('postImagePreviewBox').classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearSelectedPostImage() {
+        post_selectedImageFile = null;
+        document.getElementById('postImageFileInput').value = '';
+        document.getElementById('postImagePreviewBox').classList.add('d-none');
+    }
+
+    // Chọn file video
+    function handleVideoSelected(input) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        post_selectedVideoFile = file;
+
+        // Reset phông nền vì đã có video
+        applyPostBackground('none');
+
+        const video = document.getElementById('postVideoPreview');
+        video.src = URL.createObjectURL(file);
+        document.getElementById('postVideoPreviewBox').classList.remove('d-none');
+    }
+
+    function clearSelectedVideo() {
+        post_selectedVideoFile = null;
+        document.getElementById('postVideoFileInput').value = '';
+        document.getElementById('postVideoPreviewBox').classList.add('d-none');
+        const video = document.getElementById('postVideoPreview');
+        video.pause();
+        video.src = '';
+    }
+
+    // Gửi bài viết lên Server
+    function submitCreatePost() {
+        const content = document.getElementById('postContentInput').value.trim();
+        if (!content) {
+            alert('Vui lòng nhập nội dung cho bài viết!');
+            return;
+        }
+
+        const btn = document.getElementById('btnSubmitPost');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng bài...';
+
+        const formData = new FormData();
+        formData.append('noiDung', content);
+        if (post_selectedBackground) {
+            formData.append('phongNen', post_selectedBackground);
+        }
+        if (post_selectedImageFile) {
+            formData.append('hinhAnhFile', post_selectedImageFile);
+        }
+        if (post_selectedVideoFile) {
+            formData.append('videoFile', post_selectedVideoFile);
+        }
+
+        fetch('/BaiViet/TaoBaiViet', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = 'Đăng bài viết';
+
+            if (data && data.success) {
+                // Đóng modal & reset form
+                const createModalElem = document.getElementById('fbCreatePostModal');
+                if (createModalElem && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(createModalElem).hide();
+                }
+                document.getElementById('postContentInput').value = '';
+                applyPostBackground('none');
+                clearSelectedPostImage();
+                clearSelectedVideo();
+
+                alert(data.message || 'Đăng bài viết thành công!');
+                loadNewsFeed(post_currentFeedFilter);
+            } else {
+                alert(data.message || 'Không thể đăng bài viết!');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = 'Đăng bài viết';
+            console.error("Lỗi đăng bài:", err);
+            alert('Có lỗi xảy ra khi kết nối máy chủ!');
+        });
+    }
+
+    // =========================================================================
+    // 3. XÓA BÀI VIẾT (TÁC GIẢ HOẶC QUẢN LÝ CÓ QUYỀN XÓA)
+    // =========================================================================
+    function confirmDeletePost(postId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa bài viết này khỏi bảng tin?')) return;
+
+        fetch('/BaiViet/XoaBaiViet?maBaiViet=' + postId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    const postElem = document.getElementById('user-post-' + postId);
+                    if (postElem) {
+                        postElem.style.transition = 'all 0.3s ease';
+                        postElem.style.opacity = '0';
+                        postElem.style.transform = 'scale(0.95)';
+                        setTimeout(() => postElem.remove(), 300);
+                    }
+                    alert(data.message || 'Đã xóa bài viết thành công!');
+                } else {
+                    alert(data.message || 'Không thể xóa bài viết!');
+                }
+            });
+    }
+
+    // =========================================================================
+    // 4. BÁO CÁO BÀI VIẾT SAI PHẠM (HỌC VIÊN & GIÁO VIÊN BÁO CÁO)
+    // =========================================================================
+    function openReportModal(postId) {
+        if (!post_isUserLoggedIn) {
+            const reqModal = document.getElementById('fbRequireLoginModal');
+            if (reqModal && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(reqModal).show();
+            } else {
+                window.location.href = '/TaiKhoan/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            }
+            return;
+        }
+        document.getElementById('reportTargetPostId').value = postId;
+        document.getElementById('reportDetailsInput').value = '';
+        const reportModalElem = document.getElementById('fbReportPostModal');
+        if (reportModalElem && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(reportModalElem).show();
+        }
+    }
+
+    function submitPostReport() {
+        const postId = document.getElementById('reportTargetPostId').value;
+        const selectedRadio = document.querySelector('input[name="reportReasonRadio"]:checked');
+        const reason = selectedRadio ? selectedRadio.value : '';
+        const details = document.getElementById('reportDetailsInput').value.trim();
+
+        if (!reason) {
+            alert('Vui lòng chọn lý do báo cáo sai phạm!');
+            return;
+        }
+
+        fetch('/BaiViet/BaoCaoBaiViet?maBaiViet=' + postId + '&lyDo=' + encodeURIComponent(reason) + '&chiTiet=' + encodeURIComponent(details), {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                const reportModalElem = document.getElementById('fbReportPostModal');
+                if (reportModalElem && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(reportModalElem).hide();
+                }
+                alert(data.message || 'Cảm ơn bạn đã báo cáo sai phạm!');
+            } else {
+                alert(data.message || 'Không thể gửi báo cáo!');
+            }
+        });
+    }
+
+    // =========================================================================
+    // 5. QUẢN TRỊ VIÊN: BẬT/TẮT KIỂM DUYỆT & PHÊ DUYỆT BÀI VIẾT
+    // =========================================================================
+    function togglePostApproval(isChecked) {
+        fetch('/BaiViet/BatTatXetDuyet?batXetDuyet=' + isChecked, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    const labelElem = document.getElementById('toggleApprovalLabel');
+                    if (labelElem) {
+                        labelElem.innerHTML = data.batXetDuyet 
+                            ? '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Đang BẬT xét duyệt</span>'
+                            : '<span class="text-secondary"><i class="bi bi-dash-circle me-1"></i>Đang TẮT (Đăng ngay)</span>';
+                    }
+                    alert(data.message);
+                } else {
+                    alert(data.message || 'Không thể thay đổi cấu hình!');
+                }
+            });
+    }
+
+    function approvePost(postId, isApproved) {
+        const actionText = isApproved ? 'phê duyệt để bài viết hiển thị công khai' : 'TỪ CHỐI và gỡ bỏ bài viết này';
+        if (!confirm(`Bạn có chắc chắn muốn ${actionText}?`)) return;
+
+        fetch('/BaiViet/DuyetBaiViet?maBaiViet=' + postId + '&dongY=' + isApproved, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    alert(data.message);
+                    loadNewsFeed(post_currentFeedFilter);
+                } else {
+                    alert(data.message || 'Không thể thực hiện phê duyệt!');
+                }
+            });
+    }
+
+    function filterFeed(filter, btn) {
+        document.querySelectorAll('.filter-feed-btn').forEach(b => b.classList.remove('active', 'btn-primary'));
+        if (btn) btn.classList.add('active');
+        post_currentFeedFilter = filter;
+        loadNewsFeed(filter);
+    }
+
+    // =========================================================================
+    // 6. QUẢN TRỊ VIÊN: XỬ LÝ TRUNG TÂM BÁO CÁO VI PHẠM
+    // =========================================================================
+    function openAdminReportsModal() {
+        const modalElem = document.getElementById('fbAdminReportsModal');
+        if (modalElem && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalElem).show();
+        }
+
+        const container = document.getElementById('adminReportsContainer');
+        container.innerHTML = '<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-danger mb-2"></div><div>Đang tải danh sách báo cáo vi phạm...</div></div>';
+
+        fetch('/BaiViet/GetDanhSachBaoCao')
+            .then(res => res.json())
+            .then(data => {
+                if (!data || !data.success || !data.reports || data.reports.length === 0) {
+                    container.innerHTML = '<div class="alert alert-success text-center py-4 mb-0"><i class="bi bi-shield-check fs-2 d-block mb-2"></i>Hiện tại không có báo cáo sai phạm nào cần xử lý!</div>';
+                    return;
+                }
+
+                let html = '<div class="d-flex flex-column gap-3">';
+                data.reports.forEach(r => {
+                    html += `
+                        <div class="card border border-danger-subtle p-3 shadow-sm rounded-3" id="admin-report-card-${r.maBaoCao}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="badge bg-danger mb-1">${r.lyDo}</span>
+                                    <div class="small text-muted">Báo cáo bởi: <strong>${r.nguoiBaoCaoTen}</strong> &bull; ${r.ngayBaoCao}</div>
+                                </div>
+                                <span class="badge bg-light text-secondary border">Mã bài viết: #${r.maBaiViet}</span>
+                            </div>
+                            ${r.chiTiet ? `<div class="p-2 bg-light rounded small mb-2 text-secondary"><strong>Chi tiết:</strong> ${r.chiTiet}</div>` : ''}
+
+                            <!-- Nội dung bài viết bị báo cáo -->
+                            <div class="border rounded p-2 mb-3 bg-white">
+                                <div class="small text-muted mb-1">Tác giả bài viết: <strong>${r.baiVietTacGia}</strong></div>
+                                <div class="small fw-semibold text-dark">${r.baiVietNoiDung}</div>
+                                ${r.baiVietHinhAnh ? `<img src="${r.baiVietHinhAnh}" class="mt-2 rounded" style="max-height: 120px; object-fit: cover;" />` : ''}
+                            </div>
+
+                            <!-- Nút hành động của Quản lý -->
+                            <div class="d-flex justify-content-end gap-2 border-top pt-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="handleReportAction(${r.maBaoCao}, 'bo_qua')">
+                                    <i class="bi bi-shield-check me-1"></i>Bỏ qua báo cáo
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm rounded-pill" onclick="handleReportAction(${r.maBaoCao}, 'xoa_bai')">
+                                    <i class="bi bi-trash3 me-1"></i>Xóa bài viết vi phạm
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            });
+    }
+
+    function handleReportAction(reportId, action) {
+        const actionLabel = action === 'xoa_bai' ? 'XÓA bài viết vi phạm này' : 'BỎ QUA báo cáo này';
+        if (!confirm(`Bạn có chắc chắn muốn ${actionLabel}?`)) return;
+
+        fetch('/BaiViet/XuLyBaoCao?maBaoCao=' + reportId + '&hanhDong=' + action, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    const card = document.getElementById('admin-report-card-' + reportId);
+                    if (card) card.remove();
+                    alert(data.message);
+                    loadNewsFeed(post_currentFeedFilter);
+                } else {
+                    alert(data.message || 'Không thể xử lý báo cáo!');
+                }
+            });
+    }
+
+    // =========================================================================
+    // 7. TƯƠNG TÁC THÍCH (LIKE / UNLIKE)
+    // =========================================================================
+    function togglePostLike(btn, postId) {
+        if (!post_isUserLoggedIn) {
+            const reqModal = document.getElementById('fbRequireLoginModal');
+            if (reqModal && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(reqModal).show();
+            } else {
+                window.location.href = '/TaiKhoan/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            }
+            return;
+        }
+
+        fetch('/BaiViet/ToggleLike?maBaiViet=' + postId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    const icon = btn.querySelector('i');
+                    const countSpan = document.getElementById('like-count-' + postId);
+                    const bubble = document.getElementById('like-bubble-' + postId);
+
+                    if (data.isLiked) {
+                        btn.classList.add('active-liked', 'text-primary', 'fw-bold');
+                        if (icon) icon.className = 'bi bi-hand-thumbs-up-fill fs-5 text-primary';
+                    } else {
+                        btn.classList.remove('active-liked', 'text-primary', 'fw-bold');
+                        if (icon) icon.className = 'bi bi-hand-thumbs-up fs-5';
+                    }
+
+                    if (countSpan) {
+                        countSpan.innerText = data.likeCount > 0 ? (data.likeCount + ' người thích') : 'Hãy là người đầu tiên thích';
+                    }
+                    if (bubble) {
+                        bubble.style.display = data.likeCount > 0 ? 'inline-flex' : 'none';
+                    }
+                } else if (data && data.requireLogin) {
+                    const reqModal = document.getElementById('fbRequireLoginModal');
+                    if (reqModal && window.bootstrap) {
+                        bootstrap.Modal.getOrCreateInstance(reqModal).show();
+                    }
+                } else {
+                    alert(data.message || 'Không thể tương tác thích bài viết!');
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi toggle like:", err);
+            });
+    }
+
+    // =========================================================================
+    // 8. BÌNH LUẬN BÀI VIẾT (COMMENT SYSTEM)
+    // =========================================================================
+    function togglePostCommentBox(postId) {
+        const commentSection = document.getElementById('comments-section-' + postId);
+        if (!commentSection) return;
+
+        const isCurrentlyHidden = commentSection.classList.contains('d-none');
+        if (isCurrentlyHidden) {
+            commentSection.classList.remove('d-none');
+            // Tải danh sách bình luận
+            loadPostComments(postId);
+            // Focus vào ô input
+            const input = document.getElementById('comment-input-' + postId);
+            if (input) setTimeout(() => input.focus(), 150);
+        } else {
+            commentSection.classList.add('d-none');
+        }
+    }
+
+    function loadPostComments(postId) {
+        const list = document.getElementById('comments-list-' + postId);
+        if (!list) return;
+
+        list.innerHTML = `
+            <div class="text-center py-2 text-muted small">
+                <div class="spinner-border spinner-border-sm text-secondary me-1"></div> Đang tải bình luận...
+            </div>
+        `;
+
+        fetch('/BaiViet/GetBinhLuans?maBaiViet=' + postId)
+            .then(res => res.json())
+            .then(data => {
+                if (!data || !data.success) {
+                    list.innerHTML = `<div class="text-center text-muted small py-2">Không thể tải bình luận.</div>`;
+                    return;
+                }
+
+                const countLabel = document.getElementById('comment-count-label-' + postId);
+                if (countLabel) countLabel.innerText = `${data.totalComments} bình luận`;
+
+                if (!data.comments || data.comments.length === 0) {
+                    list.innerHTML = `<div class="text-center text-muted small py-2"><i class="bi bi-chat-dots me-1"></i>Chưa có bình luận nào. Hãy là người đầu tiên bình luận!</div>`;
+                    return;
+                }
+
+                let html = '';
+                data.comments.forEach(c => {
+                    const avatarLetter = (c.tacGiaTen && c.tacGiaTen.length > 0) ? c.tacGiaTen.substring(0, 1).toUpperCase() : 'U';
+                    const roleBadge = c.tacGiaVaiTro === 'Admin' 
+                        ? '<span class="badge bg-danger ms-1" style="font-size: 9px; padding: 1px 5px;">Quản trị</span>'
+                        : (c.tacGiaVaiTro === 'GiaoVien' ? '<span class="badge bg-primary ms-1" style="font-size: 9px; padding: 1px 5px;">Giáo viên</span>' : '<span class="badge bg-success ms-1" style="font-size: 9px; padding: 1px 5px;">Học viên</span>');
+
+                    html += `
+                        <div class="d-flex align-items-start gap-2 mb-1" id="post-comment-${c.maBinhLuan}">
+                            <div class="fb-avatar fb-avatar-sm flex-shrink-0" style="width: 32px; height: 32px; font-size: 13px; ${c.tacGiaAvatar ? `background-image: url('${c.tacGiaAvatar}'); background-size: cover;` : 'background: #0866ff; color: #fff;'}">
+                                ${!c.tacGiaAvatar ? avatarLetter : ''}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="p-2 px-3 rounded-4 d-inline-block position-relative" style="background-color: #f0f2f5; max-width: 95%;">
+                                    <div class="d-flex align-items-center gap-1 mb-1">
+                                        <span class="fw-bold small text-dark">${c.tacGiaTen}</span>
+                                        ${roleBadge}
+                                    </div>
+                                    <div class="small text-dark" style="word-break: break-word;">${formatPostContentText(c.noiDung)}</div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3 ms-2 mt-1 text-muted" style="font-size: 11px;">
+                                    <span>${c.ngayBinhLuanHienThi}</span>
+                                    ${c.canDelete ? `
+                                        <a href="javascript:void(0)" class="text-danger fw-semibold text-decoration-none" onclick="confirmDeleteComment(${c.maBinhLuan}, ${postId})">
+                                            <i class="bi bi-trash3 me-1"></i>Xóa
+                                        </a>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            })
+            .catch(err => {
+                console.error("Lỗi load bình luận:", err);
+                list.innerHTML = `<div class="text-center text-danger small py-2">Lỗi kết nối khi tải bình luận.</div>`;
+            });
+    }
+
+    function handleCommentKeyDown(event, postId) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            submitComment(postId);
+        }
+    }
+
+    function submitComment(postId) {
+        if (!post_isUserLoggedIn) {
+            const reqModal = document.getElementById('fbRequireLoginModal');
+            if (reqModal && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(reqModal).show();
+            } else {
+                window.location.href = '/TaiKhoan/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            }
+            return;
+        }
+
+        const input = document.getElementById('comment-input-' + postId);
+        if (!input) return;
+        const content = input.value.trim();
+        if (!content) return;
+
+        input.disabled = true;
+
+        const formData = new FormData();
+        formData.append('maBaiViet', postId);
+        formData.append('noiDung', content);
+
+        fetch('/BaiViet/ThemBinhLuan', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            input.disabled = false;
+            if (data && data.success) {
+                input.value = '';
+                const countLabel = document.getElementById('comment-count-label-' + postId);
+                if (countLabel) countLabel.innerText = `${data.totalComments} bình luận`;
+
+                // Tải lại bình luận
+                loadPostComments(postId);
+            } else if (data && data.requireLogin) {
+                const reqModal = document.getElementById('fbRequireLoginModal');
+                if (reqModal && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(reqModal).show();
+                }
+            } else {
+                alert(data.message || 'Không thể gửi bình luận!');
+            }
+        })
+        .catch(err => {
+            input.disabled = false;
+            console.error("Lỗi gửi bình luận:", err);
+            alert('Có lỗi xảy ra khi kết nối máy chủ!');
+        });
+    }
+
+    function confirmDeleteComment(commentId, postId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
+
+        fetch('/BaiViet/XoaBinhLuan?maBinhLuan=' + commentId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    const cElem = document.getElementById('post-comment-' + commentId);
+                    if (cElem) cElem.remove();
+                    const countLabel = document.getElementById('comment-count-label-' + postId);
+                    if (countLabel) countLabel.innerText = `${data.totalComments} bình luận`;
+                } else {
+                    alert(data.message || 'Không thể xóa bình luận!');
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi xóa bình luận:", err);
+            });
+    }
+
+    // =========================================================================
+    // 9. CHIA SẺ BÀI VIẾT (SHARE POST SYSTEM)
+    // =========================================================================
+    function openSharePostModal(postId) {
+        if (!post_isUserLoggedIn) {
+            const reqModal = document.getElementById('fbRequireLoginModal');
+            if (reqModal && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(reqModal).show();
+            } else {
+                window.location.href = '/TaiKhoan/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            }
+            return;
+        }
+
+        const post = post_cachedPosts[postId];
+        if (!post) {
+            alert('Không tìm thấy thông tin bài viết!');
+            return;
+        }
+
+        document.getElementById('shareTargetPostId').value = postId;
+        document.getElementById('shareCaptionInput').value = '';
+        document.getElementById('sharePreviewAuthor').innerText = post.tacGiaTen;
+        document.getElementById('sharePreviewTime').innerText = post.ngayDangHienThi;
+        document.getElementById('sharePreviewContent').innerHTML = formatPostContentText(post.noiDung);
+
+        const avatarElem = document.getElementById('sharePreviewAvatar');
+        if (avatarElem) {
+            if (post.tacGiaAvatar) {
+                avatarElem.style.backgroundImage = `url('${post.tacGiaAvatar}')`;
+                avatarElem.style.backgroundSize = 'cover';
+                avatarElem.innerText = '';
+            } else {
+                avatarElem.style.backgroundImage = 'none';
+                avatarElem.innerText = (post.tacGiaTen && post.tacGiaTen.length > 0) ? post.tacGiaTen.substring(0, 1).toUpperCase() : 'U';
+            }
+        }
+
+        const mediaElem = document.getElementById('sharePreviewMedia');
+        if (mediaElem) {
+            mediaElem.innerHTML = '';
+            if (post.hinhAnhUrl) {
+                mediaElem.innerHTML = `<img src="${post.hinhAnhUrl}" class="w-100 rounded" style="max-height: 180px; object-fit: cover;" />`;
+            } else if (post.videoUrl) {
+                mediaElem.innerHTML = `<div class="bg-dark text-white text-center py-4 rounded small"><i class="bi bi-camera-video-fill fs-3 d-block mb-1"></i>Video đính kèm</div>`;
+            } else if (post.phongNen && post.phongNen !== 'none') {
+                mediaElem.innerHTML = `<div class="fb-post-bg-canvas fb-bg-${post.phongNen} rounded p-2 text-center text-white small" style="min-height: 60px;">Phông nền ${post.phongNen}</div>`;
+            }
+        }
+
+        const modalElem = document.getElementById('fbSharePostModal');
+        if (modalElem && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalElem).show();
+        }
+    }
+
+    function submitSharePost() {
+        const postId = document.getElementById('shareTargetPostId').value;
+        const caption = document.getElementById('shareCaptionInput').value.trim();
+        const btn = document.getElementById('btnConfirmSharePost');
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang chia sẻ...';
+        }
+
+        const formData = new FormData();
+        formData.append('maBaiVietGoc', postId);
+        if (caption) formData.append('loiBinh', caption);
+
+        fetch('/BaiViet/ChiaSeBaiViet', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-check me-1"></i>Chia sẻ ngay lên Bảng tin';
+            }
+
+            if (data && data.success) {
+                const modalElem = document.getElementById('fbSharePostModal');
+                if (modalElem && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(modalElem).hide();
+                }
+                const shareCountSpan = document.getElementById('share-count-label-' + postId);
+                if (shareCountSpan) shareCountSpan.innerText = `${data.soChiaSe} chia sẻ`;
+
+                alert(data.message || 'Đã chia sẻ bài viết lên bảng tin!');
+                loadNewsFeed(post_currentFeedFilter);
+            } else if (data && data.requireLogin) {
+                const reqModal = document.getElementById('fbRequireLoginModal');
+                if (reqModal && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(reqModal).show();
+                }
+            } else {
+                alert(data.message || 'Không thể chia sẻ bài viết!');
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-check me-1"></i>Chia sẻ ngay lên Bảng tin';
+            }
+            console.error("Lỗi chia sẻ bài:", err);
+            alert('Có lỗi xảy ra khi kết nối máy chủ!');
+        });
+    }
+
+    function copyPostLinkFromShareModal() {
+        const postId = document.getElementById('shareTargetPostId').value;
+        copyPostLink(postId);
+        const modalElem = document.getElementById('fbSharePostModal');
+        if (modalElem && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalElem).hide();
+        }
+    }
+
+    function copyPostLink(postId) {
+        const link = window.location.origin + '/#user-post-' + postId;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Đã sao chép liên kết bài viết: ' + link);
+            }).catch(() => {
+                prompt('Sao chép liên kết bài viết:', link);
+            });
+        } else {
+            prompt('Sao chép liên kết bài viết:', link);
+        }
+    }
+
+    // Global Window bindings
+    window.openCreatePostModal = openCreatePostModal;
+    window.loadNewsFeed = loadNewsFeed;
+    window.filterFeed = filterFeed;
+    window.togglePostApproval = togglePostApproval;
+    window.approvePost = approvePost;
+    window.openAdminReportsModal = openAdminReportsModal;
+    window.handleReportAction = handleReportAction;
+    window.openReportModal = openReportModal;
+    window.submitPostReport = submitPostReport;
+    window.confirmDeletePost = confirmDeletePost;
+    window.submitCreatePost = submitCreatePost;
+    window.applyPostBackground = applyPostBackground;
+    window.toggleBackgroundPalette = toggleBackgroundPalette;
+    window.insertBoldText = insertBoldText;
+    window.handleImageSelected = handleImageSelected;
+    window.clearSelectedPostImage = clearSelectedPostImage;
+    window.handleVideoSelected = handleVideoSelected;
+    window.clearSelectedVideo = clearSelectedVideo;
+    window.togglePostLike = togglePostLike;
+    window.togglePostCommentBox = togglePostCommentBox;
+    window.loadPostComments = loadPostComments;
+    window.handleCommentKeyDown = handleCommentKeyDown;
+    window.submitComment = submitComment;
+    window.confirmDeleteComment = confirmDeleteComment;
+    window.openSharePostModal = openSharePostModal;
+    window.submitSharePost = submitSharePost;
+    window.copyPostLinkFromShareModal = copyPostLinkFromShareModal;
+    window.copyPostLink = copyPostLink;
+    console.log("LanguageBook: Feed script loaded successfully.");
+</script>
+}

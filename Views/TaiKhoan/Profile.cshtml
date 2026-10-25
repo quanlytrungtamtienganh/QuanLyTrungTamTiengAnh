@@ -1,0 +1,160 @@
+@model TrungTamNgoaiNgu.ViewModels.ProfileViewModel
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var role = HttpContextAccessor.HttpContext?.Session.GetString("VaiTro");
+    Layout = role == "Admin" ? "_AdminLayout" : "_StudentLayout";
+    ViewData["Title"] = "Trang Cá Nhân & Cài Đặt · " + Model.HoTen;
+}
+
+<div class="container-xl py-3">
+    <!-- Cover & Profile Banner (Facebook Profile Header) -->
+    <div class="fb-card mb-4 overflow-hidden">
+        <!-- Cover Photo -->
+        <div style="height: 200px; background: linear-gradient(135deg, #0866ff, #1877f2, #0055d6); position: relative;">
+            <div class="position-absolute bottom-0 end-0 p-3">
+                <button type="button" class="fb-btn fb-btn-secondary fb-btn-sm">
+                    <i class="bi bi-camera-fill me-1"></i> Chỉnh sửa ảnh bìa
+                </button>
+            </div>
+        </div>
+
+        <!-- Avatar & Name Bar -->
+        <div class="px-4 pb-3 d-flex flex-wrap justify-content-between align-items-end gap-3" style="position: relative;">
+            <div class="d-flex align-items-end gap-3" style="margin-top: -50px;">
+                <div class="fb-avatar fb-avatar-xl shadow" style="border: 4px solid #fff; background: #e4e6eb; color: #0866ff; font-weight: 800;">
+                    @(Model.HoTen.Length > 0 ? Model.HoTen.Substring(0, 1).ToUpper() : "U")
+                </div>
+                <div class="mb-2">
+                    <h3 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        @Model.HoTen
+                        <i class="bi bi-patch-check-fill text-primary fs-5" title="Tài khoản đã xác minh"></i>
+                    </h3>
+                    <div class="text-muted small">
+                        <span>@@@Model.TenDangNhap</span> &bull; 
+                        <span class="fb-badge @(Model.VaiTro == "Admin" ? "fb-badge-purple" : "fb-badge-green")">
+                            @(Model.VaiTro == "Admin" ? "Quản trị viên" : "Học viên")
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-2 d-flex gap-2">
+                <a href="#edit-form" class="fb-btn fb-btn-secondary fb-btn-sm">
+                    <i class="bi bi-pencil-fill me-1"></i> Chỉnh sửa trang cá nhân
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2 Column Profile Content -->
+    <div class="row g-4" id="edit-form">
+        <!-- Left Column: User Summary Card -->
+        <div class="col-lg-4">
+            <div class="fb-card p-3">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-lines-fill text-primary"></i> Giới thiệu
+                </h5>
+
+                <div class="d-flex flex-column gap-3 small">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-secondary fs-5"></i>
+                        <div>Họ và tên: <strong>@Model.HoTen</strong></div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-envelope text-secondary fs-5"></i>
+                        <div>Email: <strong>@Model.Email</strong></div>
+                    </div>
+                    @if (Model.VaiTro == "HocVien")
+                    {
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-telephone text-secondary fs-5"></i>
+                            <div>Số điện thoại: <strong class="font-monospace">@Model.SoDienThoai</strong></div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-hash text-secondary fs-5"></i>
+                            <div>Mã học viên: <strong class="text-primary font-monospace">#HV-@Model.MaHocVien.ToString("D4")</strong></div>
+                        </div>
+                    }
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-lock text-secondary fs-5"></i>
+                        <div>Vai trò: <strong>@Model.VaiTro</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Edit Profile Form -->
+        <div class="col-lg-8">
+            <div class="fb-card">
+                <div class="fb-card-header">
+                    <h5 class="fb-card-title"><i class="bi bi-gear-fill text-primary"></i> Cập nhật thông tin cá nhân</h5>
+                </div>
+
+                <form asp-action="Profile" asp-controller="TaiKhoan" method="post" class="p-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="MaTaiKhoan" />
+                    <input type="hidden" asp-for="MaHocVien" />
+                    <input type="hidden" asp-for="TenDangNhap" />
+                    <input type="hidden" asp-for="VaiTro" />
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="HoTen" class="fb-label">Họ và tên *</label>
+                            <input asp-for="HoTen" class="fb-input" placeholder="Nhập họ và tên đầy đủ..." />
+                            <span asp-validation-for="HoTen" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Email" class="fb-label">Địa chỉ Email *</label>
+                            <input asp-for="Email" class="fb-input" placeholder="example@domain.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        @if (Model.VaiTro == "HocVien")
+                        {
+                            <div class="col-md-4 form-group">
+                                <label asp-for="NgaySinh" class="fb-label">Ngày sinh</label>
+                                <input asp-for="NgaySinh" type="date" class="fb-input" />
+                                <span asp-validation-for="NgaySinh" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 form-group">
+                                <label asp-for="GioiTinh" class="fb-label">Giới tính</label>
+                                <select asp-for="GioiTinh" class="fb-input">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                                <span asp-validation-for="GioiTinh" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 form-group">
+                                <label asp-for="SoDienThoai" class="fb-label">Số điện thoại</label>
+                                <input asp-for="SoDienThoai" class="fb-input" placeholder="0912345678" />
+                                <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 form-group">
+                                <label asp-for="DiaChi" class="fb-label">Địa chỉ nơi cư trú</label>
+                                <textarea asp-for="DiaChi" class="fb-input" rows="3" placeholder="Nhập địa chỉ cư trú hoặc nơi nhận thông báo..."></textarea>
+                                <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                        <button type="submit" class="fb-btn fb-btn-primary">
+                            <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

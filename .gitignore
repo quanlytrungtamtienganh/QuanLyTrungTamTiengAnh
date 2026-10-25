@@ -1,0 +1,15 @@
+## Visual Studio / .NET build artifacts
+[Bb]in/
+[Oo]bj/
+[Bb]uild/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+## Crash and log files
+*.log
+*.tmp

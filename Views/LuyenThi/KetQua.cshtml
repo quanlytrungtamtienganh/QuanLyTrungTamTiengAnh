@@ -1,0 +1,470 @@
+@model TrungTamNgoaiNgu.ViewModels.KetQuaChiTietViewModel
+@{
+    ViewData["Title"] = "Kết quả luyện tập · " + Model.DeThi.TieuDe;
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    var m = Math.Floor((double)Model.KetQua.ThoiGianLamGiay / 60);
+    var s = Model.KetQua.ThoiGianLamGiay % 60;
+    var timeFormatted = $"{(m < 10 ? "0" : "")}{m}:{(s < 10 ? "0" : "")}{s}";
+}
+
+<style>
+    /* Facebook-synchronized Badge Circles */
+    .fb-circle-badge-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 700;
+        margin: 2px 4px;
+        text-decoration: none;
+        transition: transform 0.15s ease;
+    }
+    .fb-circle-badge-num:hover {
+        transform: scale(1.15);
+    }
+    .badge-status-correct {
+        border: 1.5px solid var(--fb-green, #42b72a);
+        color: var(--fb-green, #42b72a);
+        background: #e7f8ec;
+    }
+    .badge-status-wrong {
+        border: 1.5px solid var(--fb-red, #e41e3f);
+        color: var(--fb-red, #e41e3f);
+        background: #fde8e8;
+    }
+    .badge-status-skip {
+        border: 1.5px solid var(--fb-border, #ced0d4);
+        color: var(--fb-text-secondary, #65676b);
+        background: var(--fb-secondary-bg, #f0f2f5);
+    }
+
+    /* Explanation Box */
+    .fb-explanation-box {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+        border-radius: 0 8px 8px 0;
+        padding: 14px 18px;
+        margin-top: 14px;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: #334155;
+    }
+
+    .fb-choice-row {
+        padding: 8px 14px;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        font-size: 13.5px;
+        border: 1px solid var(--fb-border-light, #e4e6eb);
+    }
+    .fb-choice-row.user-wrong {
+        background: #fde8e8;
+        color: #991b1b;
+        border-color: #fca5a5;
+    }
+    .fb-choice-row.correct-ans {
+        background: #e7f8ec;
+        color: #166534;
+        border-color: #86efac;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container-fluid px-lg-4 py-3">
+    <div class="row g-3">
+        <!-- =========================================================================
+             1. LEFT COLUMN: FACEBOOK SHORTCUTS (ĐỒNG BỘ 100% MENU CHÍNH)
+             ========================================================================= -->
+        <div class="col-lg-3 col-xl-3 d-none d-lg-block">
+            <div class="fb-sidebar">
+                <a href="/LuyenThi/ChiTiet/@Model.DeThi.MaDeThi" class="fb-sidebar-item mb-2 fw-bold text-primary">
+                    <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                        <i class="bi bi-arrow-left"></i>
+                    </div>
+                    <span>Quay lại trang đề thi</span>
+                </a>
+
+                <div class="fb-sidebar-title text-uppercase" style="font-size:11px; letter-spacing:0.5px;">Xem nhanh kết quả</div>
+
+                <a href="#statsOverview" class="fb-sidebar-item active">
+                    <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                        <i class="bi bi-pie-chart-fill"></i>
+                    </div>
+                    <span>Tổng quan điểm số</span>
+                </a>
+
+                <a href="#analysisTable" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e7f8ec; color: #31a24c;">
+                        <i class="bi bi-table"></i>
+                    </div>
+                    <span>Phân tích theo dạng câu</span>
+                </a>
+
+                <a href="#detailedAnswersSection" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #fef7e0; color: #f7b125;">
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    <span>Lý do giải thích chi tiết</span>
+                </a>
+
+                <hr class="my-2" style="border-color: #e4e6eb;" />
+
+                <div class="fb-sidebar-title text-uppercase" style="font-size:11px; letter-spacing:0.5px;">Hành động tiếp theo</div>
+
+                <a href="/LuyenThi/ChiTiet/@Model.DeThi.MaDeThi" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #f0e6ff; color: #9360f7;">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </div>
+                    <span>Làm lại bài thi này</span>
+                </a>
+
+                <a href="/LuyenThi" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #e7f3ff; color: #0866ff;">
+                        <i class="bi bi-journal-plus"></i>
+                    </div>
+                    <span>Thư viện đề thi khác</span>
+                </a>
+
+                <a href="/LuyenThi/LichSu" class="fb-sidebar-item">
+                    <div class="fb-sidebar-icon" style="background: #fef7e0; color: #f7b125;">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <span>Lịch sử luyện thi của bạn</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- =========================================================================
+             2. CENTER COLUMN: EXAM RESULTS & EXPLANATIONS (ĐỒNG BỘ 100% FB CARD)
+             ========================================================================= -->
+        <div class="col-lg-6 col-xl-6">
+            <!-- 2.1 Result Header Card (FB Card Style) -->
+            <div class="fb-card mb-3 shadow-sm" id="statsOverview">
+                <div class="fb-card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fb-badge fb-badge-blue">@Model.DeThi.TheLoai</span>
+                        <span class="fb-badge fb-badge-green">@Model.KetQua.CacPhanDaLam</span>
+                    </div>
+                    <span class="text-muted small"><i class="bi bi-clock me-1"></i>Nộp lúc: @Model.KetQua.NgayNop.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+
+                <div class="fb-card-body p-3">
+                    <h1 class="fw-bold text-dark mb-1" style="font-size:19px; line-height:1.4;">
+                        Kết quả luyện tập: @Model.DeThi.TieuDe
+                    </h1>
+                    <div class="text-muted small mb-3">Chế độ: <strong>@Model.KetQua.CheDoLam</strong> &bull; Đã chấm điểm tự động</div>
+
+                    <!-- 4 Statistics Cards Row (FB Palette Colors) -->
+                    <div class="row g-2 text-center mb-3">
+                        <!-- Thống kê tổng -->
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 border bg-light">
+                                <div class="text-muted small" style="font-size:11px;">Độ chính xác</div>
+                                <div class="fw-bold text-primary fs-3">@Model.KetQua.DoChinhXac%</div>
+                                <div class="text-muted" style="font-size:11px;">@Model.KetQua.SoCauDung/@Model.KetQua.TongSoCau câu</div>
+                            </div>
+                        </div>
+
+                        <!-- Trả lời đúng (FB Green) -->
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 border" style="background:#e7f8ec; border-color:#86efac!important;">
+                                <div class="text-success small fw-semibold" style="font-size:11px;">Trả lời đúng</div>
+                                <div class="fw-bold text-success fs-3">@Model.KetQua.SoCauDung</div>
+                                <div class="text-success" style="font-size:11px;">câu hỏi</div>
+                            </div>
+                        </div>
+
+                        <!-- Trả lời sai (FB Red) -->
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 border" style="background:#fde8e8; border-color:#fca5a5!important;">
+                                <div class="text-danger small fw-semibold" style="font-size:11px;">Trả lời sai</div>
+                                <div class="fw-bold text-danger fs-3">@Model.KetQua.SoCauSai</div>
+                                <div class="text-danger" style="font-size:11px;">câu hỏi</div>
+                            </div>
+                        </div>
+
+                        <!-- Bỏ qua -->
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 border bg-light">
+                                <div class="text-secondary small fw-semibold" style="font-size:11px;">Bỏ qua</div>
+                                <div class="fw-bold text-secondary fs-3">@Model.KetQua.SoCauBoQua</div>
+                                <div class="text-muted" style="font-size:11px;">câu hỏi</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thời gian hoàn thành & Nút hành động -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between p-2 rounded bg-light border">
+                        <span class="text-muted small">
+                            <i class="bi bi-stopwatch text-warning me-1"></i>Thời gian hoàn thành: <strong>@timeFormatted</strong>
+                        </span>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="background:#0866ff; border-color:#0866ff;" onclick="scrollToReview()">
+                                <i class="bi bi-eye-fill me-1"></i>Xem lời giải chi tiết
+                            </button>
+                            <a href="/LuyenThi/ChiTiet/@Model.DeThi.MaDeThi" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Chi tiết đề thi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2.2 Detailed Analysis Table (FB Card Style) -->
+            <div class="fb-card mb-3 shadow-sm" id="analysisTable">
+                <div class="fb-card-header d-flex justify-content-between align-items-center">
+                    <div class="fb-card-title" style="font-size:15px;">
+                        <i class="bi bi-bar-chart-line-fill text-primary"></i> Phân tích chi tiết theo dạng câu hỏi
+                    </div>
+                    <span class="text-muted small">Click vào số câu để xem lời giải</span>
+                </div>
+
+                <div class="fb-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size:13px;">
+                            <thead class="table-light text-muted small">
+                                <tr>
+                                    <th class="ps-3">Phân loại dạng bài</th>
+                                    <th class="text-center">Đúng</th>
+                                    <th class="text-center">Sai</th>
+                                    <th class="text-center">Bỏ qua</th>
+                                    <th class="text-center">Tỷ lệ</th>
+                                    <th class="pe-3" style="min-width: 160px;">Danh sách câu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ThongKeDangBai)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold text-dark">@item.TenDangBai</td>
+                                        <td class="text-center text-success fw-bold">@item.SoCauDung</td>
+                                        <td class="text-center text-danger fw-bold">@item.SoCauSai</td>
+                                        <td class="text-center text-secondary">@item.SoCauBoQua</td>
+                                        <td class="text-center fw-bold">@item.DoChinhXac%</td>
+                                        <td class="pe-3">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                @foreach (var b in item.DanhSachSoCau)
+                                                {
+                                                    var badgeClass = b.TrangThai == "Dung" ? "badge-status-correct" :
+                                                                     (b.TrangThai == "Sai" ? "badge-status-wrong" : "badge-status-skip");
+                                                    <a href="#cauHoi_@b.MaCauHoi" class="fb-circle-badge-num @badgeClass" title="Câu @b.SoThuTu (@b.TrangThai)">
+                                                        @b.SoThuTu
+                                                    </a>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2.3 DETAILED ANSWERS & EXPLANATIONS (TRỌNG TÂM: LÝ DO GIẢI THÍCH CHI TIẾT) -->
+            <div id="detailedAnswersSection">
+                <!-- Filter bar card -->
+                <div class="fb-card mb-3 p-3 shadow-sm">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size:16px;">
+                                <i class="bi bi-lightbulb-fill text-warning"></i> Chi tiết đáp án & Lý do giải thích
+                            </h5>
+                            <span class="text-muted" style="font-size:12px;">Xem chi tiết câu đúng, câu sai và lý do giải thích chi tiết bên dưới mỗi câu</span>
+                        </div>
+
+                        <!-- Filter buttons -->
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold active" onclick="filterQuestions('all', this)" style="font-size:12px; background:#0866ff; border-color:#0866ff;">
+                                Tất cả (@Model.DanhSachCauHoi.Count)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold" onclick="filterQuestions('wrong', this)" style="font-size:12px;">
+                                Câu sai (@Model.KetQua.SoCauSai)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold" onclick="filterQuestions('correct', this)" style="font-size:12px;">
+                                Câu đúng (@Model.KetQua.SoCauDung)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" onclick="filterQuestions('skip', this)" style="font-size:12px;">
+                                Bỏ qua (@Model.KetQua.SoCauBoQua)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions List with Explanation Boxes -->
+                <div class="d-flex flex-column gap-3" id="questionsContainer">
+                    @foreach (var q in Model.DanhSachCauHoi)
+                    {
+                        var borderStatus = q.IsDung ? "border-success" : (q.IsBoQua ? "border-secondary" : "border-danger");
+                        var statusBadge = q.IsDung ? "<span class='fb-badge fb-badge-green'><i class='bi bi-check-circle-fill me-1'></i>Đúng</span>" :
+                                         (q.IsBoQua ? "<span class='fb-badge' style='background:#f0f2f5; color:#65676b;'><i class='bi bi-dash-circle me-1'></i>Bỏ qua</span>" :
+                                                      "<span class='fb-badge' style='background:#fde8e8; color:#e41e3f;'><i class='bi bi-x-circle-fill me-1'></i>Sai</span>");
+                        var filterType = q.IsDung ? "correct" : (q.IsBoQua ? "skip" : "wrong");
+
+                        <div class="fb-card mb-0 shadow-sm question-item-box border-2 @borderStatus" id="cauHoi_@q.MaCauHoi" data-filter="@filterType">
+                            <div class="fb-card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2">
+                                <div class="d-flex align-items-center flex-wrap gap-2">
+                                    <span class="badge bg-light text-dark border fw-bold px-2 py-1">Câu @q.SoThuTu</span>
+                                    <span class="text-muted small">@q.TenPhanThi</span>
+                                    <span class="fb-badge fb-badge-blue small">@q.PhanLoaiDangBai</span>
+                                </div>
+                                <div>
+                                    @Html.Raw(statusBadge)
+                                </div>
+                            </div>
+
+                            <div class="fb-card-body p-3">
+                                <!-- Nội dung câu hỏi -->
+                                <div class="fw-bold text-dark mb-3" style="font-size:14.5px; line-height: 1.5;">
+                                    @Html.Raw(q.NoiDung)
+                                </div>
+
+                                <!-- Nếu là trắc nghiệm: Liệt kê các lựa chọn A, B, C, D -->
+                                @if (q.LoaiCauHoi == "TracNghiem")
+                                {
+                                    <div class="mb-3">
+                                        @if (!string.IsNullOrEmpty(q.DapAnA))
+                                        {
+                                            var isCorrectOpt = q.DapAnDung.Equals("A", StringComparison.OrdinalIgnoreCase);
+                                            var isUserOpt = (q.DapAnCuaBan ?? "").Equals("A", StringComparison.OrdinalIgnoreCase);
+                                            var optClass = isCorrectOpt ? "correct-ans" : (isUserOpt && !q.IsDung ? "user-wrong" : "bg-light");
+                                            <div class="fb-choice-row @optClass">
+                                                <strong>A.</strong> @q.DapAnA
+                                                @if (isCorrectOpt) { <span class="badge bg-success ms-2">Đáp án đúng</span> }
+                                                @if (isUserOpt && !q.IsDung) { <span class="badge bg-danger ms-2">Bạn đã chọn</span> }
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(q.DapAnB))
+                                        {
+                                            var isCorrectOpt = q.DapAnDung.Equals("B", StringComparison.OrdinalIgnoreCase);
+                                            var isUserOpt = (q.DapAnCuaBan ?? "").Equals("B", StringComparison.OrdinalIgnoreCase);
+                                            var optClass = isCorrectOpt ? "correct-ans" : (isUserOpt && !q.IsDung ? "user-wrong" : "bg-light");
+                                            <div class="fb-choice-row @optClass">
+                                                <strong>B.</strong> @q.DapAnB
+                                                @if (isCorrectOpt) { <span class="badge bg-success ms-2">Đáp án đúng</span> }
+                                                @if (isUserOpt && !q.IsDung) { <span class="badge bg-danger ms-2">Bạn đã chọn</span> }
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(q.DapAnC))
+                                        {
+                                            var isCorrectOpt = q.DapAnDung.Equals("C", StringComparison.OrdinalIgnoreCase);
+                                            var isUserOpt = (q.DapAnCuaBan ?? "").Equals("C", StringComparison.OrdinalIgnoreCase);
+                                            var optClass = isCorrectOpt ? "correct-ans" : (isUserOpt && !q.IsDung ? "user-wrong" : "bg-light");
+                                            <div class="fb-choice-row @optClass">
+                                                <strong>C.</strong> @q.DapAnC
+                                                @if (isCorrectOpt) { <span class="badge bg-success ms-2">Đáp án đúng</span> }
+                                                @if (isUserOpt && !q.IsDung) { <span class="badge bg-danger ms-2">Bạn đã chọn</span> }
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(q.DapAnD))
+                                        {
+                                            var isCorrectOpt = q.DapAnDung.Equals("D", StringComparison.OrdinalIgnoreCase);
+                                            var isUserOpt = (q.DapAnCuaBan ?? "").Equals("D", StringComparison.OrdinalIgnoreCase);
+                                            var optClass = isCorrectOpt ? "correct-ans" : (isUserOpt && !q.IsDung ? "user-wrong" : "bg-light");
+                                            <div class="fb-choice-row @optClass">
+                                                <strong>D.</strong> @q.DapAnD
+                                                @if (isCorrectOpt) { <span class="badge bg-success ms-2">Đáp án đúng</span> }
+                                                @if (isUserOpt && !q.IsDung) { <span class="badge bg-danger ms-2">Bạn đã chọn</span> }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <!-- So sánh đáp án -->
+                                <div class="d-flex flex-wrap gap-3 align-items-center p-2 rounded-2 bg-light border mb-2" style="font-size:13px;">
+                                    <div>
+                                        <span class="text-muted">Câu trả lời của bạn:</span>
+                                        @if (string.IsNullOrEmpty(q.DapAnCuaBan))
+                                        {
+                                            <span class="fst-italic text-secondary fw-semibold">(Chưa trả lời)</span>
+                                        }
+                                        else if (q.IsDung)
+                                        {
+                                            <span class="text-success fw-bold"><i class="bi bi-check-lg me-1"></i>@q.DapAnCuaBan</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger fw-bold"><i class="bi bi-x-lg me-1"></i>@q.DapAnCuaBan</span>
+                                        }
+                                    </div>
+                                    <div>
+                                        <span class="text-muted">Đáp án chính xác:</span>
+                                        <span class="text-primary fw-bold">@q.DapAnDung</span>
+                                    </div>
+                                </div>
+
+                                <!-- 💡 BOX LÝ DO GIẢI THÍCH CHI TIẾT -->
+                                <div class="fb-explanation-box">
+                                    <div class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                                        <i class="bi bi-lightbulb-fill text-warning fs-5"></i>
+                                        <span>Lý do giải thích chi tiết:</span>
+                                    </div>
+                                    <div class="explanation-content" style="font-size:13px; line-height:1.6;">
+                                        @if (!string.IsNullOrEmpty(q.GiaiThichChiTiet))
+                                        {
+                                            @Html.Raw(q.GiaiThichChiTiet)
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Đáp án chuẩn là <strong>@q.DapAnDung</strong> theo hướng dẫn đề thi.</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================================
+             3. RIGHT COLUMN: WIDGETS
+             ========================================================================= -->
+        <div class="col-lg-3 col-xl-3 d-none d-lg-block">
+            <!-- Retake Exam Widget -->
+            <div class="fb-card mb-3 p-3 shadow-sm text-center">
+                <i class="bi bi-arrow-repeat text-primary fs-2 mb-2 d-block"></i>
+                <h6 class="fw-bold text-dark small mb-1">Rèn Luyện Lại Câu Sai</h6>
+                <p class="text-muted small mb-3" style="font-size:12px;">Tập trung làm lại các câu chưa đúng để ghi nhớ từ vựng và cấu trúc ngữ pháp.</p>
+                <a href="/LuyenThi/ChiTiet/@Model.DeThi.MaDeThi" class="btn btn-primary btn-sm rounded-pill w-100 fw-bold" style="background:#0866ff; border-color:#0866ff;">
+                    Làm lại bài thi
+                </a>
+            </div>
+
+            <!-- Group Invitation -->
+            <div class="fb-card p-3 shadow-sm text-center">
+                <div class="fb-avatar fb-avatar-lg mx-auto mb-2" style="background:#fef7e0; color:#f7b125; font-size:24px;">
+                    <i class="bi bi-chat-dots-fill"></i>
+                </div>
+                <h6 class="fw-bold text-dark small mb-1">Thảo luận về bài thi này</h6>
+                <p class="text-muted small mb-3" style="font-size:12px;">Bạn có thắc mắc về đáp án hay cần giải thích thêm? Hãy để lại bình luận để giảng viên hỗ trợ bạn.</p>
+                <a href="/LuyenThi/ChiTiet/@Model.DeThi.MaDeThi#commentSection" class="btn btn-outline-secondary btn-sm rounded-pill w-100 fw-semibold">
+                    Xem bình luận của đề thi
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function scrollToReview() {
+        document.getElementById('detailedAnswersSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function filterQuestions(type, btn) {
+        document.querySelectorAll('.btn-group .btn, #detailedAnswersSection .btn').forEach(b => b.classList.remove('active', 'btn-primary'));
+        if (btn) btn.classList.add('active', 'btn-primary');
+
+        const items = document.querySelectorAll('.question-item-box');
+        items.forEach(function(item) {
+            if (type === 'all' || item.getAttribute('data-filter') === type) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>

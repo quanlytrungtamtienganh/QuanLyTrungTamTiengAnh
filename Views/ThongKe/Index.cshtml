@@ -1,0 +1,321 @@
+@model TrungTamNgoaiNgu.ViewModels.DashboardViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Thống Kê Doanh Thu & Báo Cáo Tuyển Sinh · Meta Business Suite";
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow text-primary"></i> Báo Cáo Phân Tích & Doanh Thu
+        </h3>
+        <p class="text-muted mb-0 small">Thống kê doanh thu học phí, hiệu quả tuyển sinh và tăng trưởng học viên thời gian thực</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/DangKyHoc" class="fb-btn fb-btn-secondary fb-btn-sm">
+            <i class="bi bi-inbox-fill me-1"></i> Quản lý đăng ký
+        </a>
+        <a href="/LopHoc/Create" class="fb-btn fb-btn-primary fb-btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Tạo lớp học
+        </a>
+    </div>
+</div>
+
+<!-- =========================================================================
+     4.20. KHỐI THỐNG KÊ DOANH THU HỌC PHÍ NỔI BẬT (USER SPEC 4.20)
+     ========================================================================= -->
+<div class="row g-3 mb-4">
+    <!-- Doanh thu thực tế đã thu -->
+    <div class="col-md-6 col-lg-6">
+        <div class="fb-card p-3 mb-0 border-start border-4 border-success h-100 shadow-sm" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <span class="text-uppercase fw-bold text-success" style="font-size: 11px; letter-spacing: 0.5px;">
+                        <i class="bi bi-cash-stack me-1"></i> 4.20. Doanh thu học phí thực tế
+                    </span>
+                    <h2 class="fw-bold text-success mb-0 mt-1">@Model.TongDoanhThuHocPhi.ToString("N0") <span class="fs-5">VNĐ</span></h2>
+                </div>
+                <div class="fb-avatar fb-avatar-lg" style="background: #e7f8ec; color: #16a34a; width: 56px; height: 56px; font-size: 26px;">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between pt-2 border-top border-success-subtle mt-2 small">
+                <span class="text-muted">Từ <strong>@Model.DaXacNhan</strong> học viên đã xác nhận nhập học</span>
+                <span class="fb-badge fb-badge-green"><i class="bi bi-check2-circle me-1"></i>Đã vào quỹ</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doanh thu dự kiến chờ duyệt -->
+    <div class="col-md-6 col-lg-6">
+        <div class="fb-card p-3 mb-0 border-start border-4 border-warning h-100 shadow-sm" style="background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <span class="text-uppercase fw-bold text-warning" style="font-size: 11px; letter-spacing: 0.5px;">
+                        <i class="bi bi-hourglass-top me-1"></i> Doanh thu dự kiến (Chờ duyệt)
+                    </span>
+                    <h2 class="fw-bold text-warning mb-0 mt-1">@Model.DoanhThuDuKien.ToString("N0") <span class="fs-5">VNĐ</span></h2>
+                </div>
+                <div class="fb-avatar fb-avatar-lg" style="background: #fef7e0; color: #d97706; width: 56px; height: 56px; font-size: 26px;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between pt-2 border-top border-warning-subtle mt-2 small">
+                <span class="text-muted">Từ <strong>@Model.ChoXacNhan</strong> đơn đăng ký đang chờ xét duyệt</span>
+                <a href="/DangKyHoc?TrangThai=Chờ xác nhận" class="text-primary text-decoration-none fw-semibold">Duyệt ngay &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     BIỂU ĐỒ DOANH THU THEO THÁNG & THEO NGOẠI NGỮ
+     ========================================================================= -->
+<div class="row g-3 mb-4">
+    <!-- Biểu đồ biến động doanh thu theo tháng -->
+    <div class="col-lg-8">
+        <div class="fb-card h-100">
+            <div class="fb-card-header d-flex justify-content-between align-items-center">
+                <h5 class="fb-card-title"><i class="bi bi-bar-chart-line-fill text-success"></i> Biểu Đồ Doanh Thu Học Phí Theo Tháng</h5>
+                <span class="fb-badge fb-badge-green">Đơn vị: VNĐ</span>
+            </div>
+            <div class="p-3">
+                <canvas id="monthlyRevenueChart" height="260"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ tỷ trọng doanh thu theo ngoại ngữ -->
+    <div class="col-lg-4">
+        <div class="fb-card h-100">
+            <div class="fb-card-header">
+                <h5 class="fb-card-title"><i class="bi bi-pie-chart-fill text-primary"></i> Doanh Thu Theo Ngôn Ngữ</h5>
+            </div>
+            <div class="p-3">
+                <canvas id="languageRevenueChart" height="260"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     7 FACEBOOK METRIC CARDS
+     ========================================================================= -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Tổng khóa học</span>
+                <div class="fb-sidebar-icon" style="background:#e7f3ff; color:#0866ff;"><i class="bi bi-journal-album"></i></div>
+            </div>
+            <div class="fs-2 fw-bold text-dark mb-1">@Model.TongKhoaHoc</div>
+            <span class="fb-badge fb-badge-blue">Chương trình chuẩn CEFR</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Tổng lớp học</span>
+                <div class="fb-sidebar-icon" style="background:#f0e6ff; color:#9360f7;"><i class="bi bi-people-fill"></i></div>
+            </div>
+            <div class="fs-2 fw-bold text-dark mb-1">@Model.TongLopHoc</div>
+            <span class="fb-badge fb-badge-purple">Nhóm học tập đang mở</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Tổng học viên</span>
+                <div class="fb-sidebar-icon" style="background:#e7f8ec; color:#31a24c;"><i class="bi bi-person-check-fill"></i></div>
+            </div>
+            <div class="fs-2 fw-bold text-dark mb-1">@Model.TongHocVien</div>
+            <span class="fb-badge fb-badge-green">Thành viên cộng đồng</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="fb-card p-3 mb-0 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Tổng lượt đăng ký</span>
+                <div class="fb-sidebar-icon" style="background:#fef7e0; color:#f7b125;"><i class="bi bi-envelope-paper-fill"></i></div>
+            </div>
+            <div class="fs-2 fw-bold text-dark mb-1">@Model.TongDangKy</div>
+            <span class="fb-badge fb-badge-yellow">Lượt tương tác ghi danh</span>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     TOP KHÓA HỌC THEO DOANH THU & HỒ SƠ GẦN ĐÂY
+     ========================================================================= -->
+<div class="row g-3 mb-4">
+    <!-- Bảng doanh thu theo khóa học -->
+    <div class="col-lg-7">
+        <div class="fb-card h-100">
+            <div class="fb-card-header d-flex justify-content-between align-items-center">
+                <h5 class="fb-card-title"><i class="bi bi-award-fill text-warning"></i> Doanh Thu Học Phí Theo Khóa Học</h5>
+                <a href="/KhoaHoc" class="small text-primary text-decoration-none fw-semibold">Xem tất cả khóa học</a>
+            </div>
+
+            @if (!Model.TopKhoaHocDoanhThu.Any())
+            {
+                <div class="p-4 text-center text-muted">
+                    <p class="mb-0">Chưa có khóa học nào phát sinh doanh thu xác nhận.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" style="font-size: 0.9rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Khóa học</th>
+                                <th>Ngôn ngữ</th>
+                                <th class="text-center">Số học viên</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model.TopKhoaHocDoanhThu)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-dark">@c.TenKhoaHoc</td>
+                                    <td><span class="badge bg-light text-dark border">@c.NgoaiNgu</span></td>
+                                    <td class="text-center font-monospace">@c.SoHocVien</td>
+                                    <td class="text-end fw-bold text-success font-monospace">@c.DoanhThu.ToString("N0") đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Hồ sơ đăng ký gần đây -->
+    <div class="col-lg-5">
+        <div class="fb-card h-100">
+            <div class="fb-card-header d-flex justify-content-between align-items-center">
+                <h5 class="fb-card-title"><i class="bi bi-clock-history text-primary"></i> Ghi Danh Mới Nhất</h5>
+                <a href="/DangKyHoc" class="small text-primary text-decoration-none fw-semibold">Xem tất cả</a>
+            </div>
+
+            @if (!Model.RecentDangKys.Any())
+            {
+                <div class="p-4 text-center text-muted">
+                    <p class="mb-0">Chưa có giao dịch ghi danh nào gần đây.</p>
+                </div>
+            }
+            else
+            {
+                <div class="divide-y">
+                    @foreach (var dk in Model.RecentDangKys.Take(5))
+                    {
+                        <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-semibold text-dark">@(dk.HocVien?.HoTen ?? "—")</div>
+                                <div class="text-muted small">Lớp: @(dk.LopHoc?.TenLop ?? "—")</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-success small">@((dk.HocPhi > 0 ? dk.HocPhi : (dk.LopHoc?.HocPhi ?? 0)).ToString("N0")) đ</div>
+                                @if (dk.TrangThai == "Đã xác nhận")
+                                {
+                                    <span class="fb-badge fb-badge-green" style="font-size: 10px;">Đã duyệt</span>
+                                }
+                                else if (dk.TrangThai == "Chờ xác nhận")
+                                {
+                                    <span class="fb-badge fb-badge-yellow" style="font-size: 10px;">Chờ duyệt</span>
+                                }
+                                else
+                                {
+                                    <span class="fb-badge fb-badge-red" style="font-size: 10px;">Đã hủy</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 1. Monthly Revenue Chart (Bar & Area)
+        const revCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+        new Chart(revCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuThangLabels)),
+                datasets: [{
+                    label: 'Doanh thu học phí (VNĐ)',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuThangValues)),
+                    backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                    borderColor: '#16a34a',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let val = context.raw || 0;
+                                return 'Doanh thu: ' + val.toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) return (value / 1000000) + ' tr';
+                                return value.toLocaleString('vi-VN');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Language Revenue Donut Chart
+        const langRevCtx = document.getElementById('languageRevenueChart').getContext('2d');
+        new Chart(langRevCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuNgoaiNguLabels)),
+                datasets: [{
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuNgoaiNguValues)),
+                    backgroundColor: ['#0866ff', '#22c55e', '#f59e0b', '#ef4444', '#a855f7'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let val = context.raw || 0;
+                                return context.label + ': ' + val.toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

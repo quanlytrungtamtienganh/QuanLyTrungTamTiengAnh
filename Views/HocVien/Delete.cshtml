@@ -1,0 +1,99 @@
+@model TrungTamNgoaiNgu.Models.HocVien
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Xác nhận xóa học viên #" + Model.MaHocVien;
+    var hasEnrollments = Model.DangKyHocs != null && Model.DangKyHocs.Any();
+}
+
+<!-- Page Header (4.14 Xóa học viên) -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1 d-flex align-items-center gap-2 text-danger">
+            <i class="bi bi-person-x-fill"></i> Xác Nhận Xóa Học Viên
+        </h3>
+        <p class="text-muted mb-0 small">Kiểm tra thông tin học viên và các ràng buộc dữ liệu lớp học trước khi xóa</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="fb-btn fb-btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="fb-card p-4 border border-danger">
+            @if (hasEnrollments)
+            {
+                <div class="alert alert-danger d-flex align-items-center gap-3 mb-4" role="alert">
+                    <i class="bi bi-shield-x fs-2"></i>
+                    <div>
+                        <strong class="d-block mb-1">Không thể xóa học viên này!</strong>
+                        <div>Học viên <strong>@Model.HoTen</strong> hiện đã đăng ký <strong>@(Model.DangKyHocs?.Count ?? 0)</strong> khóa/lớp học. Vui lòng giữ lại hồ sơ để bảo toàn tính toàn vẹn của báo cáo và doanh thu.</div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-2 text-warning"></i>
+                    <div>
+                        <strong class="d-block mb-1">Cảnh báo xóa vĩnh viễn!</strong>
+                        <div>Bạn có chắc chắn muốn xóa hồ sơ học viên <strong>@Model.HoTen</strong> cùng tài khoản đăng nhập liên kết? Dữ liệu này sẽ không thể phục hồi.</div>
+                    </div>
+                </div>
+            }
+
+            <div class="p-3 bg-light rounded-3 mb-4 border">
+                <div class="row g-3">
+                    <div class="col-sm-4 text-muted">Mã học viên:</div>
+                    <div class="col-sm-8 fw-bold font-monospace">#HV-@Model.MaHocVien.ToString("D4")</div>
+
+                    <div class="col-sm-4 text-muted">Họ và tên:</div>
+                    <div class="col-sm-8 fw-bold text-dark fs-5">@Model.HoTen</div>
+
+                    <div class="col-sm-4 text-muted">Tài khoản liên kết:</div>
+                    <div class="col-sm-8"><code>@(Model.TaiKhoan?.TenDangNhap ?? "Chưa có")</code></div>
+
+                    <div class="col-sm-4 text-muted">Giới tính & Ngày sinh:</div>
+                    <div class="col-sm-8">@Model.GioiTinh — @Model.NgaySinh.ToString("dd/MM/yyyy")</div>
+
+                    <div class="col-sm-4 text-muted">Số điện thoại:</div>
+                    <div class="col-sm-8 font-monospace fw-semibold">@Model.SoDienThoai</div>
+
+                    <div class="col-sm-4 text-muted">Email liên hệ:</div>
+                    <div class="col-sm-8">@Model.Email</div>
+
+                    <!-- Hiển thị Địa chỉ (User Spec 4.14) -->
+                    <div class="col-sm-4 text-muted">Địa chỉ:</div>
+                    <div class="col-sm-8 fw-semibold text-danger">
+                        <i class="bi bi-geo-alt-fill me-1"></i>@(string.IsNullOrWhiteSpace(Model.DiaChi) ? "Chưa cập nhật" : Model.DiaChi)
+                    </div>
+
+                    <div class="col-sm-4 text-muted">Lịch sử đăng ký lớp:</div>
+                    <div class="col-sm-8">
+                        @if (hasEnrollments)
+                        {
+                            <span class="badge bg-danger">Đã có @(Model.DangKyHocs?.Count ?? 0) lượt đăng ký (Không thể xóa)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">0 lượt đăng ký (Hợp lệ để xóa)</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MaHocVien" />
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="fb-btn fb-btn-secondary">Hủy bỏ</a>
+                    <button type="submit" class="fb-btn fb-btn-sm text-white" style="background-color: #dc3545;" @(hasEnrollments ? "disabled title='Học viên đã có lớp học, không thể xóa'" : "")>
+                        <i class="bi bi-trash-fill me-1"></i> Xác nhận xóa học viên
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
