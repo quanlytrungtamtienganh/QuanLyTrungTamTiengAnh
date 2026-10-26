@@ -7,8 +7,15 @@ namespace TrungTamNgoaiNgu.Data
     {
         public static void Initialize(TrungTamDbContext context)
         {
-            // Tự động tạo cơ sở dữ liệu nếu chưa tồn tại
-            context.Database.EnsureCreated();
+            // Tự động áp dụng Migration (hoặc tạo cơ sở dữ liệu nếu chưa tồn tại)
+            try
+            {
+                context.Database.Migrate();
+            }
+            catch
+            {
+                context.Database.EnsureCreated();
+            }
 
             // Đảm bảo các bảng BinhLuan, GiaoVien, TinNhan và cột MaGiaoVien tồn tại
             try

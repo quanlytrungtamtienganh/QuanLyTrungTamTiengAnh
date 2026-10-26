@@ -159,7 +159,7 @@ Ngoài 4 module bắt buộc, hệ thống được trang bị thêm các phân 
 | **Thực thể dữ liệu (Models)** | `TaiKhoan.cs`<br/>`OtpDoiMatKhau.cs`<br/>`LichSuDoiMatKhau.cs`<br/>`KhoaHoc.cs`<br/>`LopHoc.cs`<br/>`GiaoVien.cs`<br/>`HocVien.cs`<br/>`DangKyHoc.cs`<br/>`YeuCauDangKy.cs`<br/>`CauHinhHeThong.cs`<br/>`DeThi.cs`<br/>`PhanThi.cs`<br/>`CauHoiLuyenThi.cs`<br/>`KetQuaLuyenThi.cs`<br/>`BinhLuanDeThi.cs`<br/>`NhomChat.cs`<br/>`ThanhVienNhom.cs`<br/>`TinNhan.cs`<br/>`BaiViet.cs`<br/>`BinhLuan.cs`<br/>`ThichBaiViet.cs`<br/>`BaoCaoBaiViet.cs` |
 | **Tín hiệu thời gian thực (Hubs)** | `CallHub.cs`<br/>`ChatHub.cs`<br/>`VideoCallHub.cs` |
 | **Dịch vụ nền & Dữ liệu (Services & Data)** | `EmailService.cs`<br/>`IEmailService.cs`<br/>`ImageHelper.cs`<br/>`TrungTamDbContext.cs`<br/>`DbInitializer.cs`<br/>`LuyenThiDataGenerator.cs` |
-| **Cơ sở dữ liệu (Database Files)** | `TrungTamNgoaiNguDb.sql`<br/>`TrungTamNgoaiNguDb.bak` |
+| **Cơ sở dữ liệu & Migration** | `TrungTamNgoaiNguDb.sql`<br/>`TrungTamNgoaiNguDb.bak`<br/>`InitialCreate.cs`<br/>`TrungTamDbContextModelSnapshot.cs`<br/>`InitialCreate_Script.sql` |
 | **Cấu hình & Tài liệu (Config & Docs)** | `appsettings.json`<br/>`Program.cs`<br/>`README.md`<br/>`DESIGN.md`<br/>`PHAN_CHIA_MODULE_DU_AN.md` |
 
 ---
@@ -173,6 +173,10 @@ Hệ thống cung cấp **02 tệp cơ sở dữ liệu hoàn chỉnh** tại th
 ### Cách Khôi Phục:
 - **Cách 1 (Khuyên dùng - Chạy Script SQL)**: Mở **SQL Server Management Studio (SSMS)**, kết nối tới SQL Server $\rightarrow$ Mở file `TrungTamNgoaiNguDb.sql` $\rightarrow$ Nhấn **Execute (F5)**.
 - **Cách 2 (Restore file .BAK)**: Trong SSMS, chuột phải vào **Databases** $\rightarrow$ Chọn **Restore Database...** $\rightarrow$ Chọn file `TrungTamNgoaiNguDb.bak` $\rightarrow$ Nhấn **OK**.
+- **Cách 3 (Sử dụng EF Core Migrations)**:
+  + Chạy lệnh `dotnet ef database update` trong Terminal tại thư mục dự án để tự động tạo toàn bộ bảng và cập nhật CSDL.
+  + Hoặc khi khởi động ứng dụng với lệnh `dotnet run`, hàm `context.Database.Migrate()` trong `DbInitializer.cs` sẽ tự động phát hiện và áp dụng các migration chưa chạy.
+  + Kịch bản SQL thuần túy sinh từ migration được lưu tại tệp `InitialCreate_Script.sql`.
 
 ---
 
